@@ -7,17 +7,17 @@ import com.itv.aws.{ARN, AWSService}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
-case class ListPublishedLambdasWithNameRequest(functionName: LambdaName)
-case class ListPublishedLambdasWithNameResponse(aliases: List[PublishedLambda])
+case class ListPublishedLambdasWithNameRequest(lambdaName: LambdaName)
+case class ListPublishedLambdasWithNameResponse(publishedLambdas: List[PublishedLambda])
 
 
-class ListPublishedLambdasWithName(awsLambda: AWSLambda) extends AWSService[ListPublishedLambdasWithNameRequest, ListPublishedLambdasWithNameResponse] {
+class AWSListPublishedLambdasWithName(awsLambda: AWSLambda) extends AWSService[ListPublishedLambdasWithNameRequest, ListPublishedLambdasWithNameResponse] {
 
   override def apply(listFunctionsWithNameRequest: ListPublishedLambdasWithNameRequest): ListPublishedLambdasWithNameResponse = {
 
     val listVersionsByFunctionRequest =
       new ListVersionsByFunctionRequest()
-        .withFunctionName(listFunctionsWithNameRequest.functionName.value)
+        .withFunctionName(listFunctionsWithNameRequest.lambdaName.value)
 
     val listFunctionsResult = awsLambda.listVersionsByFunction(listVersionsByFunctionRequest)
 
@@ -34,7 +34,7 @@ class ListPublishedLambdasWithName(awsLambda: AWSLambda) extends AWSService[List
           )
         ),
         arn = ARN(fc.getFunctionArn),
-        version = LambdaVersion(fc.getVersion)
+        version = LambdaVersion(fc.getVersion.toInt)
       )
     }.toList
     ListPublishedLambdasWithNameResponse(fcs)

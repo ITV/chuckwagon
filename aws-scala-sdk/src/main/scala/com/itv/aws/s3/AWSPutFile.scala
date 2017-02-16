@@ -9,7 +9,7 @@ import com.itv.aws.AWSService
 case class PutFileRequest(bucket: Bucket, keyPrefix: S3KeyPrefix, file:File)
 case class PutFileResponse(key: S3Location)
 
-object PutFile extends AWSService[PutFileRequest, PutFileResponse] {
+object AWSPutFile extends AWSService[PutFileRequest, PutFileResponse] {
   override def apply(putFileRequest: PutFileRequest): PutFileResponse = {
     import putFileRequest._
 
@@ -19,6 +19,6 @@ object PutFile extends AWSService[PutFileRequest, PutFileResponse] {
 
     val putObjectResponse = awsS3.putObject(putObjectRequest)
 
-    PutFileResponse(S3Location(S3Key(key), bucket))
+    PutFileResponse(S3Location(bucket, S3Key(key)))
   }
 }

@@ -23,11 +23,13 @@ lazy val `aws-scala-sdk` = project
   .settings(
     commonSettings ++
       Seq(
+        scalaVersion := "2.10.6",
         crossScalaVersions := Seq("2.12.1", "2.10.6"),
         libraryDependencies ++= Seq(
           "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
-          "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion
+          "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion,
+          "org.typelevel" %% "cats-free" % "0.9.0"
         )
       )
   )

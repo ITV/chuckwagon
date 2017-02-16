@@ -7,7 +7,7 @@ import com.itv.aws.{ARN, AWSService, Role, RoleName}
 case class CreateRoleRequest(name: RoleName, policyDocument: String)
 case class CreateRoleResponse(role: Role)
 
-object CreateRole extends AWSService[CreateRoleRequest, CreateRoleResponse] {
+object AWSCreateRole extends AWSService[CreateRoleRequest, CreateRoleResponse] {
 
   override def apply(createRoleRequest: CreateRoleRequest): CreateRoleResponse = {
     val awsCreateRoleRequest =

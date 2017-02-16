@@ -7,7 +7,7 @@ package object s3 {
   case class S3KeyPrefix(value: String) extends AnyVal
   case class S3Key(value: String) extends AnyVal
 
-  case class S3Location(key: S3Key, bucket:Bucket)
+  case class S3Location(bucket:Bucket, key: S3Key)
 
   case class Bucket(name: String)
 

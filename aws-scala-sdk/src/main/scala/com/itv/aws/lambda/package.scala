@@ -8,11 +8,12 @@ import scala.concurrent.duration.FiniteDuration
 package object lambda {
 
   case class LambdaName(value: String) extends AnyVal
-  case class LambdaVersion(value: String) extends AnyVal
+  case class LambdaVersion(value: Int) extends AnyVal
   case class LambdaHandler(value: String) extends AnyVal
   case class MemorySize(value: Int) extends AnyVal
 
-  case class Alias(value: String) extends AnyVal
+  case class AliasName(value: String) extends AnyVal
+  case class Alias(name: AliasName, lambdaVersion: LambdaVersion)
 
   case class LambdaConfiguration(
                                   roleARN: ARN,

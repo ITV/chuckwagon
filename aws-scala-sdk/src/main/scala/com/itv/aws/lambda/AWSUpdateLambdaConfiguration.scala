@@ -9,7 +9,7 @@ case class UpdateLambdaConfigurationRequest(lambda: Lambda)
 case class UpdateLambdaConfigurationResponse()
 
 
-class UpdateLambdaConfiguration(awsLambda: AWSLambda) extends AWSService[UpdateLambdaConfigurationRequest, UpdateLambdaConfigurationResponse] {
+class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda) extends AWSService[UpdateLambdaConfigurationRequest, UpdateLambdaConfigurationResponse] {
   override def apply(updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest): UpdateLambdaConfigurationResponse = {
     import updateLambdaConfigurationRequest.lambda._
 
