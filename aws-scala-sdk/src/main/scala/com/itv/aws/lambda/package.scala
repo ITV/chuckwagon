@@ -13,7 +13,7 @@ package object lambda {
   case class MemorySize(value: Int) extends AnyVal
 
   case class AliasName(value: String) extends AnyVal
-  case class Alias(name: AliasName, lambdaVersion: LambdaVersion)
+  case class Alias(name: AliasName, lambdaName: LambdaName, lambdaVersion: LambdaVersion, arn: ARN)
 
   case class LambdaConfiguration(
                                   roleARN: ARN,
@@ -26,10 +26,6 @@ package object lambda {
                              version: LambdaVersion,
                              arn: ARN
                             )
-  case class AliasedLambda(publishedLambda: PublishedLambda,
-                           alias: Alias,
-                           arn: ARN
-                          )
 
   def awsLambda(region:Regions): AWSLambda =
     configuredClientForRegion(AWSLambdaClientBuilder.standard())(region)

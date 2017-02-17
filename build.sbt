@@ -39,7 +39,11 @@ lazy val `sbt-chuckwagon` = project
   commonSettings ++
     Seq(
       sbtPlugin := true,
-      scalaVersion := "2.10.6"
+      scalaVersion := "2.10.6",
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %% "fansi" % "0.2.3"
+      ),
+      addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.4")
     )
   )
   .dependsOn(`aws-scala-sdk`)

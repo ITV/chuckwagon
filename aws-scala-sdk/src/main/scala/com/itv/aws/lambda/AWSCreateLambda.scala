@@ -18,7 +18,7 @@ class AWSCreateLambda(awsLambda: AWSLambda) extends AWSService[CreateLambdaReque
     import createLambdaRequest.lambda._
 
     val functionCode = new FunctionCode().
-      withS3Bucket(createLambdaRequest.s3Location.bucket.name).
+      withS3Bucket(createLambdaRequest.s3Location.bucket.name.value).
       withS3Key(createLambdaRequest.s3Location.key.value)
 
     val awsCreateFunctionRequest = new CreateFunctionRequest().

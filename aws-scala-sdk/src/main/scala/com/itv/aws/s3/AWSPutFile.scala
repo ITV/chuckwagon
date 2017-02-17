@@ -14,7 +14,7 @@ object AWSPutFile extends AWSService[PutFileRequest, PutFileResponse] {
     import putFileRequest._
 
     val key: String = keyPrefix + file.getName
-    val putObjectRequest = new PutObjectRequest(bucket.name, key, file)
+    val putObjectRequest = new PutObjectRequest(bucket.name.value, key, file)
     putObjectRequest.setCannedAcl(CannedAccessControlList.AuthenticatedRead)
 
     val putObjectResponse = awsS3.putObject(putObjectRequest)

@@ -1,38 +1,43 @@
 package com.itv.sbt
 
+import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
 import com.itv.aws.ARN
 import com.itv.aws.lambda._
-import com.itv.aws.s3.{Bucket, S3Key, S3Location}
+import com.itv.aws.s3._
 import com.itv.chuckwagon.deploy.AWSCompiler
+import sbt.Keys.streams
 import sbt._
 import sbt.complete.DefaultParsers._
 
 import scala.concurrent.duration._
+import fansi._
+import fansi.Color._
+
 
 object AWSLambdaPlugin extends AutoPlugin {
 
-  override def requires = sbt.plugins.JvmPlugin
+  override def requires = sbtassembly.AssemblyPlugin
 
   override def trigger = allRequirements
 
   object autoImport {
-    val awsLambdaRegion = settingKey[Regions](
+    val chuckLambdaRegion = settingKey[Regions](
       "AWS region within which to manage Lambda"
     )
-    def awsRegion(region: String):Regions = {
+    def chuckDefineRegion(region: String):Regions = {
       Regions.fromName(region)
     }
-    val awsLambdaS3Location = settingKey[S3Location](
-      "The S3 location where Scala Assembly JAR will be staged for Lambda create/update"
+    val chuckStagingS3Address = settingKey[S3Address](
+      "The S3 address we want to use for staging our Scala Assembly JAR for Lambda create/update"
     )
-    def awsS3Location(bucketName: String, keyPrefix: String):S3Location = {
-      S3Location(Bucket(bucketName), S3Key(keyPrefix))
+    def chuckDefineS3Address(bucketName: String, keyPrefix: String):S3Address = {
+      S3Address(BucketName(bucketName), S3KeyPrefix(keyPrefix))
     }
-    val awsLambda = settingKey[Lambda](
+    val chuckLambda = settingKey[Lambda](
       "Lambda definition to be managed"
     )
-    def awsLambdaAndConfiguration(name: String,
+    def chuckDefineLambda(name: String,
                                   roleARN: String,
                                   handler: String,
                                   timeoutInSeconds: Int,
@@ -52,31 +57,116 @@ object AWSLambdaPlugin extends AutoPlugin {
         )
       )
     }
-    val awsSDKFreeCompiler = settingKey[AWSCompiler](
+    val aliasPipeline = settingKey[NonEmptyList[AliasName]](
+      "The aliases through which our lambda will be promoted and tested"
+    )
+    val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
-    val actualAliases = taskKey[List[Alias]](
-      "The Aliases currently configured in AWS"
+
+    val chuckCurrentAliases = taskKey[Option[List[Alias]]](
+      "The Aliases currently configured in AWS (if Lambda exists)"
+    )
+    val chuckCurrentPublishedLambdas = taskKey[Option[List[PublishedLambda]]](
+      "The currently published versions of this Lambda (if Lambda exists)"
     )
 
-    val awsLambdaDeploy = taskKey[ARN](
-      "Deploy, test and put live the code in this project as an AWS Lambda"
+    val chuckPublish = taskKey[ARN](
+      "Upload latest code to Lambda and Publish it"
     )
-    val awsLambdaPromote = inputKey[Unit](
+    val chuckPromote = inputKey[ARN](
       "Promote a published Lambda by attaching it to an alias"
     )
   }
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    awsSDKFreeCompiler := new AWSCompiler(com.itv.aws.lambda.awsLambda(awsLambdaRegion.value)),
-    actualAliases := {
-      com.itv.chuckwagon.deploy.listAliases(awsLambda.value.name).foldMap(awsSDKFreeCompiler.value.compiler)
+    aliasPipeline := NonEmptyList(AliasName("blue-qa"), List(AliasName("qa"))),
+    chuckSDKFreeCompiler := new AWSCompiler(com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)),
+    chuckCurrentAliases := {
+      val maybeAliases = com.itv.chuckwagon.deploy.listAliases(chuckLambda.value.name).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      maybeAliases match {
+        case Some(aliases) => {
+          streams.value.log.info(
+            logItemsMessage(
+              "Current Aliases and associated Lambda Versions",
+              aliases.map(alias => s"${alias.name.value}=${alias.lambdaVersion.value}") :_*
+            )
+          )
+        }
+        case None => streams.value.log.info(logItemsMessage("No Lambda defined so no aliases exist"))
+      }
+      maybeAliases
+    },
+    chuckCurrentPublishedLambdas := {
+      val maybePublishedLambdas = com.itv.chuckwagon.deploy.listPublishedLambdasWithName(chuckLambda.value.name).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      maybePublishedLambdas match {
+        case Some(publishedLambdas) => {
+          streams.value.log.info(
+            logItemsMessage(
+              "Currently published versions",
+              publishedLambdas.map(_.version.value.toString) :_*
+            )
+          )
+        }
+        case None => streams.value.log.info(logItemsMessage("No Lambda defined so no published versions exist"))
+      }
+
+      maybePublishedLambdas
+    },
+    chuckPublish := {
+      val publishedLambda =
+        com.itv.chuckwagon.deploy.publishLambda(
+          chuckLambda.value,
+          chuckStagingS3Address.value,
+          sbtassembly.AssemblyKeys.assembly.value
+          ).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      val alias =
+        com.itv.chuckwagon.deploy.aliasPublishedLambda(
+          publishedLambda,
+          aliasPipeline.value.head
+        ).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      streams.value.log.info(
+        logMessage(
+          (Str("Just Published Version '") ++ Green(publishedLambda.version.value.toString) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str("' as '") ++ Green(alias.arn.value) ++ Str("'")).render
+        )
+      )
+
+      alias.arn
+    },
+    chuckPromote := {
+      val args: Seq[String] = spaceDelimited("<arg>").parsed
+      val promotedToAlias = com.itv.chuckwagon.deploy.promoteLambda(
+        chuckLambda.value.name,
+        AliasName(args(0)),
+        AliasName(args(1))
+      ).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      streams.value.log.info(
+        logMessage(
+        (Str("Just Promoted Version '") ++ Green(promotedToAlias.lambdaVersion.value.toString) ++ Str("' from Environment '") ++ Green(args(0)) ++ Str("' to Environment '") ++ Green(args(1)) ++ Str("' as '") ++ Green(promotedToAlias.arn.value) ++ Str("'")).render
+        )
+      )
+
+      promotedToAlias.arn
     }
-//    awsLambdaPromote := {
-//      val args: Seq[String] = spaceDelimited("<arg>").parsed
-//      com.itv.chuckwagon.deploy.promoteLambda().foldMap(awsSDKFreeCompiler.value)
-//      ()
-//    }
   )
+
+  def logItemsMessage(prefix: String, items:String*): String = {
+
+    val colouredItems =
+      if (items.isEmpty) ""
+      else items.map(Green(_).render).mkString(Str("'").render, Str("', '").render, Str("'").render)
+
+    (Cyan("Chuckwagon") ++ Str(s": $prefix ")).render ++ colouredItems
+  }
+
+  def logMessage(message: String): String = {
+    (Cyan("Chuckwagon") ++ Str(s": ")).render ++ message
+  }
+
 }

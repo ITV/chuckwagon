@@ -19,7 +19,7 @@ class AWSUpdateLambdaCode(awsLambda: AWSLambda) extends AWSService[UpdateLambdaC
 
     val awsUpdateFunctionRequest = new UpdateFunctionCodeRequest().
       withFunctionName(lambda.name.value).
-      withS3Bucket(s3Location.bucket.name).
+      withS3Bucket(s3Location.bucket.name.value).
       withS3Key(s3Location.key.value).
       withPublish(true)
 

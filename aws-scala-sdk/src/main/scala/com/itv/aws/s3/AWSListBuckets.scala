@@ -10,7 +10,7 @@ case class ListBucketsResponse(buckets: List[Bucket])
 object AWSListBuckets extends AWSService[ListBucketsRequest, ListBucketsResponse] {
   override def apply(v1: ListBucketsRequest): ListBucketsResponse = {
     val buckets: List[Bucket] = awsS3.listBuckets.asScala.map { b =>
-      Bucket(b.getName)
+      Bucket(BucketName(b.getName))
     }.toList
 
     ListBucketsResponse(buckets)
