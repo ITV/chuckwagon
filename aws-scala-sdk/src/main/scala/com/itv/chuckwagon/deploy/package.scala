@@ -21,7 +21,7 @@ package object deploy {
 
   case class CreateAlias(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion) extends DeployLambdaA[Alias]
   case class UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) extends DeployLambdaA[Alias]
-  case class DeleteAlias(alias: Alias) extends DeployLambdaA[Unit]
+  case class DeleteAlias(alias: Alias) extends DeployLambdaA[AliasName]
   case class ListAliases(lambdaName: LambdaName) extends DeployLambdaA[Option[List[Alias]]]
 
   case class ListPublishedLambdasWithName(lambdaName: LambdaName) extends DeployLambdaA[Option[List[PublishedLambda]]]
@@ -30,7 +30,7 @@ package object deploy {
   case class UpdateLambdaConfiguration(lambda: Lambda) extends DeployLambdaA[Unit]
   case class UpdateLambdaCode(lambda: Lambda,
                               s3Location: S3Location) extends DeployLambdaA[PublishedLambda]
-  case class DeleteLambdaVersion(publishedLambda: PublishedLambda) extends DeployLambdaA[Unit]
+  case class DeleteLambdaVersion(publishedLambda: PublishedLambda) extends DeployLambdaA[LambdaVersion]
 
   case class CreateRole(name: RoleName, policyDocument: String) extends DeployLambdaA[Role]
   case class ListRoles() extends DeployLambdaA[List[Role]]
@@ -45,8 +45,8 @@ package object deploy {
     liftF[DeployLambdaA, Alias](CreateAlias(name, lambdaName, lambdaVersionToAlias))
   def updateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
     liftF[DeployLambdaA, Alias](UpdateAlias(alias, lambdaVersionToAlias))
-  def deleteAlias(alias: Alias): DeployLambda[Unit] =
-    liftF[DeployLambdaA, Unit](DeleteAlias(alias))
+  def deleteAlias(alias: Alias): DeployLambda[AliasName] =
+    liftF[DeployLambdaA, AliasName](DeleteAlias(alias))
   def listAliases(lambdaName: LambdaName): DeployLambda[Option[List[Alias]]] =
     liftF[DeployLambdaA, Option[List[Alias]]](ListAliases(lambdaName))
 
@@ -58,8 +58,8 @@ package object deploy {
     liftF[DeployLambdaA, Unit](UpdateLambdaConfiguration(lambda))
   def updateLambdaCode(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](UpdateLambdaCode(lambda, s3Location))
-  def deleteLambdaVersion(publishedLambda: PublishedLambda): DeployLambda[Unit] =
-    liftF[DeployLambdaA, Unit](DeleteLambdaVersion(publishedLambda))
+  def deleteLambdaVersion(publishedLambda: PublishedLambda): DeployLambda[LambdaVersion] =
+    liftF[DeployLambdaA, LambdaVersion](DeleteLambdaVersion(publishedLambda))
 
   def createRole(name: RoleName, policyDocument: String): DeployLambda[Role] =
     liftF[DeployLambdaA, Role](CreateRole(name, policyDocument))
@@ -115,14 +115,19 @@ package object deploy {
       }
     } yield alias
 
-  def deleteRedundantAliases(lambdaName: LambdaName, desiredAliasNames: List[AliasName], actualAliases: List[Alias]): DeployLambda[Unit] = {
-    val aliasesToDelete = actualAliases.filterNot(a => desiredAliasNames.toSet.contains(a.name))
-    aliasesToDelete.map(deleteAlias).sequenceU.map(_ => ())
-  }
+  def deleteRedundantAliases(lambdaName: LambdaName, desiredAliasNames: List[AliasName]): DeployLambda[List[AliasName]] =
+  for {
+    alreadyCreatedAliases <- listAliases(lambdaName)
+    aliasesToDelete = alreadyCreatedAliases.toList.flatten.filterNot(
+      a => desiredAliasNames.toSet.contains(a.name)
+    )
+    deletedAliases <- aliasesToDelete.map(deleteAlias).sequenceU
+  } yield deletedAliases
 
-  def deleteRedundantPublishedLambdas(lambdaName: LambdaName, desiredAliases: List[Alias]): DeployLambda[Unit] = for {
+  def deleteRedundantPublishedLambdas(lambdaName: LambdaName): DeployLambda[List[LambdaVersion]] = for {
     publishedLambdas <- listPublishedLambdasWithName(lambdaName)
-    publishedLambdasToDelete: List[PublishedLambda] = publishedLambdas.toList.flatten.filterNot(pl => desiredAliases.map(_.lambdaVersion).toSet.contains(pl))
-    _ <- publishedLambdasToDelete.map(deleteLambdaVersion).sequenceU
-  } yield ()
+    alreadyCreatedAliases <- listAliases(lambdaName)
+    publishedLambdasToDelete: List[PublishedLambda] = publishedLambdas.toList.flatten.filterNot(pl => alreadyCreatedAliases.toList.flatten.map(_.lambdaVersion).toSet.contains(pl.version))
+    deletedLambdaVersions <- publishedLambdasToDelete.map(deleteLambdaVersion).sequenceU
+  } yield deletedLambdaVersions
 }

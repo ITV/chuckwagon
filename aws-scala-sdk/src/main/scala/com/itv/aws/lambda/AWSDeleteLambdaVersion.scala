@@ -8,7 +8,7 @@ import com.itv.aws.AWSService
 case class DeleteLambdaVersionRequest(
                                 publishedLambda: PublishedLambda
                               )
-case class DeleteLambdaVersionResponse()
+case class DeleteLambdaVersionResponse(deletedVersion: LambdaVersion)
 
 
 class AWSDeleteLambdaVersion(awsLambda: AWSLambda) extends AWSService[DeleteLambdaVersionRequest, DeleteLambdaVersionResponse] {
@@ -22,6 +22,6 @@ class AWSDeleteLambdaVersion(awsLambda: AWSLambda) extends AWSService[DeleteLamb
 
     val _ = awsLambda.deleteFunction(awsDeleteFunctionRequest)
 
-    DeleteLambdaVersionResponse()
+    DeleteLambdaVersionResponse(version)
   }
 }

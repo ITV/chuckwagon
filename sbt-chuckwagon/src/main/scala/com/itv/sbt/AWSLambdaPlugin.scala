@@ -77,6 +77,9 @@ object AWSLambdaPlugin extends AutoPlugin {
     val chuckPromote = inputKey[ARN](
       "Promote a published Lambda by attaching it to an alias"
     )
+    val chuckCleanUp = taskKey[Unit](
+      "Remove all unused Published Lambda Versions and Aliases"
+    )
   }
   import autoImport._
 
@@ -153,6 +156,34 @@ object AWSLambdaPlugin extends AutoPlugin {
       )
 
       promotedToAlias.arn
+    },
+    chuckCleanUp := {
+
+      val deletedAliases =
+        com.itv.chuckwagon.deploy.deleteRedundantAliases(
+          chuckLambda.value.name,
+          aliasPipeline.value.toList
+        ).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      streams.value.log.info(
+        logItemsMessage(
+          "Deleted the following redundant aliases",
+          deletedAliases.map(_.value) :_*
+        )
+      )
+
+      val deletedLambdaVersions =
+        com.itv.chuckwagon.deploy.deleteRedundantPublishedLambdas(
+          chuckLambda.value.name
+        ).foldMap(chuckSDKFreeCompiler.value.compiler)
+
+      streams.value.log.info(
+        logItemsMessage(
+          "Deleted the following redundant lambda versions",
+          deletedLambdaVersions.map(_.value.toString) :_*
+        )
+      )
+
     }
   )
 

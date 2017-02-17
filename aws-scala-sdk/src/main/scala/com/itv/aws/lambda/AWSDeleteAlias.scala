@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.model.{DeleteAliasRequest => AWSDeleteAlias
 
 
 case class DeleteAliasRequest(alias:Alias)
-case class DeleteAliasResponse()
+case class DeleteAliasResponse(name: AliasName)
 
 class AWSDeleteAlias(awsLambda: AWSLambda) extends AWSService[DeleteAliasRequest, DeleteAliasResponse] {
   override def apply(deleteAliasRequest: DeleteAliasRequest): DeleteAliasResponse = {
@@ -18,6 +18,6 @@ class AWSDeleteAlias(awsLambda: AWSLambda) extends AWSService[DeleteAliasRequest
 
     val _ = awsLambda.deleteAlias(awsDeleteAliasRequest)
 
-    DeleteAliasResponse()
+    DeleteAliasResponse(alias.name)
   }
 }

@@ -27,17 +27,13 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           createAlias(CreateAliasRequest(name, lambdaName, lambdaVersionToAlias)).aliasedLambda
         case CreateLambda(lambda: Lambda, s3Location: S3Location) =>
           createLambda(CreateLambdaRequest(lambda, s3Location)).publishedLambda
-        case DeleteAlias(alias: Alias) => {
-          deleteAlias(DeleteAliasRequest(alias))
-          ()
-        }
-        case DeleteLambdaVersion(publishedLambda: PublishedLambda) => {
-          deleteLambdaVersion(DeleteLambdaVersionRequest(publishedLambda))
-          ()
-        }
-        case ListAliases(lambdaName: LambdaName) => {
+        case DeleteAlias(alias: Alias) =>
+          deleteAlias(DeleteAliasRequest(alias)).name
+        case DeleteLambdaVersion(publishedLambda: PublishedLambda) =>
+          deleteLambdaVersion(DeleteLambdaVersionRequest(publishedLambda)).deletedVersion
+        case ListAliases(lambdaName: LambdaName) =>
           listAliases(ListAliasesRequest(lambdaName)).aliases
-        } case ListPublishedLambdasWithName(lambdaName: LambdaName) =>
+        case ListPublishedLambdasWithName(lambdaName: LambdaName) =>
           listPublishedLambdasWithName(ListPublishedLambdasWithNameRequest(lambdaName)).publishedLambdas
         case UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) =>
           updateAlias(UpdateAliasRequest(alias, lambdaVersionToAlias)).alias
@@ -47,9 +43,8 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           updateLambdaConfiguration(UpdateLambdaConfigurationRequest(lambda))
           ()
         }
-        case ListBuckets() => {
+        case ListBuckets() =>
           AWSListBuckets(ListBucketsRequest()).buckets
-        }
         case CreateBucket(name: BucketName) =>
           AWSCreateBucket(CreateBucketRequest(name)).bucket
         case PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file:File) =>
