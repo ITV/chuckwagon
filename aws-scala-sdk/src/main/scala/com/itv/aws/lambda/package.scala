@@ -13,21 +13,19 @@ package object lambda {
   case class MemorySize(value: Int) extends AnyVal
 
   case class AliasName(value: String) extends AnyVal
-  case class Alias(name: AliasName, lambdaName: LambdaName, lambdaVersion: LambdaVersion, arn: ARN)
+  case class Alias(name: AliasName,
+                   lambdaName: LambdaName,
+                   lambdaVersion: LambdaVersion,
+                   arn: ARN)
 
-  case class LambdaConfiguration(
-                                  roleARN: ARN,
-                                  handler: LambdaHandler,
-                                  timeout: FiniteDuration,
-                                  memorySize: MemorySize
-                                  )
-  case class Lambda(name: LambdaName,configuration: LambdaConfiguration)
-  case class PublishedLambda(lambda: Lambda,
-                             version: LambdaVersion,
-                             arn: ARN
-                            )
+  case class LambdaConfiguration(roleARN: ARN,
+                                 handler: LambdaHandler,
+                                 timeout: FiniteDuration,
+                                 memorySize: MemorySize)
+  case class Lambda(name: LambdaName, configuration: LambdaConfiguration)
+  case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)
 
-  def awsLambda(region:Regions): AWSLambda =
+  def awsLambda(region: Regions): AWSLambda =
     configuredClientForRegion(AWSLambdaClientBuilder.standard())(region)
 
 }

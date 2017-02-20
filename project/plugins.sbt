@@ -1,0 +1,1 @@
+addSbtPlugin("org.caoilte" % "plugin-defaults" % "0.1.0-SNAPSHOT")

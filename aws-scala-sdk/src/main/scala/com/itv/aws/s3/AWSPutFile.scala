@@ -2,11 +2,13 @@ package com.itv.aws.s3
 
 import java.io.File
 
-import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
+import com.amazonaws.services.s3.model.{
+  CannedAccessControlList,
+  PutObjectRequest
+}
 import com.itv.aws.AWSService
 
-
-case class PutFileRequest(bucket: Bucket, keyPrefix: S3KeyPrefix, file:File)
+case class PutFileRequest(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File)
 case class PutFileResponse(key: S3Location)
 
 object AWSPutFile extends AWSService[PutFileRequest, PutFileResponse] {

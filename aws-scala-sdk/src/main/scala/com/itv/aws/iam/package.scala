@@ -1,11 +1,17 @@
 package com.itv.aws
 
-import com.amazonaws.services.identitymanagement.{AmazonIdentityManagement, AmazonIdentityManagementClientBuilder}
+import com.amazonaws.services.identitymanagement.{
+  AmazonIdentityManagement,
+  AmazonIdentityManagementClientBuilder
+}
 
 package object iam {
 
   val iam: AmazonIdentityManagement =
-    AmazonIdentityManagementClientBuilder.standard().withCredentials(provider).build()
+    AmazonIdentityManagementClientBuilder
+      .standard()
+      .withCredentials(provider)
+      .build()
 
   iam.listRoles()
 }

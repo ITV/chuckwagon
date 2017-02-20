@@ -1,7 +1,10 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{ResourceNotFoundException, ListAliasesRequest => AWSListAliasesRequest}
+import com.amazonaws.services.lambda.model.{
+  ResourceNotFoundException,
+  ListAliasesRequest => AWSListAliasesRequest
+}
 import com.itv.aws.{ARN, AWSService}
 
 import scala.collection.JavaConverters._
@@ -9,12 +12,15 @@ import scala.collection.JavaConverters._
 case class ListAliasesRequest(lambdaName: LambdaName)
 case class ListAliasesResponse(aliases: Option[List[Alias]])
 
+class AWSListAliases(awsLambda: AWSLambda)
+    extends AWSService[ListAliasesRequest, ListAliasesResponse] {
 
-class AWSListAliases(awsLambda: AWSLambda) extends AWSService[ListAliasesRequest, ListAliasesResponse] {
-
-  override def apply(listAliasesRequest: ListAliasesRequest): ListAliasesResponse = {
+  override def apply(
+    listAliasesRequest: ListAliasesRequest
+  ): ListAliasesResponse = {
     val awsListAliasesRequest =
-      new AWSListAliasesRequest().withFunctionName(listAliasesRequest.lambdaName.value)
+      new AWSListAliasesRequest()
+        .withFunctionName(listAliasesRequest.lambdaName.value)
 
     try {
       val listAliasesResult = awsLambda.listAliases(awsListAliasesRequest)
@@ -30,7 +36,7 @@ class AWSListAliases(awsLambda: AWSLambda) extends AWSService[ListAliasesRequest
 
       ListAliasesResponse(Option(aliases))
     } catch {
-      case _:ResourceNotFoundException => ListAliasesResponse(None)
+      case _: ResourceNotFoundException => ListAliasesResponse(None)
     }
   }
 

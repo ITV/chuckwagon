@@ -14,6 +14,8 @@ project/plugins/project/
 
 project/project/credentials.sbt
 
+.scalafmt.conf
+
 # Scala-IDE specific
 .scala_dependencies
 .worksheet

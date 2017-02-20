@@ -2,10 +2,9 @@ lazy val commonSettings = Seq(
   organization := "com.itv",
   scalaVersion := "2.12.1",
   description := "A framework for writing and deploying Scala AWS Lambda Functions",
-  publishArtifact in (Compile, packageBin) := true,
-  publishArtifact in (Test, packageBin) := false,
-  publishArtifact in (Compile, packageDoc) := false,
-  publishArtifact in (Compile, packageSrc) := true
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.0.1" % Test
+  )
 )
 
 val awsSdkVersion = "1.11.86"

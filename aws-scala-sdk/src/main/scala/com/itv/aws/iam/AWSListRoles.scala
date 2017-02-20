@@ -11,12 +11,14 @@ case class ListRolesResponse(roles: List[Role])
 object AWSListRoles extends AWSService[ListRolesRequest, ListRolesResponse] {
 
   override def apply(listRolesRequest: ListRolesRequest): ListRolesResponse = {
-    val roles = iam.listRoles().getRoles.asScala.map { r =>
-      Role(
-        name = RoleName(r.getRoleName),
-        arn = ARN(r.getArn)
-      )
-    }.toList
+    val roles = iam
+      .listRoles()
+      .getRoles
+      .asScala
+      .map { r =>
+        Role(name = RoleName(r.getRoleName), arn = ARN(r.getArn))
+      }
+      .toList
 
     ListRolesResponse(roles)
   }

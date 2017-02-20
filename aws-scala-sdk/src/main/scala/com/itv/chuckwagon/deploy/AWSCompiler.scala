@@ -3,7 +3,7 @@ package com.itv.chuckwagon.deploy
 import java.io.File
 
 import cats.arrow.FunctionK
-import cats.{Id, ~>}
+import cats.{~>, Id}
 import com.amazonaws.services.lambda.AWSLambda
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
@@ -15,7 +15,9 @@ class AWSCompiler(val awsLambda: AWSLambda) {
   val deleteAlias = new AWSDeleteAlias(awsLambda)
   val deleteLambdaVersion = new AWSDeleteLambdaVersion(awsLambda)
   val listAliases = new AWSListAliases(awsLambda)
-  val listPublishedLambdasWithName = new AWSListPublishedLambdasWithName(awsLambda)
+  val listPublishedLambdasWithName = new AWSListPublishedLambdasWithName(
+    awsLambda
+  )
   val updateAlias = new AWSUpdateAlias(awsLambda)
   val updateLambdaCode = new AWSUpdateLambdaCode(awsLambda)
   val updateLambdaConfiguration = new AWSUpdateLambdaConfiguration(awsLambda)
@@ -23,8 +25,14 @@ class AWSCompiler(val awsLambda: AWSLambda) {
   def compiler: DeployLambdaA ~> Id = {
     new (DeployLambdaA ~> Id) {
       def apply[A](command: DeployLambdaA[A]): Id[A] = command match {
-        case CreateAlias(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion) =>
-          createAlias(CreateAliasRequest(name, lambdaName, lambdaVersionToAlias)).aliasedLambda
+        case CreateAlias(
+            name: AliasName,
+            lambdaName: LambdaName,
+            lambdaVersionToAlias: LambdaVersion
+            ) =>
+          createAlias(
+            CreateAliasRequest(name, lambdaName, lambdaVersionToAlias)
+          ).aliasedLambda
         case CreateLambda(lambda: Lambda, s3Location: S3Location) =>
           createLambda(CreateLambdaRequest(lambda, s3Location)).publishedLambda
         case DeleteAlias(alias: Alias) =>
@@ -34,7 +42,9 @@ class AWSCompiler(val awsLambda: AWSLambda) {
         case ListAliases(lambdaName: LambdaName) =>
           listAliases(ListAliasesRequest(lambdaName)).aliases
         case ListPublishedLambdasWithName(lambdaName: LambdaName) =>
-          listPublishedLambdasWithName(ListPublishedLambdasWithNameRequest(lambdaName)).publishedLambdas
+          listPublishedLambdasWithName(
+            ListPublishedLambdasWithNameRequest(lambdaName)
+          ).publishedLambdas
         case UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) =>
           updateAlias(UpdateAliasRequest(alias, lambdaVersionToAlias)).alias
         case UpdateLambdaCode(lambda: Lambda, s3Location: S3Location) =>
@@ -47,7 +57,7 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           AWSListBuckets(ListBucketsRequest()).buckets
         case CreateBucket(name: BucketName) =>
           AWSCreateBucket(CreateBucketRequest(name)).bucket
-        case PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file:File) =>
+        case PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) =>
           AWSPutFile(PutFileRequest(bucket, keyPrefix, file)).key
       }
     }
