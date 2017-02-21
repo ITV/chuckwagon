@@ -14,11 +14,18 @@ import scala.concurrent.duration._
 import fansi._
 import fansi.Color._
 
+import scala.collection.immutable.Seq
+
 object AWSLambdaPlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin
 
   override def trigger = allRequirements
+
+  // Shouldn't be called on public API.
+  val chuckEnvironments = settingKey[NonEmptyList[Environment]](
+    "The environments through which our lambda will be promoted and tested"
+  )
 
   object autoImport {
     val chuckLambdaRegion =
@@ -60,9 +67,31 @@ object AWSLambdaPlugin extends AutoPlugin {
         )
       )
     }
-    val environments = settingKey[NonEmptyList[LambdaEnv]](
-      "The environments through which our lambda will be promoted and tested"
-    )
+    def chuckDefineEnvironments(
+      firstEnvironmentName: String,
+      subsequentEnvironmentsNames: String*
+    ): Seq[Setting[_]] = {
+      val environments = BlueGreenEnvironments(
+        firstEnvironmentName,
+        subsequentEnvironmentsNames: _*
+      )
+      val environmentsSettings =
+        environments.toList.flatMap(testConfigurationSettingsFor)
+
+      val promotions: List[_root_.sbt.Def.Initialize[Task[Unit]]] =
+        environments.toList.zip(environments.tail).flatMap {
+          case (from: Environment, to: Environment) => {
+            val testTask: _root_.sbt.Def.Initialize[Task[Unit]] =
+              (test in from.configuration).toTask
+            val promoteTask: _root_.sbt.Def.Initialize[Task[Unit]] =
+              chuckPromote
+                .toTask(s" ${from.aliasName.value} ${to.aliasName.value}")
+            List(testTask, promoteTask)
+          }
+        } ::: (test in environments.reverse.head.configuration).toTask :: Nil
+
+      (chuckEnvironments := environments) :: (chuckReleaseSteps := promotions) :: environmentsSettings
+    }
     val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
@@ -75,164 +104,181 @@ object AWSLambdaPlugin extends AutoPlugin {
     )
 
     val chuckPublish =
-      taskKey[ARN]("Upload latest code to Lambda and Publish it")
+      taskKey[Unit]("Upload latest code to Lambda and Publish it")
     val chuckPromote =
-      inputKey[ARN]("Promote a published Lambda by attaching it to an alias")
+      inputKey[Unit]("Promote a published Lambda by attaching it to an alias")
     val chuckCleanUp =
       taskKey[Unit]("Remove all unused Published Lambda Versions and Aliases")
+
+    val chuckReleaseSteps =
+      settingKey[List[_root_.sbt.Def.Initialize[Task[Unit]]]]("")
+    val chuckRelease =
+      taskKey[Unit]("Run the entire Deployment Pipeline")
   }
   import autoImport._
 
-  def testConfigurationFor(lambdaEnv: LambdaEnv): Seq[Setting[_]] = {
-    val testConfig = config(lambdaEnv.aliasName.value) extend (Test)
+  def testConfigurationSettingsFor(lambdaEnv: Environment): Seq[Setting[_]] = {
+    val configuration = lambdaEnv.configuration
 
     Seq(
-      logBuffered in testConfig := false, // http://www.scalatest.org/user_guide/using_scalatest_with_sbt
-      parallelExecution in testConfig := false,
-      publish := publish dependsOn (test in testConfig) dependsOn (test in Test)
-    )
+      logBuffered in configuration := false, // http://www.scalatest.org/user_guide/using_scalatest_with_sbt
+      parallelExecution in configuration := false
+    ) ++ inConfig(configuration)(Defaults.testSettings)
   }
 
-  override lazy val projectSettings = Seq(
-    environments := NonEmptyList[LambdaEnv](
-      BlueLambdaEnv(AliasName("blue-qa")),
-      List[LambdaEnv](
-        GreenLambdaEnv(AliasName("qa")),
-        BlueLambdaEnv(AliasName("blue-prd")),
-        GreenLambdaEnv(AliasName("prd"))
-      )
-    ),
-    chuckSDKFreeCompiler := new AWSCompiler(
-      com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
-    ),
-    chuckCurrentAliases := {
-      val maybeAliases = com.itv.chuckwagon.deploy
-        .listAliases(chuckLambda.value.name)
-        .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-      maybeAliases match {
-        case Some(aliases) => {
-          streams.value.log.info(
-            logItemsMessage(
-              "Current Aliases and associated Lambda Versions",
-              aliases.map(
-                alias => s"${alias.name.value}=${alias.lambdaVersion.value}"
-              ): _*
-            )
-          )
-        }
-        case None =>
-          streams.value.log
-            .info(logItemsMessage("No Lambda defined so no aliases exist"))
-      }
-      maybeAliases
-    },
-    chuckCurrentPublishedLambdas := {
-      val maybePublishedLambdas = com.itv.chuckwagon.deploy
-        .listPublishedLambdasWithName(chuckLambda.value.name)
-        .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-      maybePublishedLambdas match {
-        case Some(publishedLambdas) => {
-          streams.value.log.info(
-            logItemsMessage(
-              "Currently published versions",
-              publishedLambdas.map(_.version.value.toString): _*
-            )
-          )
-        }
-        case None =>
-          streams.value.log.info(
-            logItemsMessage("No Lambda defined so no published versions exist")
-          )
-      }
-
-      maybePublishedLambdas
-    },
-    chuckPublish := {
-      val publishedLambda =
-        com.itv.chuckwagon.deploy
-          .publishLambda(
-            chuckLambda.value,
-            chuckStagingS3Address.value,
-            sbtassembly.AssemblyKeys.assembly.value
-          )
+  override lazy val projectSettings = chuckDefineEnvironments("qa", "prd") ++
+      Seq(
+        chuckSDKFreeCompiler := new AWSCompiler(
+          com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
+        ),
+        chuckCurrentAliases := {
+        val maybeAliases = com.itv.chuckwagon.deploy
+          .listAliases(chuckLambda.value.name)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-      val alias =
-        com.itv.chuckwagon.deploy
-          .aliasPublishedLambda(
-            publishedLambda,
-            environments.value.head.aliasName
-          )
+        maybeAliases match {
+          case Some(aliases) => {
+            streams.value.log.info(
+              logItemsMessage(
+                "Current Aliases and associated Lambda Versions",
+                aliases.map(
+                  alias => s"${alias.name.value}=${alias.lambdaVersion.value}"
+                ): _*
+              )
+            )
+          }
+          case None =>
+            streams.value.log
+              .info(logItemsMessage("No Lambda defined so no aliases exist"))
+        }
+        maybeAliases
+      },
+        chuckCurrentPublishedLambdas := {
+        val maybePublishedLambdas = com.itv.chuckwagon.deploy
+          .listPublishedLambdasWithName(chuckLambda.value.name)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-      streams.value.log.info(
-        logMessage(
-          (Str("Just Published Version '") ++ Green(
-            publishedLambda.version.value.toString
-          ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
-            "' as '"
-          ) ++ Green(alias.arn.value) ++ Str("'")).render
+        maybePublishedLambdas match {
+          case Some(publishedLambdas) => {
+            streams.value.log.info(
+              logItemsMessage(
+                "Currently published versions",
+                publishedLambdas.map(_.version.value.toString): _*
+              )
+            )
+          }
+          case None =>
+            streams.value.log.info(
+              logItemsMessage(
+                "No Lambda defined so no published versions exist"
+              )
+            )
+        }
+
+        maybePublishedLambdas
+      },
+        chuckPublish := {
+        val publishedLambda =
+          com.itv.chuckwagon.deploy
+            .publishLambda(
+              chuckLambda.value,
+              chuckStagingS3Address.value,
+              sbtassembly.AssemblyKeys.assembly.value
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        val alias =
+          com.itv.chuckwagon.deploy
+            .aliasPublishedLambda(
+              publishedLambda,
+              chuckEnvironments.value.head.aliasName
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        streams.value.log.info(
+          logMessage(
+            (Str("Just Published Version '") ++ Green(
+              publishedLambda.version.value.toString
+            ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
+              "' as '"
+            ) ++ Green(alias.arn.value) ++ Str("'")).render
+          )
         )
-      )
-
-      alias.arn
-    },
-    chuckPromote := {
-      val args: Seq[String] = spaceDelimited("<arg>").parsed
-      val promotedToAlias = com.itv.chuckwagon.deploy
-        .promoteLambda(
-          chuckLambda.value.name,
-          AliasName(args(0)),
-          AliasName(args(1))
-        )
-        .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-      streams.value.log.info(
-        logMessage(
-          (Str("Just Promoted Version '") ++ Green(
-            promotedToAlias.lambdaVersion.value.toString
-          ) ++ Str("' from Environment '") ++ Green(args(0)) ++ Str(
-            "' to Environment '"
-          ) ++ Green(args(1)) ++ Str("' as '") ++ Green(
-            promotedToAlias.arn.value
-          ) ++ Str("'")).render
-        )
-      )
-
-      promotedToAlias.arn
-    },
-    chuckCleanUp := {
-
-      val deletedAliases =
-        com.itv.chuckwagon.deploy
-          .deleteRedundantAliases(
+        alias.arn
+      },
+        chuckPromote := {
+        val args = spaceDelimited("<arg>").parsed
+        val promotedToAlias = com.itv.chuckwagon.deploy
+          .promoteLambda(
             chuckLambda.value.name,
-            environments.value.toList.map(_.aliasName)
+            AliasName(args(0)),
+            AliasName(args(1))
           )
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-      streams.value.log.info(
-        logItemsMessage(
-          "Deleted the following redundant aliases",
-          deletedAliases.map(_.value): _*
+        streams.value.log.info(
+          logMessage(
+            (Str("Just Promoted Version '") ++ Green(
+              promotedToAlias.lambdaVersion.value.toString
+            ) ++ Str("' from Environment '") ++ Green(args(0)) ++ Str(
+              "' to Environment '"
+            ) ++ Green(args(1)) ++ Str("' as '") ++ Green(
+              promotedToAlias.arn.value
+            ) ++ Str("'")).render
+          )
         )
-      )
+        ()
+      },
+        chuckCleanUp := {
+        val deletedAliases =
+          com.itv.chuckwagon.deploy
+            .deleteRedundantAliases(
+              chuckLambda.value.name,
+              chuckEnvironments.value.toList.map(_.aliasName)
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-      val deletedLambdaVersions =
-        com.itv.chuckwagon.deploy
-          .deleteRedundantPublishedLambdas(chuckLambda.value.name)
-          .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-      streams.value.log.info(
-        logItemsMessage(
-          "Deleted the following redundant lambda versions",
-          deletedLambdaVersions.map(_.value.toString): _*
+        streams.value.log.info(
+          logItemsMessage(
+            "Deleted the following redundant aliases",
+            deletedAliases.map(_.value): _*
+          )
         )
+
+        val deletedLambdaVersions =
+          com.itv.chuckwagon.deploy
+            .deleteRedundantPublishedLambdas(chuckLambda.value.name)
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        streams.value.log.info(
+          logItemsMessage(
+            "Deleted the following redundant lambda versions",
+            deletedLambdaVersions.map(_.value.toString): _*
+          )
+        )
+        ()
+      },
+        chuckRelease := Def.taskDyn {
+
+        def sequential[B](
+          tasks: Seq[_root_.sbt.Def.Initialize[Task[Unit]]],
+          last: _root_.sbt.Def.Initialize[Task[B]]
+        ): _root_.sbt.Def.Initialize[Task[B]] =
+          tasks.toList match {
+            case Nil => Def.task { last.value }
+            case x :: xs =>
+              Def.taskDyn {
+                val _ = x.value
+                sequential(xs, last)
+              }
+          }
+
+        val x: List[_root_.sbt.Def.Initialize[Task[Unit]]] =
+          chuckReleaseSteps.value
+        val _ = chuckPublish.value
+        sequential(x, x.reverse.head)
+      }.value
       )
-    }
-  )
 
   def logItemsMessage(prefix: String, items: String*): String = {
 

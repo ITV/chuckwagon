@@ -1,18 +1,21 @@
-package com.itv
+package com.itv.sbt
 
 import com.itv.aws.lambda.AliasName
+import sbt._
 
-package object sbt {
+import cats.data.NonEmptyList
 
-  sealed trait LambdaEnv {
-    val aliasName: AliasName
-    val isTestEnv: Boolean
-  }
+case class Environment(name: String) {
+  val configuration = config(name) extend (Test)
+  val aliasName = AliasName(name)
+}
 
-  case class BlueLambdaEnv(aliasName: AliasName) extends LambdaEnv {
-    val isTestEnv = true
-  }
-  case class GreenLambdaEnv(aliasName: AliasName) extends LambdaEnv {
-    val isTestEnv = false
+object BlueGreenEnvironments {
+  def apply(firstName: String,
+            subsequentNames: String*): NonEmptyList[Environment] = {
+
+    NonEmptyList.of(firstName, subsequentNames.toSeq: _*).flatMap { name =>
+      NonEmptyList.of(Environment(s"blue-$name"), Environment(s"$name"))
+    }
   }
 }
