@@ -28,6 +28,9 @@ object AWSLambdaPlugin extends AutoPlugin {
   )
 
   object autoImport {
+    val chuckDefaultEnvironments: NonEmptyList[Environment] =
+      NonEmptyList.of("blue-qa", "qa", "blue-prd", "prd").map(Environment)
+
     val chuckLambdaRegion =
       settingKey[Regions]("AWS region within which to manage Lambda")
     def chuckDefineRegion(region: String): Regions = {
@@ -68,13 +71,8 @@ object AWSLambdaPlugin extends AutoPlugin {
       )
     }
     def chuckDefineEnvironments(
-      firstEnvironmentName: String,
-      subsequentEnvironmentsNames: String*
+      environments: NonEmptyList[Environment]
     ): Seq[Setting[_]] = {
-      val environments = BlueGreenEnvironments(
-        firstEnvironmentName,
-        subsequentEnvironmentsNames: _*
-      )
       val environmentsSettings =
         environments.toList.flatMap(testConfigurationSettingsFor)
 
@@ -126,7 +124,9 @@ object AWSLambdaPlugin extends AutoPlugin {
     ) ++ inConfig(configuration)(Defaults.testSettings)
   }
 
-  override lazy val projectSettings = chuckDefineEnvironments("qa", "prd") ++
+  override lazy val projectSettings = chuckDefineEnvironments(
+      chuckDefaultEnvironments
+    ) ++
       Seq(
         chuckSDKFreeCompiler := new AWSCompiler(
           com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
@@ -204,7 +204,7 @@ object AWSLambdaPlugin extends AutoPlugin {
             ) ++ Green(alias.arn.value) ++ Str("'")).render
           )
         )
-        alias.arn
+        ()
       },
         chuckPromote := {
         val args = spaceDelimited("<arg>").parsed
@@ -276,7 +276,7 @@ object AWSLambdaPlugin extends AutoPlugin {
         val x: List[_root_.sbt.Def.Initialize[Task[Unit]]] =
           chuckReleaseSteps.value
         val _ = chuckPublish.value
-        sequential(x, x.reverse.head)
+        sequential(x ::: chuckCleanUp :: Nil, x.reverse.head)
       }.value
       )
 
