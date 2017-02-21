@@ -19,6 +19,7 @@ lazy val root = (project in file("."))
   )
 
 lazy val `aws-scala-sdk` = project
+  .enablePlugins(CrossPerProjectPlugin)
   .settings(
     commonSettings ++
       Seq(
@@ -34,6 +35,7 @@ lazy val `aws-scala-sdk` = project
   )
 
 lazy val `sbt-chuckwagon` = project
+  .enablePlugins(CrossPerProjectPlugin)
   .settings(
   commonSettings ++
     Seq(
@@ -46,3 +48,22 @@ lazy val `sbt-chuckwagon` = project
     )
   )
   .dependsOn(`aws-scala-sdk`)
+
+
+publishTo := Some("Artifactory Realm" at "https://itvrepos.artifactoryonline.com/itvrepos/cps-libs")
+
+releaseCrossBuild := false
+import ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  releaseStepCommandAndRemaining("+test"),
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  releaseStepCommandAndRemaining("+publish"),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
