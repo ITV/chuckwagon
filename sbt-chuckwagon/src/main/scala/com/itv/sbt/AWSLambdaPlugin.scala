@@ -20,8 +20,6 @@ object AWSLambdaPlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin
 
-  override def trigger = allRequirements
-
   // Shouldn't be called on public API.
   val chuckEnvironments = settingKey[NonEmptyList[Environment]](
     "The environments through which our lambda will be promoted and tested"
@@ -70,26 +68,6 @@ object AWSLambdaPlugin extends AutoPlugin {
         )
       )
     }
-    def chuckDefineEnvironments(
-      environments: NonEmptyList[Environment]
-    ): Seq[Setting[_]] = {
-      val environmentsSettings =
-        environments.toList.flatMap(testConfigurationSettingsFor)
-
-      val promotions: List[_root_.sbt.Def.Initialize[Task[Unit]]] =
-        environments.toList.zip(environments.tail).flatMap {
-          case (from: Environment, to: Environment) => {
-            val testTask: _root_.sbt.Def.Initialize[Task[Unit]] =
-              (test in from.configuration).toTask
-            val promoteTask: _root_.sbt.Def.Initialize[Task[Unit]] =
-              chuckPromote
-                .toTask(s" ${from.aliasName.value} ${to.aliasName.value}")
-            List(testTask, promoteTask)
-          }
-        } ::: (test in environments.reverse.head.configuration).toTask :: Nil
-
-      (chuckEnvironments := environments) :: (chuckReleaseSteps := promotions) :: environmentsSettings
-    }
     val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
@@ -124,10 +102,9 @@ object AWSLambdaPlugin extends AutoPlugin {
     ) ++ inConfig(configuration)(Defaults.testSettings)
   }
 
-  override lazy val projectSettings = chuckDefineEnvironments(
-      chuckDefaultEnvironments
-    ) ++
+  override lazy val projectSettings =
       Seq(
+        chuckEnvironments := chuckDefaultEnvironments,
         chuckSDKFreeCompiler := new AWSCompiler(
           com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
         ),
@@ -257,27 +234,7 @@ object AWSLambdaPlugin extends AutoPlugin {
           )
         )
         ()
-      },
-        chuckRelease := Def.taskDyn {
-
-        def sequential[B](
-          tasks: Seq[_root_.sbt.Def.Initialize[Task[Unit]]],
-          last: _root_.sbt.Def.Initialize[Task[B]]
-        ): _root_.sbt.Def.Initialize[Task[B]] =
-          tasks.toList match {
-            case Nil => Def.task { last.value }
-            case x :: xs =>
-              Def.taskDyn {
-                val _ = x.value
-                sequential(xs, last)
-              }
-          }
-
-        val x: List[_root_.sbt.Def.Initialize[Task[Unit]]] =
-          chuckReleaseSteps.value
-        val _ = chuckPublish.value
-        sequential(x ::: chuckCleanUp :: Nil, x.reverse.head)
-      }.value
+      }
       )
 
   def logItemsMessage(prefix: String, items: String*): String = {

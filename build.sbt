@@ -12,7 +12,8 @@ val awsSdkVersion = "1.11.86"
 
 lazy val root = (project in file("."))
   .settings(
-    Seq(publishArtifact := false)
+    Seq(publishArtifact := false),
+    name := "chuckwagon"
   )
   .aggregate(
     `aws-scala-sdk`,
