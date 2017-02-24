@@ -1,12 +1,11 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{
-  CreateFunctionRequest,
-  FunctionCode
-}
+import com.amazonaws.services.lambda.model.{CreateFunctionRequest, FunctionCode, VpcConfig => AWSVpcConfig}
 import com.itv.aws.s3.S3Location
 import com.itv.aws.{ARN, AWSService}
+
+import scala.collection.JavaConverters._
 
 case class CreateLambdaRequest(lambda: Lambda, s3Location: S3Location)
 case class CreateLambdaResponse(publishedLambda: PublishedLambda)
@@ -31,6 +30,16 @@ class AWSCreateLambda(awsLambda: AWSLambda)
       .withMemorySize(configuration.memorySize.value)
       .withCode(functionCode)
       .withPublish(true)
+
+    // TODO figure out how to set vpcId https://forums.aws.amazon.com/thread.jspa?threadID=250008
+    configuration.vpcConfig.foreach {
+      vpc =>
+        awsCreateFunctionRequest.withVpcConfig(
+          new AWSVpcConfig()
+            .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
+            .withSubnetIds(vpc.subnets.map(_.id).asJava)
+        )
+    }
 
     val awsCreateFunctionResponse =
       awsLambda.createFunction(awsCreateFunctionRequest)

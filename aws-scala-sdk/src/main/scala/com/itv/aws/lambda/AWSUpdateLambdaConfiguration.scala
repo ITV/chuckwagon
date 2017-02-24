@@ -1,8 +1,10 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest
+import com.amazonaws.services.lambda.model.{UpdateFunctionConfigurationRequest, VpcConfig => AWSVpcConfig}
 import com.itv.aws.AWSService
+
+import scala.collection.JavaConverters._
 
 case class UpdateLambdaConfigurationRequest(lambda: Lambda)
 case class UpdateLambdaConfigurationResponse()
@@ -24,6 +26,16 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
         .withHandler(configuration.handler.value)
         .withTimeout(configuration.timeout.toSeconds.toInt)
         .withMemorySize(configuration.memorySize.value)
+
+    // TODO figure out how to set vpcId https://forums.aws.amazon.com/thread.jspa?threadID=250008
+    configuration.vpcConfig.foreach {
+      vpc =>
+        awsUpdateFunctionConfigurationRequest.withVpcConfig(
+          new AWSVpcConfig()
+            .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
+            .withSubnetIds(vpc.subnets.map(_.id).asJava)
+        )
+    }
 
     val _ = awsLambda.updateFunctionConfiguration(
       awsUpdateFunctionConfigurationRequest

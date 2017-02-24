@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
   publishTo := Some("Artifactory Realm" at "https://itvrepos.artifactoryonline.com/itvrepos/cps-libs")
 )
 
-val awsSdkVersion = "1.11.86"
+val awsSdkVersion = "1.11.93"
 
 lazy val root = (project in file("."))
   .settings(
@@ -28,9 +28,11 @@ lazy val `aws-scala-sdk` = project
         scalaVersion := "2.10.6",
         crossScalaVersions := Seq("2.12.1", "2.10.6"),
         libraryDependencies ++= Seq(
-          "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
-          "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
-          "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-iam"        % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-lambda"     % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-s3"         % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-ec2"        % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-events"     % awsSdkVersion,
           "org.typelevel" %% "cats-free" % "0.9.0"
         )
       )

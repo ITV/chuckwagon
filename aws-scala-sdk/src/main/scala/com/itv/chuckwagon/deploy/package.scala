@@ -2,7 +2,7 @@ package com.itv.chuckwagon
 
 import java.io.File
 
-import com.itv.aws.{Role, RoleName}
+import com.itv.aws.{ARN, Role, RoleName}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import cats.free.Free
@@ -12,11 +12,21 @@ import scala.collection.immutable.Seq
 import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
+import com.itv.aws.ec2.{SecurityGroup, Subnet, Filter, VPC}
+import com.itv.aws.events.{RuleName, ScheduleExpression}
 
 package object deploy {
 
   sealed trait DeployLambdaA[A]
 
+  case class FindSecurityGroups(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[SecurityGroup]]
+  case class FindSubnets(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[Subnet]]
+  case class FindVPC(filters: List[Filter]) extends DeployLambdaA[VPC]
+
+  case class PutRule(name: RuleName, scheduleExpression: ScheduleExpression) extends DeployLambdaA[Unit]
+  case class PutTargets(ruleName: RuleName, targetARN: ARN) extends DeployLambdaA[Unit]
+
+  case class AddPermission(lambdaName: LambdaName, action: String, principal: String, sourceARN: ARN) extends DeployLambdaA[Unit]
   case class CreateAlias(name: AliasName,
                          lambdaName: LambdaName,
                          lambdaVersionToAlias: LambdaVersion)
@@ -49,6 +59,28 @@ package object deploy {
 
   type DeployLambda[A] = Free[DeployLambdaA, A]
 
+  def findSecurityGroups(vpc: VPC, filters: List[Filter]): DeployLambda[List[SecurityGroup]] = {
+    liftF[DeployLambdaA, List[SecurityGroup]](
+      FindSecurityGroups(vpc, filters)
+    )
+  }
+  def findSubnets(vpc: VPC, filters: List[Filter]): DeployLambda[List[Subnet]] = {
+    liftF[DeployLambdaA, List[Subnet]](
+      FindSubnets(vpc, filters)
+    )
+  }
+  def findVPC(filters: List[Filter]): DeployLambda[VPC] = {
+    liftF[DeployLambdaA, VPC](
+      FindVPC(filters)
+    )
+  }
+
+
+  def addPermission(lambdaName: LambdaName, action: String, principal: String, sourceARN: ARN): DeployLambda[Unit] = {
+    liftF[DeployLambdaA, Unit](
+      AddPermission(lambdaName, action, principal, sourceARN)
+    )
+  }
   def createAlias(name: AliasName,
                   lambdaName: LambdaName,
                   lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
@@ -95,6 +127,20 @@ package object deploy {
               keyPrefix: S3KeyPrefix,
               file: File): DeployLambda[S3Location] =
     liftF[DeployLambdaA, S3Location](PutFile(bucket, keyPrefix, file))
+
+  def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]):DeployLambda[Option[VpcConfig]] = maybeVpcConfigDeclaration match {
+    case Some(vpcConfigDeclaration) => for {
+      vpc <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
+      subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
+      securityGroups <- findSecurityGroups(
+        vpc,
+        vpcConfigDeclaration.securityGroupsLookupFilters
+      )
+    } yield {
+      Some(VpcConfig(vpc, subnets, securityGroups))
+    }
+    case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
+  }
 
   def publishLambda(lambda: Lambda,
                     s3Address: S3Address,

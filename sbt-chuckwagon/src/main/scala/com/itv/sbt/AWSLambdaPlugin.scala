@@ -3,6 +3,7 @@ package com.itv.sbt
 import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
 import com.itv.aws.ARN
+import com.itv.aws.ec2.Filter
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.chuckwagon.deploy.AWSCompiler
@@ -68,6 +69,27 @@ object AWSLambdaPlugin extends AutoPlugin {
         )
       )
     }
+    val chuckVpnConfigDeclaration = settingKey[Option[VpcConfigDeclaration]](
+      "Optional VPN Configuration Lookup Parameters"
+    )
+    def chuckDefineVpnConfigDeclaration(
+                                         vpcLookupFilters: List[(String, String)],
+                                         subnetsLookupFilters: List[(String, String)],
+                                         securityGroupsLookupFilters: List[(String, String)]
+                                       ): Option[VpcConfigDeclaration] = {
+      Option(VpcConfigDeclaration(
+        vpcLookupFilters =
+          vpcLookupFilters.map(t => Filter(t._1, t._2)),
+        subnetsLookupFilters =
+          subnetsLookupFilters.map(t => Filter(t._1, t._2)),
+        securityGroupsLookupFilters =
+          securityGroupsLookupFilters.map(t => Filter(t._1, t._2))
+      ))
+    }
+    val chuckVpcConfig = taskKey[Option[VpcConfig]](
+      "Lookup desired vpn config for sbt defined VpcConfigDeclaration"
+    )
+
     val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
@@ -105,6 +127,7 @@ object AWSLambdaPlugin extends AutoPlugin {
   override lazy val projectSettings =
       Seq(
         chuckEnvironments := chuckDefaultEnvironments,
+        chuckVpnConfigDeclaration := None,
         chuckSDKFreeCompiler := new AWSCompiler(
           com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
         ),
@@ -154,11 +177,38 @@ object AWSLambdaPlugin extends AutoPlugin {
 
         maybePublishedLambdas
       },
+        chuckVpcConfig := {
+          val maybeVpcConfig =
+            com.itv.chuckwagon.deploy
+              .getVpcConfig(
+                chuckVpnConfigDeclaration.value
+              )
+              .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+          maybeVpcConfig match {
+            case Some(vpcConfig) => {
+              streams.value.log.info(logMessage(
+                (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets.map(s => Green(s.id).render).mkString(Str(", ").render) ++ Str("' security groups: '") ++ vpcConfig.securityGroups.map(sg => Green(sg.id).render).mkString(Str(", ").render) ++ Str("'")).render
+              ))
+            }
+            case None =>
+              streams.value.log.info(logMessage(
+                "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
+              ))
+          }
+          maybeVpcConfig
+        },
         chuckPublish := {
+          val maybeVpcConfig = chuckVpcConfig.value
+          val lambda = maybeVpcConfig match {
+            case Some(vpcConfig) => chuckLambda.value.withVpcConfig(vpcConfig)
+            case None => chuckLambda.value
+          }
+
         val publishedLambda =
           com.itv.chuckwagon.deploy
             .publishLambda(
-              chuckLambda.value,
+              lambda,
               chuckStagingS3Address.value,
               sbtassembly.AssemblyKeys.assembly.value
             )

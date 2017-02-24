@@ -14,6 +14,7 @@ class AWSDeleteAlias(awsLambda: AWSLambda)
   override def apply(
     deleteAliasRequest: DeleteAliasRequest
   ): DeleteAliasResponse = {
+
     import deleteAliasRequest._
 
     val awsDeleteAliasRequest = new AWSDeleteAliasRequest()

@@ -13,5 +13,4 @@ package object iam {
       .withCredentials(provider)
       .build()
 
-  iam.listRoles()
 }
