@@ -9,6 +9,7 @@ lazy val commonSettings = Seq(
 )
 
 val awsSdkVersion = "1.11.93"
+val circeVersion = "0.7.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -33,8 +34,13 @@ lazy val `aws-scala-sdk` = project
           "com.amazonaws"  % "aws-java-sdk-s3"         % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-ec2"        % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-events"     % awsSdkVersion,
-          "org.typelevel" %% "cats-free" % "0.9.0"
-        )
+          "io.circe"                   %% "circe-core"                         % circeVersion,
+          "io.circe"                   %% "circe-generic"                      % circeVersion,
+          "io.circe"                   %% "circe-parser"                       % circeVersion,
+          "org.typelevel" %% "cats-free" % "0.9.0",
+          "org.scala-lang" % "scala-reflect" % scalaVersion.value // for macro paradise, for circe generic parsing
+        ),
+        addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
       )
   )
 

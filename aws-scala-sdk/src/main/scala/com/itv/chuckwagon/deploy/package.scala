@@ -8,12 +8,11 @@ import com.itv.aws.s3._
 import cats.free.Free
 import cats.free.Free._
 
-import scala.collection.immutable.Seq
 import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.itv.aws.ec2.{SecurityGroup, Subnet, Filter, VPC}
-import com.itv.aws.events.{RuleName, ScheduleExpression}
+import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
+import com.itv.aws.events._
 
 package object deploy {
 
@@ -23,10 +22,10 @@ package object deploy {
   case class FindSubnets(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[Subnet]]
   case class FindVPC(filters: List[Filter]) extends DeployLambdaA[VPC]
 
-  case class PutRule(name: RuleName, scheduleExpression: ScheduleExpression) extends DeployLambdaA[Unit]
-  case class PutTargets(ruleName: RuleName, targetARN: ARN) extends DeployLambdaA[Unit]
+  case class PutRule(eventRule: EventRule) extends DeployLambdaA[CreatedEventRule]
+  case class PutTargets(eventRule: EventRule, targetARN: ARN) extends DeployLambdaA[Unit]
 
-  case class AddPermission(lambdaName: LambdaName, action: String, principal: String, sourceARN: ARN) extends DeployLambdaA[Unit]
+  case class AddPermission(alias: Alias, lambdaPermission: LambdaPermission) extends DeployLambdaA[Unit]
   case class CreateAlias(name: AliasName,
                          lambdaName: LambdaName,
                          lambdaVersionToAlias: LambdaVersion)
@@ -36,9 +35,13 @@ package object deploy {
   case class DeleteAlias(alias: Alias) extends DeployLambdaA[AliasName]
   case class ListAliases(lambdaName: LambdaName)
       extends DeployLambdaA[Option[List[Alias]]]
+  case class ListPermissions(alias: Alias)
+    extends DeployLambdaA[Option[List[LambdaPermission]]]
 
   case class ListPublishedLambdasWithName(lambdaName: LambdaName)
       extends DeployLambdaA[Option[List[PublishedLambda]]]
+  case class RemovePermission(alias: Alias, lambdaPermission: LambdaPermission)
+    extends DeployLambdaA[Unit]
   case class CreateLambda(lambda: Lambda, s3Location: S3Location)
       extends DeployLambdaA[PublishedLambda]
   case class UpdateLambdaConfiguration(lambda: Lambda)
@@ -75,10 +78,21 @@ package object deploy {
     )
   }
 
-
-  def addPermission(lambdaName: LambdaName, action: String, principal: String, sourceARN: ARN): DeployLambda[Unit] = {
+  def putRule(eventRule: EventRule): DeployLambda[CreatedEventRule] = {
+    liftF[DeployLambdaA, CreatedEventRule](
+      PutRule(eventRule)
+    )
+  }
+  def putTargets(eventRule: EventRule, targetARN: ARN): DeployLambda[Unit] = {
     liftF[DeployLambdaA, Unit](
-      AddPermission(lambdaName, action, principal, sourceARN)
+      PutTargets(eventRule, targetARN)
+    )
+  }
+
+
+  def addPermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] = {
+    liftF[DeployLambdaA, Unit](
+      AddPermission(alias, lambdaPermission)
     )
   }
   def createAlias(name: AliasName,
@@ -95,12 +109,18 @@ package object deploy {
   def listAliases(lambdaName: LambdaName): DeployLambda[Option[List[Alias]]] =
     liftF[DeployLambdaA, Option[List[Alias]]](ListAliases(lambdaName))
 
+  def listPermissions(alias: Alias): DeployLambda[Option[List[LambdaPermission]]] =
+    liftF[DeployLambdaA, Option[List[LambdaPermission]]](
+      ListPermissions(alias)
+    )
   def listPublishedLambdasWithName(
     lambdaName: LambdaName
   ): DeployLambda[Option[List[PublishedLambda]]] =
     liftF[DeployLambdaA, Option[List[PublishedLambda]]](
       ListPublishedLambdasWithName(lambdaName)
     )
+  def removePermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] =
+    liftF[DeployLambdaA, Unit](RemovePermission(alias, lambdaPermission))
   def createLambda(lambda: Lambda,
                    s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](CreateLambda(lambda, s3Location))
@@ -233,4 +253,37 @@ package object deploy {
         .map(deleteLambdaVersion)
         .sequenceU
     } yield deletedLambdaVersions
+
+  def putLambdaPermission(alias: Alias, sourcePermissionName: String, sourceARN: ARN): DeployLambda[Unit] = {
+    val statementId = PermissionStatementId(s"${alias.derivedId}-$sourcePermissionName-permission")
+    for {
+      existingPermissions <- listPermissions(alias)
+      maybeToDelete = existingPermissions.getOrElse(Nil).find(_.statementId == statementId)
+      _ <- maybeToDelete match {
+        case Some(lambdaPermission) => removePermission(alias, lambdaPermission)
+        case None =>  pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
+      }
+      _ <- addPermission(
+        alias,
+        LambdaPermission(
+          statementId = statementId,
+          sourceARN = sourceARN,
+          action = PermissionAction("lambda:InvokeFunction"),
+          principalService = PermissionPrincipialService("events.amazonaws.com"),
+          targetLambdaARN = alias.arn
+        ))
+    } yield ()
+  }
+
+  private val LAMBDA_SCHEDULED_TRIGGER_NAME = "scheduled-trigger"
+  def setLambdaTrigger(alias: Alias, scheduleExpression: ScheduleExpression): DeployLambda[Unit] =
+    for {
+      createdEventRule <- putRule(EventRule(
+        name = RuleName(s"${alias.derivedId}-$LAMBDA_SCHEDULED_TRIGGER_NAME"),
+        scheduleExpression = scheduleExpression,
+        description = s"Periodic Trigger for Lambda '${alias.lambdaName.value}' in environment '${alias.name.value}'"
+      ))
+      _ <- putTargets(createdEventRule.eventRule, alias.arn)
+      _ <- putLambdaPermission(alias, LAMBDA_SCHEDULED_TRIGGER_NAME, createdEventRule.arn)
+    } yield ()
 }

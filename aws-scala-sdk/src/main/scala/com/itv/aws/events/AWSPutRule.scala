@@ -1,19 +1,24 @@
 package com.itv.aws.events
 
-import com.itv.aws.AWSService
+import com.itv.aws.{ARN, AWSService}
 import com.amazonaws.services.cloudwatchevents.model.{PutRuleRequest => AWSPutRuleRequest}
 
 
-case class PutRuleRequest(name: RuleName, scheduleExpression: ScheduleExpression)
-case class PutRuleResponse()
+case class PutRuleRequest(eventRule: EventRule)
+case class PutRuleResponse(createdEventRule: CreatedEventRule)
 
 object AWSPutRule extends AWSService[PutRuleRequest, PutRuleResponse] {
   override def apply(putRuleRequest: PutRuleRequest): PutRuleResponse = {
     import putRuleRequest._
 
-    val awsPutRuleRequest = new AWSPutRuleRequest().withName(name.value).withScheduleExpression(scheduleExpression.value)
+    val awsPutRuleRequest = new AWSPutRuleRequest()
+      .withName(eventRule.name.value)
+      .withScheduleExpression(eventRule.scheduleExpression.value)
+      .withDescription(eventRule.description)
 
-    val _ = events.putRule(awsPutRuleRequest)
-    PutRuleResponse()
+    val ruleResponse = events.putRule(awsPutRuleRequest)
+    PutRuleResponse(
+      CreatedEventRule(eventRule, ARN(ruleResponse.getRuleArn))
+    )
   }
 }

@@ -5,7 +5,9 @@ import java.io.File
 import cats.arrow.FunctionK
 import cats.{Id, ~>}
 import com.amazonaws.services.lambda.AWSLambda
+import com.itv.aws.ARN
 import com.itv.aws.ec2._
+import com.itv.aws.events._
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 
@@ -17,9 +19,11 @@ class AWSCompiler(val awsLambda: AWSLambda) {
   val deleteAlias = new AWSDeleteAlias(awsLambda)
   val deleteLambdaVersion = new AWSDeleteLambdaVersion(awsLambda)
   val listAliases = new AWSListAliases(awsLambda)
+  val listPermissions = new AWSListPermissions(awsLambda)
   val listPublishedLambdasWithName = new AWSListPublishedLambdasWithName(
     awsLambda
   )
+  val removePermission = new AWSRemovePermission(awsLambda)
   val updateAlias = new AWSUpdateAlias(awsLambda)
   val updateLambdaCode = new AWSUpdateLambdaCode(awsLambda)
   val updateLambdaConfiguration = new AWSUpdateLambdaConfiguration(awsLambda)
@@ -32,8 +36,13 @@ class AWSCompiler(val awsLambda: AWSLambda) {
         case FindSubnets(vpc, filters) =>
           AWSFindSubnets(FindSubnetsRequest(vpc, filters)).subnets
         case FindVPC(filters) => AWSFindVPC(FindVPCRequest(filters)).vpc
-        case AddPermission(lambdaName, action, principal, sourceARN) => {
-          addPermission(AddPermissionRequest(lambdaName, action, principal, sourceARN))
+        case PutRule(eventRule) => AWSPutRule(PutRuleRequest(eventRule)).createdEventRule
+        case PutTargets(eventRule: EventRule, targetARN: ARN) => {
+          AWSPutTargets(PutTargetsRequest(eventRule, targetARN))
+          ()
+        }
+        case AddPermission(alias, lambdaPermission) => {
+          addPermission(AddPermissionRequest(alias, lambdaPermission))
           ()
         }
         case CreateAlias(
@@ -52,10 +61,16 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           deleteLambdaVersion(DeleteLambdaVersionRequest(publishedLambda)).deletedVersion
         case ListAliases(lambdaName: LambdaName) =>
           listAliases(ListAliasesRequest(lambdaName)).aliases
+        case ListPermissions(alias) =>
+          listPermissions(ListPermissionsRequest(alias)).permissions
         case ListPublishedLambdasWithName(lambdaName: LambdaName) =>
           listPublishedLambdasWithName(
             ListPublishedLambdasWithNameRequest(lambdaName)
           ).publishedLambdas
+        case RemovePermission(alias, lambdaPermission) => {
+          removePermission(RemovePermissionRequest(alias, lambdaPermission))
+          ()
+        }
         case UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) =>
           updateAlias(UpdateAliasRequest(alias, lambdaVersionToAlias)).alias
         case UpdateLambdaCode(lambda: Lambda, s3Location: S3Location) =>

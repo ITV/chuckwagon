@@ -4,6 +4,7 @@ import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
 import com.itv.aws.ARN
 import com.itv.aws.ec2.Filter
+import com.itv.aws.events.ScheduleExpression
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.chuckwagon.deploy.AWSCompiler
@@ -14,6 +15,8 @@ import sbt.complete.DefaultParsers._
 import scala.concurrent.duration._
 import fansi._
 import fansi.Color._
+import complete.DefaultParsers._
+import sbt.complete._
 
 import scala.collection.immutable.Seq
 
@@ -112,6 +115,8 @@ object AWSLambdaPlugin extends AutoPlugin {
       settingKey[List[_root_.sbt.Def.Initialize[Task[Unit]]]]("")
     val chuckRelease =
       taskKey[Unit]("Run the entire Deployment Pipeline")
+    val chuckSetLambdaTrigger =
+      inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
   }
   import autoImport._
 
@@ -123,6 +128,13 @@ object AWSLambdaPlugin extends AutoPlugin {
       parallelExecution in configuration := false
     ) ++ inConfig(configuration)(Defaults.testSettings)
   }
+
+  val chuckSetLambdaTriggerArgsParser =
+    Def.setting {
+      val environments: Seq[String] = chuckEnvironments.value.map(_.name).toList
+      val x: Parser[String] = token(NotQuoted.examples(FixedSetExamples(environments)))
+      (token(' ') ~> x) ~ (token(' ') ~> token(StringBasic))
+    }
 
   override lazy val projectSettings =
       Seq(
@@ -205,32 +217,33 @@ object AWSLambdaPlugin extends AutoPlugin {
             case None => chuckLambda.value
           }
 
-        val publishedLambda =
-          com.itv.chuckwagon.deploy
-            .publishLambda(
-              lambda,
-              chuckStagingS3Address.value,
-              sbtassembly.AssemblyKeys.assembly.value
-            )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+          val publishedLambda =
+            com.itv.chuckwagon.deploy
+              .publishLambda(
+                lambda,
+                chuckStagingS3Address.value,
+                sbtassembly.AssemblyKeys.assembly.value
+              )
+              .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-        val alias =
-          com.itv.chuckwagon.deploy
-            .aliasPublishedLambda(
-              publishedLambda,
-              chuckEnvironments.value.head.aliasName
-            )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+          val alias =
+            com.itv.chuckwagon.deploy
+              .aliasPublishedLambda(
+                publishedLambda,
+                chuckEnvironments.value.head.aliasName
+              )
+              .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-        streams.value.log.info(
-          logMessage(
-            (Str("Just Published Version '") ++ Green(
-              publishedLambda.version.value.toString
-            ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
-              "' as '"
-            ) ++ Green(alias.arn.value) ++ Str("'")).render
+          streams.value.log.info(
+            logMessage(
+              (Str("Just Published Version '") ++ Green(
+                publishedLambda.version.value.toString
+              ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
+                "' as '"
+              ) ++ Green(alias.arn.value) ++ Str("'")).render
+            )
           )
-        )
+
         ()
       },
         chuckPromote := {
@@ -256,6 +269,31 @@ object AWSLambdaPlugin extends AutoPlugin {
         )
         ()
       },
+        chuckSetLambdaTrigger := {
+          val (aliasString, scheduleExpressionString) =
+            chuckSetLambdaTriggerArgsParser.parsed
+
+          val maybeAliases = com.itv.chuckwagon.deploy
+            .listAliases(chuckLambda.value.name)
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+          maybeAliases.getOrElse(Nil).find(alias => alias.name.value == aliasString) match {
+            case Some(alias) => {
+              val _ = com.itv.chuckwagon.deploy
+                .setLambdaTrigger(alias, ScheduleExpression(scheduleExpressionString))
+                .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+              streams.value.log.info(
+                logMessage(
+                  (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str("' with Expression '") ++ Green(scheduleExpressionString) ++ Str("'")).render
+                )
+              )
+            }
+            case None =>
+              throw new Exception(s"Cannot set Lambda Trigger on '${chuckLambda.value.name.value}' because '${aliasString}' does not exist yet.")
+          }
+          ()
+        },
         chuckCleanUp := {
         val deletedAliases =
           com.itv.chuckwagon.deploy

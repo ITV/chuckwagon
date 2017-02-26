@@ -13,5 +13,11 @@ package object events {
 
 package events {
   case class RuleName(value: String) extends AnyVal
+
   case class ScheduleExpression(value: String) extends AnyVal
+
+  case class EventRule(name: RuleName,
+                       scheduleExpression: ScheduleExpression,
+                       description: String)
+  case class CreatedEventRule(eventRule: EventRule, arn:ARN)
 }
