@@ -33,7 +33,6 @@ class AWSCreateLambda(awsLambda: AWSLambda)
       .withCode(functionCode)
       .withPublish(true)
 
-    // TODO figure out how to set vpcId https://forums.aws.amazon.com/thread.jspa?threadID=250008
     vpcConfig.foreach {
       vpc =>
         awsCreateFunctionRequest.withVpcConfig(

@@ -31,12 +31,7 @@ package lambda {
                                memorySize: MemorySize,
                                vpcConfig: Option[VpcConfig] = None)
 
-  case class Lambda(declaration: LambdaDeclaration, roleARN: ARN) {
-//    def withVpcConfig(vpcConfig: VpcConfig): Lambda = {
-//      val updatedConfiguration = configuration.copy(vpcConfig = Option(vpcConfig))
-//      this.copy(configuration = updatedConfiguration)
-//    }
-  }
+  case class Lambda(declaration: LambdaDeclaration, roleARN: ARN)
 
   case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)
 
