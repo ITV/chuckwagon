@@ -115,15 +115,6 @@ object AWSLambdaPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  def testConfigurationSettingsFor(lambdaEnv: Environment): Seq[Setting[_]] = {
-    val configuration = lambdaEnv.configuration
-
-    Seq(
-      logBuffered in configuration := false, // http://www.scalatest.org/user_guide/using_scalatest_with_sbt
-      parallelExecution in configuration := false
-    ) ++ inConfig(configuration)(Defaults.testSettings)
-  }
-
   val chuckSetLambdaTriggerArgsParser =
     Def.setting {
       val environments: Seq[String] = chuckEnvironments.value.map(_.name).toList
