@@ -24,14 +24,13 @@ object AWSLambdaPlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin
 
-  // Shouldn't be called on public API.
-  val chuckEnvironments = settingKey[NonEmptyList[Environment]](
-    "The environments through which our lambda will be promoted and tested"
-  )
-
   object autoImport {
-    val chuckDefaultEnvironments: NonEmptyList[Environment] =
-      NonEmptyList.of("blue-qa", "qa", "blue-prd", "prd").map(Environment)
+    val chuckEnvironments = settingKey[NonEmptyList[Environment]](
+      "The environments through which our lambda will be promoted and tested"
+    )
+    def chuckDefineEnvironments(environments: String*):NonEmptyList[Environment] = {
+      NonEmptyList.of[String](environments.head, environments.tail :_*).map(Environment)
+    }
 
     val chuckLambdaRegion =
       settingKey[Regions]("AWS region within which to manage Lambda")
@@ -134,7 +133,7 @@ object AWSLambdaPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
       Seq(
-        chuckEnvironments := chuckDefaultEnvironments,
+        chuckEnvironments := chuckDefineEnvironments("blue-qa", "qa", "blue-prd", "prd"),
         chuckVpnConfigDeclaration := None,
         chuckSDKFreeCompiler := new AWSCompiler(
           com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
