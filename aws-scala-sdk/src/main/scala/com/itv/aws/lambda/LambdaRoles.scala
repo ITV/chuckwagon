@@ -26,6 +26,7 @@ object LambdaRoles {
     )
 
   val POLICY_DOCUMENT =
-    RolePolicyDocument("""{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"ec2:CreateNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:DescribeNetworkInterfaces","Resource":"*"},{"Effect":"Allow","Action":"ec2:DeleteNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:cloudwatch","Resource":"*"}]}""")
+    RolePolicyDocument("""{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"ec2:CreateNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:DescribeNetworkInterfaces","Resource":"*"},{"Effect":"Allow","Action":"ec2:DeleteNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:logs","Resource":"*"}]}""")
 
+  // lots of lessons to adopt here, http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-identity-based-access-control-cwl.html
 }
