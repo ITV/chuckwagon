@@ -14,3 +14,12 @@ package object iam {
       .build()
 
 }
+
+package iam {
+
+  case class AssumeRolePolicyDocument(value: String) extends AnyVal
+  case class RolePolicyDocument(value: String) extends AnyVal
+  case class RolePolicyName(value: String) extends AnyVal
+  case class RolePolicy(name: RolePolicyName, role: Role, policyDocument: RolePolicyDocument)
+  case class RoleDeclaration(name: RoleName, assumeRolePolicyDocument: AssumeRolePolicyDocument)
+}

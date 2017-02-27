@@ -12,10 +12,12 @@ case class CreateLambdaResponse(publishedLambda: PublishedLambda)
 
 class AWSCreateLambda(awsLambda: AWSLambda)
     extends AWSService[CreateLambdaRequest, CreateLambdaResponse] {
+
   override def apply(
     createLambdaRequest: CreateLambdaRequest
   ): CreateLambdaResponse = {
     import createLambdaRequest.lambda._
+    import declaration._
 
     val functionCode = new FunctionCode()
       .withS3Bucket(createLambdaRequest.s3Location.bucket.name.value)
@@ -23,16 +25,16 @@ class AWSCreateLambda(awsLambda: AWSLambda)
 
     val awsCreateFunctionRequest = new CreateFunctionRequest()
       .withFunctionName(name.value)
-      .withHandler(configuration.handler.value)
-      .withRole(configuration.roleARN.value)
+      .withHandler(handler.value)
+      .withRole(roleARN.value)
       .withRuntime(com.amazonaws.services.lambda.model.Runtime.Java8)
-      .withTimeout(configuration.timeout.toSeconds.toInt)
-      .withMemorySize(configuration.memorySize.value)
+      .withTimeout(timeout.toSeconds.toInt)
+      .withMemorySize(memorySize.value)
       .withCode(functionCode)
       .withPublish(true)
 
     // TODO figure out how to set vpcId https://forums.aws.amazon.com/thread.jspa?threadID=250008
-    configuration.vpcConfig.foreach {
+    vpcConfig.foreach {
       vpc =>
         awsCreateFunctionRequest.withVpcConfig(
           new AWSVpcConfig()

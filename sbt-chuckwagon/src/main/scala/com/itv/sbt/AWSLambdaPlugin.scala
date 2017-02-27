@@ -45,12 +45,11 @@ object AWSLambdaPlugin extends AutoPlugin {
                              keyPrefix: String): S3Address = {
       S3Address(BucketName(bucketName), S3KeyPrefix(keyPrefix))
     }
-    val chuckLambda = settingKey[Lambda]("Lambda definition to be managed")
-    def chuckDefineLambda(name: String,
-                          roleARN: String,
-                          handler: String,
-                          timeoutInSeconds: Int,
-                          memorySizeInMB: Int): Lambda = {
+    val chuckLambdaDeclaration = settingKey[LambdaDeclaration]("Lambda declaration definition to be managed")
+    def chuckDefineLambdaDeclaration(name: String,
+                                     handler: String,
+                                     timeoutInSeconds: Int,
+                                     memorySizeInMB: Int): LambdaDeclaration = {
 
       require(
         timeoutInSeconds > 0 && timeoutInSeconds <= 300,
@@ -62,14 +61,11 @@ object AWSLambdaPlugin extends AutoPlugin {
         "Lambda memory must be between 128 and 1536 MBs"
       )
 
-      Lambda(
+      LambdaDeclaration(
         name = LambdaName(name),
-        LambdaConfiguration(
-          roleARN = ARN(roleARN),
-          handler = LambdaHandler(handler),
-          timeout = timeoutInSeconds.seconds,
-          memorySize = MemorySize(memorySizeInMB)
-        )
+        handler = LambdaHandler(handler),
+        timeout = timeoutInSeconds.seconds,
+        memorySize = MemorySize(memorySizeInMB)
       )
     }
     val chuckVpnConfigDeclaration = settingKey[Option[VpcConfigDeclaration]](
@@ -145,7 +141,7 @@ object AWSLambdaPlugin extends AutoPlugin {
         ),
         chuckCurrentAliases := {
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(chuckLambda.value.name)
+          .listAliases(chuckLambdaDeclaration.value.name)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases match {
@@ -167,7 +163,7 @@ object AWSLambdaPlugin extends AutoPlugin {
       },
         chuckCurrentPublishedLambdas := {
         val maybePublishedLambdas = com.itv.chuckwagon.deploy
-          .listPublishedLambdasWithName(chuckLambda.value.name)
+          .listPublishedLambdasWithName(chuckLambdaDeclaration.value.name)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybePublishedLambdas match {
@@ -212,15 +208,15 @@ object AWSLambdaPlugin extends AutoPlugin {
         },
         chuckPublish := {
           val maybeVpcConfig = chuckVpcConfig.value
-          val lambda = maybeVpcConfig match {
-            case Some(vpcConfig) => chuckLambda.value.withVpcConfig(vpcConfig)
-            case None => chuckLambda.value
+          val lambdaDeclaration = maybeVpcConfig match {
+            case Some(vpcConfig) => chuckLambdaDeclaration.value.copy(vpcConfig = Option(vpcConfig))
+            case None => chuckLambdaDeclaration.value
           }
 
           val publishedLambda =
             com.itv.chuckwagon.deploy
               .publishLambda(
-                lambda,
+                lambdaDeclaration,
                 chuckStagingS3Address.value,
                 sbtassembly.AssemblyKeys.assembly.value
               )
@@ -250,7 +246,7 @@ object AWSLambdaPlugin extends AutoPlugin {
         val args = spaceDelimited("<arg>").parsed
         val promotedToAlias = com.itv.chuckwagon.deploy
           .promoteLambda(
-            chuckLambda.value.name,
+            chuckLambdaDeclaration.value.name,
             AliasName(args(0)),
             AliasName(args(1))
           )
@@ -274,7 +270,7 @@ object AWSLambdaPlugin extends AutoPlugin {
             chuckSetLambdaTriggerArgsParser.parsed
 
           val maybeAliases = com.itv.chuckwagon.deploy
-            .listAliases(chuckLambda.value.name)
+            .listAliases(chuckLambdaDeclaration.value.name)
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
           maybeAliases.getOrElse(Nil).find(alias => alias.name.value == aliasString) match {
@@ -290,7 +286,7 @@ object AWSLambdaPlugin extends AutoPlugin {
               )
             }
             case None =>
-              throw new Exception(s"Cannot set Lambda Trigger on '${chuckLambda.value.name.value}' because '${aliasString}' does not exist yet.")
+              throw new Exception(s"Cannot set Lambda Trigger on '${chuckLambdaDeclaration.value.name.value}' because '${aliasString}' does not exist yet.")
           }
           ()
         },
@@ -298,7 +294,7 @@ object AWSLambdaPlugin extends AutoPlugin {
         val deletedAliases =
           com.itv.chuckwagon.deploy
             .deleteRedundantAliases(
-              chuckLambda.value.name,
+              chuckLambdaDeclaration.value.name,
               chuckEnvironments.value.toList.map(_.aliasName)
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -312,7 +308,7 @@ object AWSLambdaPlugin extends AutoPlugin {
 
         val deletedLambdaVersions =
           com.itv.chuckwagon.deploy
-            .deleteRedundantPublishedLambdas(chuckLambda.value.name)
+            .deleteRedundantPublishedLambdas(chuckLambdaDeclaration.value.name)
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         streams.value.log.info(

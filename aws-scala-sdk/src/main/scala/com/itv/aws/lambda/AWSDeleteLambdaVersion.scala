@@ -15,7 +15,7 @@ class AWSDeleteLambdaVersion(awsLambda: AWSLambda)
     import deleteLambdaRequest.publishedLambda._
 
     val awsDeleteFunctionRequest = new DeleteFunctionRequest()
-      .withFunctionName(lambda.name.value)
+      .withFunctionName(lambda.declaration.name.value)
       .withQualifier(version.value.toString)
 
     val _ = awsLambda.deleteFunction(awsDeleteFunctionRequest)

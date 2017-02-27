@@ -8,6 +8,7 @@ import com.amazonaws.services.lambda.AWSLambda
 import com.itv.aws.ARN
 import com.itv.aws.ec2._
 import com.itv.aws.events._
+import com.itv.aws.iam.{AWSPutRolePolicy, _}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 
@@ -85,6 +86,13 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           AWSCreateBucket(CreateBucketRequest(name)).bucket
         case PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) =>
           AWSPutFile(PutFileRequest(bucket, keyPrefix, file)).key
+        case CreateRole(roleDeclaration) =>
+          AWSCreateRole(CreateRoleRequest(roleDeclaration)).role
+        case PutRolePolicy(rolePolicy) => {
+          AWSPutRolePolicy(PutRolePolicyRequest(rolePolicy)).role
+        }
+        case ListRoles() =>
+          AWSListRoles(ListRolesRequest()).roles
       }
     }
   }

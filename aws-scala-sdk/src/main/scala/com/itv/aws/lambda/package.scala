@@ -25,17 +25,17 @@ package lambda {
     val derivedId = s"${lambdaName.value}-${name.value}"
   }
 
-  case class LambdaConfiguration(roleARN: ARN,
-                                 handler: LambdaHandler,
-                                 timeout: FiniteDuration,
-                                 memorySize: MemorySize,
-                                 vpcConfig: Option[VpcConfig] = None)
+  case class LambdaDeclaration(name: LambdaName,
+                               handler: LambdaHandler,
+                               timeout: FiniteDuration,
+                               memorySize: MemorySize,
+                               vpcConfig: Option[VpcConfig] = None)
 
-  case class Lambda(name: LambdaName, configuration: LambdaConfiguration) {
-    def withVpcConfig(vpcConfig: VpcConfig): Lambda = {
-      val updatedConfiguration = configuration.copy(vpcConfig = Option(vpcConfig))
-      this.copy(configuration = updatedConfiguration)
-    }
+  case class Lambda(declaration: LambdaDeclaration, roleARN: ARN) {
+//    def withVpcConfig(vpcConfig: VpcConfig): Lambda = {
+//      val updatedConfiguration = configuration.copy(vpcConfig = Option(vpcConfig))
+//      this.copy(configuration = updatedConfiguration)
+//    }
   }
 
   case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)

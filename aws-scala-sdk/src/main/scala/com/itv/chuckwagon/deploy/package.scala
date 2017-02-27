@@ -7,12 +7,14 @@ import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import cats.free.Free
 import cats.free.Free._
-
 import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
 import com.itv.aws.events._
+import com.itv.aws.iam.{PutRolePolicyRequest, RoleDeclaration, RolePolicy}
+
+import scala.annotation.tailrec
 
 package object deploy {
 
@@ -51,7 +53,9 @@ package object deploy {
   case class DeleteLambdaVersion(publishedLambda: PublishedLambda)
       extends DeployLambdaA[LambdaVersion]
 
-  case class CreateRole(name: RoleName, policyDocument: String)
+  case class CreateRole(roleDeclaration: RoleDeclaration)
+      extends DeployLambdaA[Role]
+  case class PutRolePolicy(rolePolicy: RolePolicy)
       extends DeployLambdaA[Role]
   case class ListRoles() extends DeployLambdaA[List[Role]]
 
@@ -134,8 +138,10 @@ package object deploy {
   ): DeployLambda[LambdaVersion] =
     liftF[DeployLambdaA, LambdaVersion](DeleteLambdaVersion(publishedLambda))
 
-  def createRole(name: RoleName, policyDocument: String): DeployLambda[Role] =
-    liftF[DeployLambdaA, Role](CreateRole(name, policyDocument))
+  def createRole(roleDeclaration: RoleDeclaration): DeployLambda[Role] =
+    liftF[DeployLambdaA, Role](CreateRole(roleDeclaration))
+  def putRolePolicy(rolePolicy: RolePolicy): DeployLambda[Role] =
+    liftF[DeployLambdaA, Role](PutRolePolicy(rolePolicy))
   def listRoles(): DeployLambda[List[Role]] =
     liftF[DeployLambdaA, List[Role]](ListRoles())
 
@@ -147,6 +153,20 @@ package object deploy {
               keyPrefix: S3KeyPrefix,
               file: File): DeployLambda[S3Location] =
     liftF[DeployLambdaA, S3Location](PutFile(bucket, keyPrefix, file))
+
+
+  def getRole(lambdaName: LambdaName):DeployLambda[Role] =
+    for {
+      roles <- listRoles()
+      maybeRole = roles.find(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName) )
+      roleWithoutPolicyDoc <- maybeRole match {
+        case Some(role) =>
+          pure[DeployLambdaA, Role](role)
+        case None =>
+          createRole(LambdaRoles.roleDeclarationFor(lambdaName))
+      }
+      role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
+    } yield role
 
   def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]):DeployLambda[Option[VpcConfig]] = maybeVpcConfigDeclaration match {
     case Some(vpcConfigDeclaration) => for {
@@ -162,10 +182,12 @@ package object deploy {
     case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
   }
 
-  def publishLambda(lambda: Lambda,
+  def publishLambda(lambdaDeclaration: LambdaDeclaration,
                     s3Address: S3Address,
                     file: File): DeployLambda[PublishedLambda] = {
     for {
+      role <- getRole(lambdaDeclaration.name)
+      lambda = Lambda(declaration = lambdaDeclaration, roleARN = role.arn)
       buckets <- listBuckets()
       uploadBucketOrEmpty = buckets.find(
         b => b.name.value == s3Address.bucketName.value
@@ -175,7 +197,7 @@ package object deploy {
         case None => createBucket(s3Address.bucketName)
       }
       s3Location <- putFile(uploadBucket, s3Address.keyPrefix, file)
-      alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.name)
+      alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.declaration.name)
       publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
         createLambda(lambda, s3Location)
       } else
@@ -189,7 +211,7 @@ package object deploy {
                            aliasName: AliasName): DeployLambda[Alias] =
     for {
       alias <- aliasLambdaVersion(
-        publishedLambda.lambda.name,
+        publishedLambda.lambda.declaration.name,
         publishedLambda.version,
         aliasName
       )

@@ -16,7 +16,13 @@ object AWSListRoles extends AWSService[ListRolesRequest, ListRolesResponse] {
       .getRoles
       .asScala
       .map { r =>
-        Role(name = RoleName(r.getRoleName), arn = ARN(r.getArn))
+        Role(
+          roleDeclaration = RoleDeclaration(
+            name = RoleName(r.getRoleName),
+            assumeRolePolicyDocument = AssumeRolePolicyDocument(r.getAssumeRolePolicyDocument)
+          ),
+          arn = ARN(r.getArn)
+        )
       }
       .toList
 

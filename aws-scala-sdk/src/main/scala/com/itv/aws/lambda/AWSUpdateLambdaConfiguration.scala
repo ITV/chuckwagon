@@ -18,17 +18,18 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
     updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest
   ): UpdateLambdaConfigurationResponse = {
     import updateLambdaConfigurationRequest.lambda._
+    import declaration._
 
     val awsUpdateFunctionConfigurationRequest =
       new UpdateFunctionConfigurationRequest()
         .withFunctionName(name.value)
-        .withRole(configuration.roleARN.value)
-        .withHandler(configuration.handler.value)
-        .withTimeout(configuration.timeout.toSeconds.toInt)
-        .withMemorySize(configuration.memorySize.value)
+        .withRole(roleARN.value)
+        .withHandler(handler.value)
+        .withTimeout(timeout.toSeconds.toInt)
+        .withMemorySize(memorySize.value)
 
     // TODO figure out how to set vpcId https://forums.aws.amazon.com/thread.jspa?threadID=250008
-    configuration.vpcConfig.foreach {
+    vpcConfig.foreach {
       vpc =>
         awsUpdateFunctionConfigurationRequest.withVpcConfig(
           new AWSVpcConfig()
