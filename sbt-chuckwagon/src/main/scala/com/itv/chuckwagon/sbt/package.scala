@@ -1,4 +1,4 @@
-package com.itv.sbt
+package com.itv.chuckwagon.sbt
 
 import com.itv.aws.lambda.AliasName
 
