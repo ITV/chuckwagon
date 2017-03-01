@@ -2,6 +2,7 @@ package com.itv.chuckwagon.sbt
 
 import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
+import com.itv.aws.Role
 import com.itv.aws.ec2.Filter
 import com.itv.aws.lambda._
 import com.itv.aws.s3.{BucketName, S3Address, S3KeyPrefix}
@@ -31,6 +32,9 @@ object Keys {
       Regions.fromName(region)
     }
 
+    val chuckLambdaName = settingKey[String]("The name of the Lambda.")
+    val chuckRoleARN = settingKey[Option[String]]("The (optional) ARN that the Lambda should run with")
+
     val chuckVpnConfigDeclaration = settingKey[Option[VpcConfigDeclaration]](
       "Optional VPN Configuration Lookup Parameters"
     )
@@ -41,13 +45,20 @@ object Keys {
                                        ): Option[VpcConfigDeclaration] = {
       Option(VpcConfigDeclaration(
         vpcLookupFilters =
-          vpcLookupFilters.map(t => Filter(t._1, t._2)),
+          toFilters(vpcLookupFilters),
         subnetsLookupFilters =
-          subnetsLookupFilters.map(t => Filter(t._1, t._2)),
+          toFilters(subnetsLookupFilters),
         securityGroupsLookupFilters =
-          securityGroupsLookupFilters.map(t => Filter(t._1, t._2))
+          toFilters(securityGroupsLookupFilters)
       ))
     }
+    private def toFilters(stringFilters: List[(String, String)]):List[Filter] = {
+      stringFilters.map(t => Filter(t._1, t._2))
+    }
+
+    val chuckDeploymentConfiguration = taskKey[LambdaDeploymentConfiguration](
+      "The environmental situation into which to deploy the Lambda"
+    )
 
     val chuckCurrentAliases = taskKey[Option[List[Alias]]](
       "The Aliases currently configured in AWS (if Lambda exists)"
@@ -58,6 +69,9 @@ object Keys {
 
     val chuckVpcConfig = taskKey[Option[VpcConfig]](
       "Lookup desired vpn config for sbt defined VpcConfigDeclaration"
+    )
+    val chuckRole = taskKey[Role](
+      "Either check that the defined chuckRoleARN is valid or ensure that a suitable role is created"
     )
 
 
@@ -83,29 +97,13 @@ object Keys {
                              keyPrefix: String): S3Address = {
       S3Address(BucketName(bucketName), S3KeyPrefix(keyPrefix))
     }
-    val chuckLambdaDeclaration = settingKey[LambdaDeclaration]("Lambda declaration definition to be managed")
-    def chuckDefineLambdaDeclaration(name: String,
-                                     handler: String,
-                                     timeoutInSeconds: Int,
-                                     memorySizeInMB: Int): LambdaDeclaration = {
+    val chuckHandler = settingKey[String]("The Handler Class/Method to be executed by the Lambda")
+    val chuckTimeoutInSeconds = settingKey[Int]("The Handler Class/Method to be executed by the Lambda")
+    val chuckMemorySizeInMB = settingKey[Int]("The amount of memory with which to provision the Lambda")
 
-      require(
-        timeoutInSeconds > 0 && timeoutInSeconds <= 300,
-        "Lambda timeout must be between 1 and 300 seconds"
-      )
-
-      require(
-        memorySizeInMB >= 128 && memorySizeInMB <= 1536,
-        "Lambda memory must be between 128 and 1536 MBs"
-      )
-
-      LambdaDeclaration(
-        name = LambdaName(name),
-        handler = LambdaHandler(handler),
-        timeout = timeoutInSeconds.seconds,
-        memorySize = MemorySize(memorySizeInMB)
-      )
-    }
+    val chuckRuntimeConfiguration = taskKey[LambdaRuntimeConfiguration](
+      "The validated runtime configuration for the Lambda"
+    )
 
 
     val chuckPublish =

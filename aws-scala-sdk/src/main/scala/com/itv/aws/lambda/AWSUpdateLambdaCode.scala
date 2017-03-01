@@ -16,7 +16,7 @@ class AWSUpdateLambdaCode(awsLambda: AWSLambda)
     import updateLambdaRequest._
 
     val awsUpdateFunctionRequest = new UpdateFunctionCodeRequest()
-      .withFunctionName(lambda.declaration.name.value)
+      .withFunctionName(lambda.deployment.name.value)
       .withS3Bucket(s3Location.bucket.name.value)
       .withS3Key(s3Location.key.value)
       .withPublish(true)

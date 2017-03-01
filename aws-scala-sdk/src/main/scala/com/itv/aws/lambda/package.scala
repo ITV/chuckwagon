@@ -25,14 +25,17 @@ package lambda {
     val derivedId = s"${lambdaName.value}-${name.value}"
   }
 
-  case class LambdaDeclaration(name: LambdaName,
-                               handler: LambdaHandler,
-                               timeout: FiniteDuration,
-                               memorySize: MemorySize,
-                               vpcConfig: Option[VpcConfig] = None)
 
-  case class Lambda(declaration: LambdaDeclaration, roleARN: ARN)
+  case class LambdaRuntimeConfiguration(handler: LambdaHandler,
+                                        timeout: FiniteDuration,
+                                        memorySize: MemorySize)
+  case class LambdaDeploymentConfiguration(
+                                            name: LambdaName,
+                                            roleARN: ARN,
+                                            vpcConfig: Option[VpcConfig]
+                                           )
 
+  case class Lambda(deployment: LambdaDeploymentConfiguration, runtime:LambdaRuntimeConfiguration)
   case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)
 
   case class VpcConfigDeclaration(

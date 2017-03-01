@@ -155,17 +155,43 @@ package object deploy {
     liftF[DeployLambdaA, S3Location](PutFile(bucket, keyPrefix, file))
 
 
-  def getRole(lambdaName: LambdaName):DeployLambda[Role] =
+  def findRole(test: Role => Boolean):DeployLambda[Option[Role]] =
     for {
       roles <- listRoles()
-      maybeRole = roles.find(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName) )
-      roleWithoutPolicyDoc <- maybeRole match {
-        case Some(role) =>
-          pure[DeployLambdaA, Role](role)
+      maybeRole <- roles.find(test) match {
+        case r @ Some(role) =>
+          pure[DeployLambdaA, Option[Role]](r)
         case None =>
-          createRole(LambdaRoles.roleDeclarationFor(lambdaName))
+          pure[DeployLambdaA, Option[Role]](None)
       }
-      role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
+    } yield maybeRole
+
+  def getOrCreateChuckwagonRole(lambdaName: LambdaName):DeployLambda[Role] =
+  for {
+    maybeRole <- findRole(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName))
+    roleWithoutPolicyDoc <- maybeRole match {
+      case Some(role) => pure[DeployLambdaA, Role](role)
+      case None => createRole(LambdaRoles.roleDeclarationFor(lambdaName))
+    }
+    role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
+  } yield role
+
+  def getPredefinedRoleOrError(predefinedRoleARN: ARN):DeployLambda[Role] =
+    for {
+      maybeRole <- findRole(_.arn == predefinedRoleARN)
+      role <- maybeRole match {
+        case Some(r) => pure[DeployLambdaA, Role](r)
+        case None => throw new Exception(s"Predefined Role '${predefinedRoleARN.value}' doesn't exist")
+      }
+    } yield role
+
+  def getPredefinedOrChuckwagonRole(predefinedRoleARN: Option[ARN],
+                                lambdaName: LambdaName):DeployLambda[Role] =
+    for {
+      role <- predefinedRoleARN match {
+        case Some(arn) => getPredefinedRoleOrError(arn)
+        case None => getOrCreateChuckwagonRole(lambdaName)
+      }
     } yield role
 
   def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]):DeployLambda[Option[VpcConfig]] = maybeVpcConfigDeclaration match {
@@ -182,12 +208,10 @@ package object deploy {
     case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
   }
 
-  def publishLambda(lambdaDeclaration: LambdaDeclaration,
+  def publishLambda(lambda: Lambda,
                     s3Address: S3Address,
                     file: File): DeployLambda[PublishedLambda] = {
     for {
-      role <- getRole(lambdaDeclaration.name)
-      lambda = Lambda(declaration = lambdaDeclaration, roleARN = role.arn)
       buckets <- listBuckets()
       uploadBucketOrEmpty = buckets.find(
         b => b.name.value == s3Address.bucketName.value
@@ -197,7 +221,7 @@ package object deploy {
         case None => createBucket(s3Address.bucketName)
       }
       s3Location <- putFile(uploadBucket, s3Address.keyPrefix, file)
-      alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.declaration.name)
+      alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.deployment.name)
       publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
         createLambda(lambda, s3Location)
       } else
@@ -211,7 +235,7 @@ package object deploy {
                            aliasName: AliasName): DeployLambda[Alias] =
     for {
       alias <- aliasLambdaVersion(
-        publishedLambda.lambda.declaration.name,
+        publishedLambda.lambda.deployment.name,
         publishedLambda.version,
         aliasName
       )

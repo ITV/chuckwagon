@@ -17,7 +17,8 @@ class AWSCreateLambda(awsLambda: AWSLambda)
     createLambdaRequest: CreateLambdaRequest
   ): CreateLambdaResponse = {
     import createLambdaRequest.lambda._
-    import declaration._
+    import deployment._
+    import runtime._
 
     val functionCode = new FunctionCode()
       .withS3Bucket(createLambdaRequest.s3Location.bucket.name.value)

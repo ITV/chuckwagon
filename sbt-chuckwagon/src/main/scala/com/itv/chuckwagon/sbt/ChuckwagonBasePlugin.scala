@@ -6,6 +6,8 @@ import fansi.Str
 import sbt._
 import sbt.Keys._
 import LoggingUtils._
+import com.itv.aws.ARN
+import com.itv.aws.lambda._
 
 object ChuckwagonBasePlugin extends AutoPlugin {
 
@@ -14,6 +16,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckRoleARN := None,
       chuckVpnConfigDeclaration := None,
       chuckSDKFreeCompiler := new AWSCompiler(
         com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
@@ -38,6 +41,17 @@ object ChuckwagonBasePlugin extends AutoPlugin {
             ))
         }
         maybeVpcConfig
+      },
+      chuckRole := {
+        com.itv.chuckwagon.deploy
+          .getPredefinedOrChuckwagonRole(
+            chuckRoleARN.value.map(ARN),
+            LambdaName(chuckLambdaName.value)
+          )
+          .foldMap(chuckSDKFreeCompiler.value.compiler)
+      },
+      chuckDeploymentConfiguration := {
+        LambdaDeploymentConfiguration(LambdaName(chuckLambdaName.value),chuckRole.value.arn,chuckVpcConfig.value)
       }
     )
 }

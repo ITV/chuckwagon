@@ -39,9 +39,12 @@ class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
       val fcs = publishedVersions.map { fc =>
         PublishedLambda(
           lambda = Lambda(
-            roleARN = ARN(fc.getRole),
-            declaration = LambdaDeclaration(
+            deployment = LambdaDeploymentConfiguration(
               name = LambdaName(fc.getFunctionName),
+              roleARN = ARN(fc.getRole),
+              vpcConfig = None // TODO actually set this...
+            ),
+            runtime = LambdaRuntimeConfiguration(
               handler = LambdaHandler(fc.getHandler),
               timeout = fc.getTimeout.toInt.seconds,
               memorySize = MemorySize(fc.getMemorySize)

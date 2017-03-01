@@ -18,7 +18,8 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
     updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest
   ): UpdateLambdaConfigurationResponse = {
     import updateLambdaConfigurationRequest.lambda._
-    import declaration._
+    import runtime._
+    import deployment._
 
     val awsUpdateFunctionConfigurationRequest =
       new UpdateFunctionConfigurationRequest()
