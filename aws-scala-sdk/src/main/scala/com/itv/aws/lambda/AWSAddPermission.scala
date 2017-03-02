@@ -8,8 +8,7 @@ case class AddPermissionRequest(alias: Alias, lambdaPermission: LambdaPermission
 
 case class AddPermissionResponse()
 
-class AWSAddPermission(awsLambda: AWSLambda)
-  extends AWSService[AddPermissionRequest, AddPermissionResponse] {
+class AWSAddPermission(awsLambda: AWSLambda) extends AWSService[AddPermissionRequest, AddPermissionResponse] {
 
   override def apply(addPermissionRequest: AddPermissionRequest): AddPermissionResponse = {
     import addPermissionRequest._

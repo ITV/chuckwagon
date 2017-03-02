@@ -10,11 +10,10 @@ import scala.collection.JavaConverters._
 case class CreateLambdaRequest(lambda: Lambda, s3Location: S3Location)
 case class CreateLambdaResponse(publishedLambda: PublishedLambda)
 
-class AWSCreateLambda(awsLambda: AWSLambda)
-    extends AWSService[CreateLambdaRequest, CreateLambdaResponse] {
+class AWSCreateLambda(awsLambda: AWSLambda) extends AWSService[CreateLambdaRequest, CreateLambdaResponse] {
 
   override def apply(
-    createLambdaRequest: CreateLambdaRequest
+      createLambdaRequest: CreateLambdaRequest
   ): CreateLambdaResponse = {
     import createLambdaRequest.lambda._
     import deployment._
@@ -34,13 +33,12 @@ class AWSCreateLambda(awsLambda: AWSLambda)
       .withCode(functionCode)
       .withPublish(true)
 
-    vpcConfig.foreach {
-      vpc =>
-        awsCreateFunctionRequest.withVpcConfig(
-          new AWSVpcConfig()
-            .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
-            .withSubnetIds(vpc.subnets.map(_.id).asJava)
-        )
+    vpcConfig.foreach { vpc =>
+      awsCreateFunctionRequest.withVpcConfig(
+        new AWSVpcConfig()
+          .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
+          .withSubnetIds(vpc.subnets.map(_.id).asJava)
+      )
     }
 
     val awsCreateFunctionResponse =

@@ -1,9 +1,6 @@
 package com.itv
 
-import com.amazonaws.auth.{
-  AWSCredentialsProvider,
-  DefaultAWSCredentialsProviderChain
-}
+import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.client.builder.AwsSyncClientBuilder
 import com.amazonaws.regions.Regions
 import com.itv.aws.iam.RoleDeclaration
@@ -14,27 +11,25 @@ package object aws {
     new DefaultAWSCredentialsProviderChain()
 
   def configuredClientForRegion[Builder <: AwsSyncClientBuilder[
-    Builder,
-    Client
-    ], Client](
-                builder: AwsSyncClientBuilder[Builder, Client]
-              ): Regions => Client = { (region: Regions) =>
-  {
-    builder.withCredentials(provider).withRegion(region).build()
-  }
+                                  Builder,
+                                  Client
+                                ],
+                                Client](
+      builder: AwsSyncClientBuilder[Builder, Client]
+  ): Regions => Client = { (region: Regions) =>
+    {
+      builder.withCredentials(provider).withRegion(region).build()
+    }
   }
 
-  def configuredClient[Builder <: AwsSyncClientBuilder[Builder, Client],
-  Client](
-           builder: AwsSyncClientBuilder[Builder, Client]
-         ): Client = {
+  def configuredClient[Builder <: AwsSyncClientBuilder[Builder, Client], Client](
+      builder: AwsSyncClientBuilder[Builder, Client]
+  ): Client = {
     builder.withCredentials(provider).build()
   }
 }
 
 package aws {
-
-  import com.itv.aws.iam.RolePolicyDocument
 
   trait AWSService[Req, Res] extends (Req => Res)
 

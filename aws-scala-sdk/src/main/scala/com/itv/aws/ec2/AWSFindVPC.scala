@@ -12,14 +12,15 @@ case class FindVPCResponse(vpc: VPC)
 object AWSFindVPC extends AWSService[FindVPCRequest, FindVPCResponse] {
   override def apply(listRolesRequest: FindVPCRequest): FindVPCResponse = {
 
-    val filters: List[AWSFilter] = listRolesRequest.filters.map {
-      tag => new AWSFilter().withName(s"${tag.key}").withValues(tag.value)
+    val filters: List[AWSFilter] = listRolesRequest.filters.map { tag =>
+      new AWSFilter().withName(s"${tag.key}").withValues(tag.value)
     }
 
     val describeVpcsRequest = new DescribeVpcsRequest().withFilters(filters.asJava)
 
     val vpcs: List[VPC] = ec2
-      .describeVpcs(describeVpcsRequest).getVpcs
+      .describeVpcs(describeVpcsRequest)
+      .getVpcs
       .asScala
       .map { vpc =>
         VPC(id = vpc.getVpcId)

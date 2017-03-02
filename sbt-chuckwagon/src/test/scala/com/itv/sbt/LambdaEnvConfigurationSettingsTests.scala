@@ -6,7 +6,5 @@ class LambdaEnvConfigurationSettingsTests extends FlatSpec {
 
   behavior of "Configuration Generator"
 
-  it should "blah" in {
-
-  }
+  it should "blah" in {}
 }

@@ -8,11 +8,10 @@ import scala.annotation.tailrec
 case class CreateRoleRequest(roleDeclaration: RoleDeclaration)
 case class CreateRoleResponse(role: Role)
 
-object AWSCreateRole
-    extends AWSService[CreateRoleRequest, CreateRoleResponse] {
+object AWSCreateRole extends AWSService[CreateRoleRequest, CreateRoleResponse] {
 
   override def apply(
-    createRoleRequest: CreateRoleRequest
+      createRoleRequest: CreateRoleRequest
   ): CreateRoleResponse = {
 
     import createRoleRequest._

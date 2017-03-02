@@ -21,48 +21,34 @@ package object deploy {
   sealed trait DeployLambdaA[A]
 
   case class FindSecurityGroups(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[SecurityGroup]]
-  case class FindSubnets(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[Subnet]]
-  case class FindVPC(filters: List[Filter]) extends DeployLambdaA[VPC]
+  case class FindSubnets(vpc: VPC, filters: List[Filter])        extends DeployLambdaA[List[Subnet]]
+  case class FindVPC(filters: List[Filter])                      extends DeployLambdaA[VPC]
 
-  case class PutRule(eventRule: EventRule) extends DeployLambdaA[CreatedEventRule]
+  case class PutRule(eventRule: EventRule)                    extends DeployLambdaA[CreatedEventRule]
   case class PutTargets(eventRule: EventRule, targetARN: ARN) extends DeployLambdaA[Unit]
 
   case class AddPermission(alias: Alias, lambdaPermission: LambdaPermission) extends DeployLambdaA[Unit]
-  case class CreateAlias(name: AliasName,
-                         lambdaName: LambdaName,
-                         lambdaVersionToAlias: LambdaVersion)
+  case class CreateAlias(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion)
       extends DeployLambdaA[Alias]
-  case class UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion)
-      extends DeployLambdaA[Alias]
-  case class DeleteAlias(alias: Alias) extends DeployLambdaA[AliasName]
-  case class ListAliases(lambdaName: LambdaName)
-      extends DeployLambdaA[Option[List[Alias]]]
-  case class ListPermissions(alias: Alias)
-    extends DeployLambdaA[Option[List[LambdaPermission]]]
+  case class UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) extends DeployLambdaA[Alias]
+  case class DeleteAlias(alias: Alias)                                      extends DeployLambdaA[AliasName]
+  case class ListAliases(lambdaName: LambdaName)                            extends DeployLambdaA[Option[List[Alias]]]
+  case class ListPermissions(alias: Alias)                                  extends DeployLambdaA[Option[List[LambdaPermission]]]
 
-  case class ListPublishedLambdasWithName(lambdaName: LambdaName)
-      extends DeployLambdaA[Option[List[PublishedLambda]]]
-  case class RemovePermission(alias: Alias, lambdaPermission: LambdaPermission)
-    extends DeployLambdaA[Unit]
-  case class CreateLambda(lambda: Lambda, s3Location: S3Location)
-      extends DeployLambdaA[PublishedLambda]
-  case class UpdateLambdaConfiguration(lambda: Lambda)
-      extends DeployLambdaA[Unit]
-  case class UpdateLambdaCode(lambda: Lambda, s3Location: S3Location)
-      extends DeployLambdaA[PublishedLambda]
-  case class DeleteLambdaVersion(publishedLambda: PublishedLambda)
-      extends DeployLambdaA[LambdaVersion]
+  case class ListPublishedLambdasWithName(lambdaName: LambdaName)               extends DeployLambdaA[Option[List[PublishedLambda]]]
+  case class RemovePermission(alias: Alias, lambdaPermission: LambdaPermission) extends DeployLambdaA[Unit]
+  case class CreateLambda(lambda: Lambda, s3Location: S3Location)               extends DeployLambdaA[PublishedLambda]
+  case class UpdateLambdaConfiguration(lambda: Lambda)                          extends DeployLambdaA[Unit]
+  case class UpdateLambdaCode(lambda: Lambda, s3Location: S3Location)           extends DeployLambdaA[PublishedLambda]
+  case class DeleteLambdaVersion(publishedLambda: PublishedLambda)              extends DeployLambdaA[LambdaVersion]
 
-  case class CreateRole(roleDeclaration: RoleDeclaration)
-      extends DeployLambdaA[Role]
-  case class PutRolePolicy(rolePolicy: RolePolicy)
-      extends DeployLambdaA[Role]
-  case class ListRoles() extends DeployLambdaA[List[Role]]
+  case class CreateRole(roleDeclaration: RoleDeclaration) extends DeployLambdaA[Role]
+  case class PutRolePolicy(rolePolicy: RolePolicy)        extends DeployLambdaA[Role]
+  case class ListRoles()                                  extends DeployLambdaA[List[Role]]
 
-  case class CreateBucket(name: BucketName) extends DeployLambdaA[Bucket]
-  case class ListBuckets() extends DeployLambdaA[List[Bucket]]
-  case class PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File)
-      extends DeployLambdaA[S3Location]
+  case class CreateBucket(name: BucketName)                              extends DeployLambdaA[Bucket]
+  case class ListBuckets()                                               extends DeployLambdaA[List[Bucket]]
+  case class PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) extends DeployLambdaA[S3Location]
 
   type DeployLambda[A] = Free[DeployLambdaA, A]
 
@@ -93,20 +79,16 @@ package object deploy {
     )
   }
 
-
   def addPermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] = {
     liftF[DeployLambdaA, Unit](
       AddPermission(alias, lambdaPermission)
     )
   }
-  def createAlias(name: AliasName,
-                  lambdaName: LambdaName,
-                  lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
+  def createAlias(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
     liftF[DeployLambdaA, Alias](
       CreateAlias(name, lambdaName, lambdaVersionToAlias)
     )
-  def updateAlias(alias: Alias,
-                  lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
+  def updateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion): DeployLambda[Alias] =
     liftF[DeployLambdaA, Alias](UpdateAlias(alias, lambdaVersionToAlias))
   def deleteAlias(alias: Alias): DeployLambda[AliasName] =
     liftF[DeployLambdaA, AliasName](DeleteAlias(alias))
@@ -118,23 +100,21 @@ package object deploy {
       ListPermissions(alias)
     )
   def listPublishedLambdasWithName(
-    lambdaName: LambdaName
+      lambdaName: LambdaName
   ): DeployLambda[Option[List[PublishedLambda]]] =
     liftF[DeployLambdaA, Option[List[PublishedLambda]]](
       ListPublishedLambdasWithName(lambdaName)
     )
   def removePermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] =
     liftF[DeployLambdaA, Unit](RemovePermission(alias, lambdaPermission))
-  def createLambda(lambda: Lambda,
-                   s3Location: S3Location): DeployLambda[PublishedLambda] =
+  def createLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](CreateLambda(lambda, s3Location))
   def updateLambdaConfiguration(lambda: Lambda): DeployLambda[Unit] =
     liftF[DeployLambdaA, Unit](UpdateLambdaConfiguration(lambda))
-  def updateLambdaCode(lambda: Lambda,
-                       s3Location: S3Location): DeployLambda[PublishedLambda] =
+  def updateLambdaCode(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](UpdateLambdaCode(lambda, s3Location))
   def deleteLambdaVersion(
-    publishedLambda: PublishedLambda
+      publishedLambda: PublishedLambda
   ): DeployLambda[LambdaVersion] =
     liftF[DeployLambdaA, LambdaVersion](DeleteLambdaVersion(publishedLambda))
 
@@ -149,13 +129,10 @@ package object deploy {
     liftF[DeployLambdaA, Bucket](CreateBucket(name))
   def listBuckets(): DeployLambda[List[Bucket]] =
     liftF[DeployLambdaA, List[Bucket]](ListBuckets())
-  def putFile(bucket: Bucket,
-              keyPrefix: S3KeyPrefix,
-              file: File): DeployLambda[S3Location] =
+  def putFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File): DeployLambda[S3Location] =
     liftF[DeployLambdaA, S3Location](PutFile(bucket, keyPrefix, file))
 
-
-  def findRole(test: Role => Boolean):DeployLambda[Option[Role]] =
+  def findRole(test: Role => Boolean): DeployLambda[Option[Role]] =
     for {
       roles <- listRoles()
       maybeRole <- roles.find(test) match {
@@ -166,51 +143,51 @@ package object deploy {
       }
     } yield maybeRole
 
-  def getOrCreateChuckwagonRole(lambdaName: LambdaName):DeployLambda[Role] =
-  for {
-    maybeRole <- findRole(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName))
-    roleWithoutPolicyDoc <- maybeRole match {
-      case Some(role) => pure[DeployLambdaA, Role](role)
-      case None => createRole(LambdaRoles.roleDeclarationFor(lambdaName))
-    }
-    role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
-  } yield role
+  def getOrCreateChuckwagonRole(lambdaName: LambdaName): DeployLambda[Role] =
+    for {
+      maybeRole <- findRole(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName))
+      roleWithoutPolicyDoc <- maybeRole match {
+        case Some(role) => pure[DeployLambdaA, Role](role)
+        case None       => createRole(LambdaRoles.roleDeclarationFor(lambdaName))
+      }
+      role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
+    } yield role
 
-  def getPredefinedRoleOrError(predefinedRoleARN: ARN):DeployLambda[Role] =
+  def getPredefinedRoleOrError(predefinedRoleARN: ARN): DeployLambda[Role] =
     for {
       maybeRole <- findRole(_.arn == predefinedRoleARN)
       role <- maybeRole match {
         case Some(r) => pure[DeployLambdaA, Role](r)
-        case None => throw new Exception(s"Predefined Role '${predefinedRoleARN.value}' doesn't exist")
+        case None =>
+          throw new Exception(s"Predefined Role '${predefinedRoleARN.value}' doesn't exist")
       }
     } yield role
 
-  def getPredefinedOrChuckwagonRole(predefinedRoleARN: Option[ARN],
-                                lambdaName: LambdaName):DeployLambda[Role] =
+  def getPredefinedOrChuckwagonRole(predefinedRoleARN: Option[ARN], lambdaName: LambdaName): DeployLambda[Role] =
     for {
       role <- predefinedRoleARN match {
         case Some(arn) => getPredefinedRoleOrError(arn)
-        case None => getOrCreateChuckwagonRole(lambdaName)
+        case None      => getOrCreateChuckwagonRole(lambdaName)
       }
     } yield role
 
-  def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]):DeployLambda[Option[VpcConfig]] = maybeVpcConfigDeclaration match {
-    case Some(vpcConfigDeclaration) => for {
-      vpc <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
-      subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
-      securityGroups <- findSecurityGroups(
-        vpc,
-        vpcConfigDeclaration.securityGroupsLookupFilters
-      )
-    } yield {
-      Some(VpcConfig(vpc, subnets, securityGroups))
+  def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]): DeployLambda[Option[VpcConfig]] =
+    maybeVpcConfigDeclaration match {
+      case Some(vpcConfigDeclaration) =>
+        for {
+          vpc     <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
+          subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
+          securityGroups <- findSecurityGroups(
+            vpc,
+            vpcConfigDeclaration.securityGroupsLookupFilters
+          )
+        } yield {
+          Some(VpcConfig(vpc, subnets, securityGroups))
+        }
+      case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
     }
-    case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
-  }
 
-  def publishLambda(lambda: Lambda,
-                    s3Address: S3Address,
-                    file: File): DeployLambda[PublishedLambda] = {
+  def publishLambda(lambda: Lambda, s3Address: S3Address, file: File): DeployLambda[PublishedLambda] = {
     for {
       buckets <- listBuckets()
       uploadBucketOrEmpty = buckets.find(
@@ -218,9 +195,9 @@ package object deploy {
       )
       uploadBucket <- uploadBucketOrEmpty match {
         case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
-        case None => createBucket(s3Address.bucketName)
+        case None         => createBucket(s3Address.bucketName)
       }
-      s3Location <- putFile(uploadBucket, s3Address.keyPrefix, file)
+      s3Location              <- putFile(uploadBucket, s3Address.keyPrefix, file)
       alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.deployment.name)
       publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
         createLambda(lambda, s3Location)
@@ -231,8 +208,7 @@ package object deploy {
     } yield publishedLambda
   }
 
-  def aliasPublishedLambda(publishedLambda: PublishedLambda,
-                           aliasName: AliasName): DeployLambda[Alias] =
+  def aliasPublishedLambda(publishedLambda: PublishedLambda, aliasName: AliasName): DeployLambda[Alias] =
     for {
       alias <- aliasLambdaVersion(
         publishedLambda.lambda.deployment.name,
@@ -254,9 +230,7 @@ package object deploy {
       }
     } yield alias
 
-  def promoteLambda(lambdaName: LambdaName,
-                    fromName: AliasName,
-                    to: AliasName): DeployLambda[Alias] =
+  def promoteLambda(lambdaName: LambdaName, fromName: AliasName, to: AliasName): DeployLambda[Alias] =
     for {
       alreadyCreatedAliases <- listAliases(lambdaName)
       alias <- alreadyCreatedAliases.toList.flatten
@@ -271,8 +245,8 @@ package object deploy {
     } yield alias
 
   def deleteRedundantAliases(
-    lambdaName: LambdaName,
-    desiredAliasNames: List[AliasName]
+      lambdaName: LambdaName,
+      desiredAliasNames: List[AliasName]
   ): DeployLambda[List[AliasName]] =
     for {
       alreadyCreatedAliases <- listAliases(lambdaName)
@@ -282,10 +256,10 @@ package object deploy {
     } yield deletedAliases
 
   def deleteRedundantPublishedLambdas(
-    lambdaName: LambdaName
+      lambdaName: LambdaName
   ): DeployLambda[List[LambdaVersion]] =
     for {
-      publishedLambdas <- listPublishedLambdasWithName(lambdaName)
+      publishedLambdas      <- listPublishedLambdasWithName(lambdaName)
       alreadyCreatedAliases <- listAliases(lambdaName)
       publishedLambdasToDelete: List[PublishedLambda] = publishedLambdas.toList.flatten
         .filterNot(
@@ -307,7 +281,7 @@ package object deploy {
       maybeToDelete = existingPermissions.getOrElse(Nil).find(_.statementId == statementId)
       _ <- maybeToDelete match {
         case Some(lambdaPermission) => removePermission(alias, lambdaPermission)
-        case None =>  pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
+        case None                   => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
       }
       _ <- addPermission(
         alias,
@@ -317,18 +291,20 @@ package object deploy {
           action = PermissionAction("lambda:InvokeFunction"),
           principalService = PermissionPrincipialService("events.amazonaws.com"),
           targetLambdaARN = alias.arn
-        ))
+        )
+      )
     } yield ()
   }
 
   private val LAMBDA_SCHEDULED_TRIGGER_NAME = "scheduled-trigger"
   def setLambdaTrigger(alias: Alias, scheduleExpression: ScheduleExpression): DeployLambda[Unit] =
     for {
-      createdEventRule <- putRule(EventRule(
-        name = RuleName(s"${alias.derivedId}-$LAMBDA_SCHEDULED_TRIGGER_NAME"),
-        scheduleExpression = scheduleExpression,
-        description = s"Periodic Trigger for Lambda '${alias.lambdaName.value}' in environment '${alias.name.value}'"
-      ))
+      createdEventRule <- putRule(
+        EventRule(
+          name = RuleName(s"${alias.derivedId}-$LAMBDA_SCHEDULED_TRIGGER_NAME"),
+          scheduleExpression = scheduleExpression,
+          description = s"Periodic Trigger for Lambda '${alias.lambdaName.value}' in environment '${alias.name.value}'"
+        ))
       _ <- putTargets(createdEventRule.eventRule, alias.arn)
       _ <- putLambdaPermission(alias, LAMBDA_SCHEDULED_TRIGGER_NAME, createdEventRule.arn)
     } yield ()

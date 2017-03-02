@@ -31,14 +31,20 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
         maybeVpcConfig match {
           case Some(vpcConfig) => {
-            streams.value.log.info(logMessage(
-              (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets.map(s => Green(s.id).render).mkString(Str(", ").render) ++ Str("' security groups: '") ++ vpcConfig.securityGroups.map(sg => Green(sg.id).render).mkString(Str(", ").render) ++ Str("'")).render
-            ))
+            streams.value.log.info(
+              logMessage(
+                (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets
+                  .map(s => Green(s.id).render)
+                  .mkString(Str(", ").render) ++ Str("' security groups: '") ++ vpcConfig.securityGroups
+                  .map(sg => Green(sg.id).render)
+                  .mkString(Str(", ").render) ++ Str("'")).render
+              ))
           }
           case None =>
-            streams.value.log.info(logMessage(
-              "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
-            ))
+            streams.value.log.info(
+              logMessage(
+                "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
+              ))
         }
         maybeVpcConfig
       },
@@ -51,7 +57,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           .foldMap(chuckSDKFreeCompiler.value.compiler)
       },
       chuckDeploymentConfiguration := {
-        LambdaDeploymentConfiguration(LambdaName(chuckLambdaName.value),chuckRole.value.arn,chuckVpcConfig.value)
+        LambdaDeploymentConfiguration(LambdaName(chuckLambdaName.value), chuckRole.value.arn, chuckVpcConfig.value)
       }
     )
 }

@@ -4,12 +4,10 @@ import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.{RemovePermissionRequest => AWSRemovePermissionRequest}
 import com.itv.aws.AWSService
 
-
 case class RemovePermissionRequest(alias: Alias, lambdaPermission: LambdaPermission)
 case class RemovePermissionResponse()
 
-class AWSRemovePermission(awsLambda: AWSLambda)
-  extends AWSService[RemovePermissionRequest, RemovePermissionResponse] {
+class AWSRemovePermission(awsLambda: AWSLambda) extends AWSService[RemovePermissionRequest, RemovePermissionResponse] {
 
   override def apply(removePermissionRequest: RemovePermissionRequest): RemovePermissionResponse = {
     import removePermissionRequest._

@@ -10,7 +10,7 @@ case class DeleteLambdaVersionResponse(deletedVersion: LambdaVersion)
 class AWSDeleteLambdaVersion(awsLambda: AWSLambda)
     extends AWSService[DeleteLambdaVersionRequest, DeleteLambdaVersionResponse] {
   override def apply(
-    deleteLambdaRequest: DeleteLambdaVersionRequest
+      deleteLambdaRequest: DeleteLambdaVersionRequest
   ): DeleteLambdaVersionResponse = {
     import deleteLambdaRequest.publishedLambda._
 

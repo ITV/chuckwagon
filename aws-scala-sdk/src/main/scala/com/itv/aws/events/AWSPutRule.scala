@@ -3,7 +3,6 @@ package com.itv.aws.events
 import com.itv.aws.{ARN, AWSService}
 import com.amazonaws.services.cloudwatchevents.model.{PutRuleRequest => AWSPutRuleRequest}
 
-
 case class PutRuleRequest(eventRule: EventRule)
 case class PutRuleResponse(createdEventRule: CreatedEventRule)
 

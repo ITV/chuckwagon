@@ -3,7 +3,7 @@ package com.itv.chuckwagon.deploy
 import java.io.File
 
 import cats.arrow.FunctionK
-import cats.{Id, ~>}
+import cats.{~>, Id}
 import com.amazonaws.services.lambda.AWSLambda
 import com.itv.aws.ARN
 import com.itv.aws.ec2._
@@ -14,19 +14,19 @@ import com.itv.aws.s3._
 
 class AWSCompiler(val awsLambda: AWSLambda) {
 
-  val addPermission = new AWSAddPermission(awsLambda)
-  val createAlias = new AWSCreateAlias(awsLambda)
-  val createLambda = new AWSCreateLambda(awsLambda)
-  val deleteAlias = new AWSDeleteAlias(awsLambda)
+  val addPermission       = new AWSAddPermission(awsLambda)
+  val createAlias         = new AWSCreateAlias(awsLambda)
+  val createLambda        = new AWSCreateLambda(awsLambda)
+  val deleteAlias         = new AWSDeleteAlias(awsLambda)
   val deleteLambdaVersion = new AWSDeleteLambdaVersion(awsLambda)
-  val listAliases = new AWSListAliases(awsLambda)
-  val listPermissions = new AWSListPermissions(awsLambda)
+  val listAliases         = new AWSListAliases(awsLambda)
+  val listPermissions     = new AWSListPermissions(awsLambda)
   val listPublishedLambdasWithName = new AWSListPublishedLambdasWithName(
     awsLambda
   )
-  val removePermission = new AWSRemovePermission(awsLambda)
-  val updateAlias = new AWSUpdateAlias(awsLambda)
-  val updateLambdaCode = new AWSUpdateLambdaCode(awsLambda)
+  val removePermission          = new AWSRemovePermission(awsLambda)
+  val updateAlias               = new AWSUpdateAlias(awsLambda)
+  val updateLambdaCode          = new AWSUpdateLambdaCode(awsLambda)
   val updateLambdaConfiguration = new AWSUpdateLambdaConfiguration(awsLambda)
 
   def compiler: DeployLambdaA ~> Id = {
@@ -36,7 +36,7 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           AWSFindSecurityGroups(FindSecurityGroupsRequest(vpc, filters)).securityGroups
         case FindSubnets(vpc, filters) =>
           AWSFindSubnets(FindSubnetsRequest(vpc, filters)).subnets
-        case FindVPC(filters) => AWSFindVPC(FindVPCRequest(filters)).vpc
+        case FindVPC(filters)   => AWSFindVPC(FindVPCRequest(filters)).vpc
         case PutRule(eventRule) => AWSPutRule(PutRuleRequest(eventRule)).createdEventRule
         case PutTargets(eventRule: EventRule, targetARN: ARN) => {
           AWSPutTargets(PutTargetsRequest(eventRule, targetARN))

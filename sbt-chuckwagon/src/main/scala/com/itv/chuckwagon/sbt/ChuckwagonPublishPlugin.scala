@@ -8,7 +8,7 @@ import LoggingUtils._
 import com.itv.aws.events.ScheduleExpression
 import fansi.Color.Green
 import fansi.Str
-import sbt.complete.DefaultParsers.{StringBasic, token}
+import sbt.complete.DefaultParsers.{token, StringBasic}
 import Parsers._
 import com.itv.aws.lambda._
 
@@ -21,7 +21,6 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
   object autoImport extends Keys.Publish
   import autoImport._
 
-
   override lazy val projectSettings =
     Seq(
       chuckEnvironments := chuckDefineEnvironments("blue-qa", "qa"),
@@ -30,9 +29,9 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
       ),
       chuckRuntimeConfiguration := {
-        val handler = chuckHandler.value
+        val handler          = chuckHandler.value
         val timeoutInSeconds = chuckTimeoutInSeconds.value
-        val memorySizeInMB = chuckMemorySizeInMB.value
+        val memorySizeInMB   = chuckMemorySizeInMB.value
 
         require(
           timeoutInSeconds > 0 && timeoutInSeconds <= 300,
@@ -132,7 +131,8 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         ()
       },
       chuckPromote := {
-        val (fromAliasName, toAliasName) = (environmentArgParser.value ~ environmentArgParser.value).parsed
+        val (fromAliasName, toAliasName) =
+          (environmentArgParser.value ~ environmentArgParser.value).parsed
         val promotedToAlias = com.itv.chuckwagon.deploy
           .promoteLambda(
             chuckDeploymentConfiguration.value.name,
@@ -168,14 +168,17 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
               .setLambdaTrigger(alias, ScheduleExpression(scheduleExpressionString))
               .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-            streams.value.log.info(
-              logMessage(
-                (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str("' with Expression '") ++ Green(scheduleExpressionString) ++ Str("'")).render
+            streams.value.log
+              .info(
+                logMessage(
+                  (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
+                    "' with Expression '") ++ Green(scheduleExpressionString) ++ Str("'")).render
+                )
               )
-            )
           }
           case None =>
-            throw new Exception(s"Cannot set Lambda Trigger on '${chuckDeploymentConfiguration.value.name.value}' because '${targetAliasName.value}' does not exist yet.")
+            throw new Exception(
+              s"Cannot set Lambda Trigger on '${chuckDeploymentConfiguration.value.name.value}' because '${targetAliasName.value}' does not exist yet.")
         }
         ()
       },

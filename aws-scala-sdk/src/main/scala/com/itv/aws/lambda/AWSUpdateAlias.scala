@@ -2,18 +2,14 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.itv.aws.{ARN, AWSService}
-import com.amazonaws.services.lambda.model.{
-  UpdateAliasRequest => AWSUpdateAliasRequest
-}
+import com.amazonaws.services.lambda.model.{UpdateAliasRequest => AWSUpdateAliasRequest}
 
-case class UpdateAliasRequest(alias: Alias,
-                              lambdaVersionToAlias: LambdaVersion)
+case class UpdateAliasRequest(alias: Alias, lambdaVersionToAlias: LambdaVersion)
 case class UpdateAliasResponse(alias: Alias)
 
-class AWSUpdateAlias(awsLambda: AWSLambda)
-    extends AWSService[UpdateAliasRequest, UpdateAliasResponse] {
+class AWSUpdateAlias(awsLambda: AWSLambda) extends AWSService[UpdateAliasRequest, UpdateAliasResponse] {
   override def apply(
-    updateAliasRequest: UpdateAliasRequest
+      updateAliasRequest: UpdateAliasRequest
   ): UpdateAliasResponse = {
 
     val lambdaNameString = updateAliasRequest.alias.lambdaName.value
@@ -31,8 +27,7 @@ class AWSUpdateAlias(awsLambda: AWSLambda)
       Alias(
         name = AliasName(awsUpdateAliasRequest.getName),
         lambdaName = LambdaName(lambdaNameString),
-        lambdaVersion =
-          LambdaVersion(awsUpdateAliasResponse.getFunctionVersion.toInt),
+        lambdaVersion = LambdaVersion(awsUpdateAliasResponse.getFunctionVersion.toInt),
         arn = ARN(awsUpdateAliasResponse.getAliasArn)
       )
     )

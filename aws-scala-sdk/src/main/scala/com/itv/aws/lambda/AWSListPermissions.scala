@@ -18,8 +18,7 @@ case class Statement(Sid: String,
                      Principal: StatementPrincipal,
                      Action: String,
                      Resource: String,
-                     Condition: StatementCondition
-                    )
+                     Condition: StatementCondition)
 
 case class LambdaPolicy(Statement: List[Statement])
 
@@ -30,22 +29,20 @@ object LambdaPolicy {
   implicit val LambdaPolicyDecoder = deriveDecoder[LambdaPolicy]
 }
 
-class AWSListPermissions(awsLambda: AWSLambda)
-  extends AWSService[ListPermissionsRequest, ListPermissionsResponse] {
+class AWSListPermissions(awsLambda: AWSLambda) extends AWSService[ListPermissionsRequest, ListPermissionsResponse] {
 
-  def extractLambdaPermissions(policyString:String):List[LambdaPermission] = {
+  def extractLambdaPermissions(policyString: String): List[LambdaPermission] = {
 
     val statements = decode[LambdaPolicy](policyString).right.get.Statement
 
-    val permissions = statements.map {
-      s =>
-        LambdaPermission(
-          statementId = PermissionStatementId(s.Sid),
-          sourceARN = ARN(s.Condition.ArnLike.`AWS:SourceArn`),
-          action = PermissionAction(s.Action),
-          principalService = PermissionPrincipialService(s.Principal.Service),
-          targetLambdaARN = ARN(s.Resource)
-        )
+    val permissions = statements.map { s =>
+      LambdaPermission(
+        statementId = PermissionStatementId(s.Sid),
+        sourceARN = ARN(s.Condition.ArnLike.`AWS:SourceArn`),
+        action = PermissionAction(s.Action),
+        principalService = PermissionPrincipialService(s.Principal.Service),
+        targetLambdaARN = ARN(s.Resource)
+      )
     }
 
     permissions

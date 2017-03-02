@@ -15,7 +15,7 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
       UpdateLambdaConfigurationResponse
     ] {
   override def apply(
-    updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest
+      updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest
   ): UpdateLambdaConfigurationResponse = {
     import updateLambdaConfigurationRequest.lambda._
     import runtime._
@@ -29,13 +29,12 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
         .withTimeout(timeout.toSeconds.toInt)
         .withMemorySize(memorySize.value)
 
-    vpcConfig.foreach {
-      vpc =>
-        awsUpdateFunctionConfigurationRequest.withVpcConfig(
-          new AWSVpcConfig()
-            .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
-            .withSubnetIds(vpc.subnets.map(_.id).asJava)
-        )
+    vpcConfig.foreach { vpc =>
+      awsUpdateFunctionConfigurationRequest.withVpcConfig(
+        new AWSVpcConfig()
+          .withSecurityGroupIds(vpc.securityGroups.map(_.id).asJava)
+          .withSubnetIds(vpc.subnets.map(_.id).asJava)
+      )
     }
 
     val _ = awsLambda.updateFunctionConfiguration(

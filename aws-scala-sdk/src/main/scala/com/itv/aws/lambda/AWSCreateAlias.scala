@@ -2,19 +2,14 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.itv.aws.{ARN, AWSService}
-import com.amazonaws.services.lambda.model.{
-  CreateAliasRequest => AWSCreateAliasRequest
-}
+import com.amazonaws.services.lambda.model.{CreateAliasRequest => AWSCreateAliasRequest}
 
-case class CreateAliasRequest(name: AliasName,
-                              lambdaName: LambdaName,
-                              lambdaVersionToAlias: LambdaVersion)
+case class CreateAliasRequest(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion)
 case class CreateAliasResponse(aliasedLambda: Alias)
 
-class AWSCreateAlias(awsLambda: AWSLambda)
-    extends AWSService[CreateAliasRequest, CreateAliasResponse] {
+class AWSCreateAlias(awsLambda: AWSLambda) extends AWSService[CreateAliasRequest, CreateAliasResponse] {
   override def apply(
-    createAliasRequest: CreateAliasRequest
+      createAliasRequest: CreateAliasRequest
   ): CreateAliasResponse = {
     val lambdaNameString = createAliasRequest.lambdaName.value
 
@@ -31,8 +26,7 @@ class AWSCreateAlias(awsLambda: AWSLambda)
       Alias(
         name = AliasName(awsCreateAliasResponse.getName),
         lambdaName = LambdaName(lambdaNameString),
-        lambdaVersion =
-          LambdaVersion(awsCreateAliasResponse.getFunctionVersion.toInt),
+        lambdaVersion = LambdaVersion(awsCreateAliasResponse.getFunctionVersion.toInt),
         arn = ARN(awsCreateAliasResponse.getAliasArn)
       )
     )

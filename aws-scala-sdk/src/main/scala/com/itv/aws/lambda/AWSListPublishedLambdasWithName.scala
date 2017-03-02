@@ -1,10 +1,7 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{
-  ListVersionsByFunctionRequest,
-  ResourceNotFoundException
-}
+import com.amazonaws.services.lambda.model.{ListVersionsByFunctionRequest, ResourceNotFoundException}
 import com.itv.aws.{ARN, AWSService}
 
 import scala.collection.JavaConverters._
@@ -13,7 +10,7 @@ import scala.util.Try
 
 case class ListPublishedLambdasWithNameRequest(lambdaName: LambdaName)
 case class ListPublishedLambdasWithNameResponse(
-  publishedLambdas: Option[List[PublishedLambda]]
+    publishedLambdas: Option[List[PublishedLambda]]
 )
 
 class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
@@ -23,7 +20,7 @@ class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
     ] {
 
   override def apply(
-    listFunctionsWithNameRequest: ListPublishedLambdasWithNameRequest
+      listFunctionsWithNameRequest: ListPublishedLambdasWithNameRequest
   ): ListPublishedLambdasWithNameResponse = {
 
     val listVersionsByFunctionRequest =

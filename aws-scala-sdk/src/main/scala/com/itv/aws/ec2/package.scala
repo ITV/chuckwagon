@@ -17,6 +17,5 @@ package ec2 {
 
   case class SecurityGroup(id: String) extends AnyVal
 
-
   case class Subnet(id: String) extends AnyVal
 }

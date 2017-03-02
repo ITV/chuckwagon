@@ -22,8 +22,8 @@ object Keys {
     val chuckEnvironments = settingKey[NonEmptyList[Environment]](
       "The environments through which our lambda will be promoted and tested"
     )
-    def chuckDefineEnvironments(environments: String*):NonEmptyList[Environment] = {
-      NonEmptyList.of[String](environments.head, environments.tail :_*).map(Environment)
+    def chuckDefineEnvironments(environments: String*): NonEmptyList[Environment] = {
+      NonEmptyList.of[String](environments.head, environments.tail: _*).map(Environment)
     }
 
     val chuckLambdaRegion =
@@ -33,26 +33,25 @@ object Keys {
     }
 
     val chuckLambdaName = settingKey[String]("The name of the Lambda.")
-    val chuckRoleARN = settingKey[Option[String]]("The (optional) ARN that the Lambda should run with")
+    val chuckRoleARN =
+      settingKey[Option[String]]("The (optional) ARN that the Lambda should run with")
 
     val chuckVpnConfigDeclaration = settingKey[Option[VpcConfigDeclaration]](
       "Optional VPN Configuration Lookup Parameters"
     )
     def chuckDefineVpnConfigDeclaration(
-                                         vpcLookupFilters: List[(String, String)],
-                                         subnetsLookupFilters: List[(String, String)],
-                                         securityGroupsLookupFilters: List[(String, String)]
-                                       ): Option[VpcConfigDeclaration] = {
-      Option(VpcConfigDeclaration(
-        vpcLookupFilters =
-          toFilters(vpcLookupFilters),
-        subnetsLookupFilters =
-          toFilters(subnetsLookupFilters),
-        securityGroupsLookupFilters =
-          toFilters(securityGroupsLookupFilters)
-      ))
+        vpcLookupFilters: List[(String, String)],
+        subnetsLookupFilters: List[(String, String)],
+        securityGroupsLookupFilters: List[(String, String)]
+    ): Option[VpcConfigDeclaration] = {
+      Option(
+        VpcConfigDeclaration(
+          vpcLookupFilters = toFilters(vpcLookupFilters),
+          subnetsLookupFilters = toFilters(subnetsLookupFilters),
+          securityGroupsLookupFilters = toFilters(securityGroupsLookupFilters)
+        ))
     }
-    private def toFilters(stringFilters: List[(String, String)]):List[Filter] = {
+    private def toFilters(stringFilters: List[(String, String)]): List[Filter] = {
       stringFilters.map(t => Filter(t._1, t._2))
     }
 
@@ -74,7 +73,6 @@ object Keys {
       "Either check that the defined chuckRoleARN is valid or ensure that a suitable role is created"
     )
 
-
     val chuckPromote =
       inputKey[Unit]("Promote a published Lambda by attaching it to an alias")
     val chuckCleanUp =
@@ -93,26 +91,23 @@ object Keys {
     val chuckStagingS3Address = settingKey[S3Address](
       "The S3 address we want to use for staging our Scala Assembly JAR for Lambda create/update"
     )
-    def chuckDefineS3Address(bucketName: String,
-                             keyPrefix: String): S3Address = {
+    def chuckDefineS3Address(bucketName: String, keyPrefix: String): S3Address = {
       S3Address(BucketName(bucketName), S3KeyPrefix(keyPrefix))
     }
     val chuckHandler = settingKey[String]("The Handler Class/Method to be executed by the Lambda")
-    val chuckTimeoutInSeconds = settingKey[Int]("The Handler Class/Method to be executed by the Lambda")
-    val chuckMemorySizeInMB = settingKey[Int]("The amount of memory with which to provision the Lambda")
+    val chuckTimeoutInSeconds =
+      settingKey[Int]("The Handler Class/Method to be executed by the Lambda")
+    val chuckMemorySizeInMB =
+      settingKey[Int]("The amount of memory with which to provision the Lambda")
 
     val chuckRuntimeConfiguration = taskKey[LambdaRuntimeConfiguration](
       "The validated runtime configuration for the Lambda"
     )
 
-
     val chuckPublish =
       taskKey[Unit]("Upload latest code to Lambda and Publish it")
   }
 
-
-  trait Copy {
-
-  }
+  trait Copy {}
 
 }

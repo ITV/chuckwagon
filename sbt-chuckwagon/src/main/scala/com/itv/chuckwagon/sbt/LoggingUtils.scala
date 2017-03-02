@@ -5,7 +5,6 @@ import fansi.Str
 
 object LoggingUtils {
 
-
   def logItemsMessage(prefix: String, items: String*): String = {
 
     val colouredItems =

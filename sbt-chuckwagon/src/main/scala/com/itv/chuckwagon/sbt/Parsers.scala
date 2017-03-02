@@ -10,10 +10,10 @@ import scala.collection.immutable.Seq
 
 object Parsers {
 
-
   val environmentArgParser: Def.Initialize[Parser[AliasName]] = Def.setting {
     val environments: Seq[String] = chuckEnvironments.value.map(_.name).toList
-    val environmentParser: Parser[AliasName] = token(NotQuoted.examples(FixedSetExamples(environments))).map(AliasName)
+    val environmentParser: Parser[AliasName] =
+      token(NotQuoted.examples(FixedSetExamples(environments))).map(AliasName)
     token(' ') ~> environmentParser
   }
 
