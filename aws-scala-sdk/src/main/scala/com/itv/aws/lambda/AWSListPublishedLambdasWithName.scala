@@ -2,7 +2,8 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.{ListVersionsByFunctionRequest, ResourceNotFoundException}
-import com.itv.aws.{ARN, AWSService}
+import com.itv.aws.AWSService
+import com.itv.aws.iam.ARN
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -43,7 +44,7 @@ class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
             ),
             runtime = LambdaRuntimeConfiguration(
               handler = LambdaHandler(fc.getHandler),
-              timeout = fc.getTimeout.toInt.seconds,
+              timeout = fc.getTimeout.toDouble.seconds,
               memorySize = MemorySize(fc.getMemorySize)
             )
           ),

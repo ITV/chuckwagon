@@ -3,7 +3,8 @@ package com.itv.aws.lambda
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.{CreateFunctionRequest, FunctionCode, VpcConfig => AWSVpcConfig}
 import com.itv.aws.s3.S3Location
-import com.itv.aws.{ARN, AWSService}
+import com.itv.aws.AWSService
+import com.itv.aws.iam.ARN
 
 import scala.collection.JavaConverters._
 

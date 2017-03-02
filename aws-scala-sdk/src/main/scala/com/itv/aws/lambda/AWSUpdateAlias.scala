@@ -1,8 +1,9 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.itv.aws.{ARN, AWSService}
+import com.itv.aws.AWSService
 import com.amazonaws.services.lambda.model.{UpdateAliasRequest => AWSUpdateAliasRequest}
+import com.itv.aws.iam.ARN
 
 case class UpdateAliasRequest(alias: Alias, lambdaVersionToAlias: LambdaVersion)
 case class UpdateAliasResponse(alias: Alias)

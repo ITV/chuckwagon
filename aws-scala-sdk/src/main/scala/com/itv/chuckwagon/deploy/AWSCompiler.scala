@@ -2,10 +2,8 @@ package com.itv.chuckwagon.deploy
 
 import java.io.File
 
-import cats.arrow.FunctionK
 import cats.{~>, Id}
 import com.amazonaws.services.lambda.AWSLambda
-import com.itv.aws.ARN
 import com.itv.aws.ec2._
 import com.itv.aws.events._
 import com.itv.aws.iam.{AWSPutRolePolicy, _}

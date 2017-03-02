@@ -1,7 +1,7 @@
 package com.itv.aws.iam
 
 import com.amazonaws.services.identitymanagement.model.{PutRolePolicyRequest => AWSPutRolePolicyRequest}
-import com.itv.aws.{AWSService, Role}
+import com.itv.aws.AWSService
 
 case class PutRolePolicyRequest(rolePolicy: RolePolicy)
 case class PutRolePolicyResponse(role: Role)

@@ -3,7 +3,6 @@ package com.itv
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.client.builder.AwsSyncClientBuilder
 import com.amazonaws.regions.Regions
-import com.itv.aws.iam.RoleDeclaration
 
 package object aws {
 
@@ -32,11 +31,5 @@ package object aws {
 package aws {
 
   trait AWSService[Req, Res] extends (Req => Res)
-
-  case class ARN(value: String) extends AnyVal
-
-  case class RoleName(value: String) extends AnyVal
-
-  case class Role(roleDeclaration: RoleDeclaration, arn: ARN)
 
 }

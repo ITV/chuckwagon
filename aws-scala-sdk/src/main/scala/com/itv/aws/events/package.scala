@@ -1,6 +1,7 @@
 package com.itv.aws
 
 import com.amazonaws.services.cloudwatchevents.{AmazonCloudWatchEvents, AmazonCloudWatchEventsClientBuilder}
+import com.itv.aws.iam.ARN
 
 package object events {
 
@@ -12,6 +13,7 @@ package object events {
 }
 
 package events {
+
   case class RuleName(value: String) extends AnyVal
 
   case class ScheduleExpression(value: String) extends AnyVal

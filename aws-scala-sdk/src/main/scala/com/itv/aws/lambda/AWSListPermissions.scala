@@ -2,7 +2,8 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.GetPolicyRequest
-import com.itv.aws.{ARN, AWSService}
+import com.itv.aws.AWSService
+import com.itv.aws.iam.ARN
 import io.circe.parser._
 
 import scala.util.Try

@@ -1,6 +1,6 @@
 package com.itv.aws.iam
 
-import com.itv.aws.{ARN, AWSService, Role, RoleName}
+import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
 

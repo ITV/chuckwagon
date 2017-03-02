@@ -2,7 +2,7 @@ package com.itv.chuckwagon.sbt
 
 import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
-import com.itv.aws.Role
+import com.itv.aws.iam.Role
 import com.itv.aws.ec2.Filter
 import com.itv.aws.lambda._
 import com.itv.aws.s3.{BucketName, S3Address, S3KeyPrefix}

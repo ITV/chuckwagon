@@ -1,6 +1,5 @@
 package com.itv.aws.lambda
 
-import com.itv.aws.{Role, RoleName}
 import com.itv.aws.iam._
 
 object LambdaRoles {

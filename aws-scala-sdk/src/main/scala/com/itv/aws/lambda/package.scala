@@ -8,6 +8,8 @@ import scala.concurrent.duration.FiniteDuration
 
 package lambda {
 
+  import com.itv.aws.iam.ARN
+
   case class LambdaName(value: String) extends AnyVal
 
   case class LambdaVersion(value: Int) extends AnyVal

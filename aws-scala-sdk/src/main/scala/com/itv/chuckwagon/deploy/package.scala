@@ -2,7 +2,7 @@ package com.itv.chuckwagon
 
 import java.io.File
 
-import com.itv.aws.{ARN, Role, RoleName}
+import com.itv.aws.iam.{ARN, Role, RoleName}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import cats.free.Free
@@ -16,7 +16,7 @@ import com.itv.aws.iam.{PutRolePolicyRequest, RoleDeclaration, RolePolicy}
 
 import scala.annotation.tailrec
 
-package object deploy {
+package deploy {
 
   sealed trait DeployLambdaA[A]
 
@@ -49,6 +49,10 @@ package object deploy {
   case class CreateBucket(name: BucketName)                              extends DeployLambdaA[Bucket]
   case class ListBuckets()                                               extends DeployLambdaA[List[Bucket]]
   case class PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) extends DeployLambdaA[S3Location]
+
+}
+
+package object deploy {
 
   type DeployLambda[A] = Free[DeployLambdaA, A]
 

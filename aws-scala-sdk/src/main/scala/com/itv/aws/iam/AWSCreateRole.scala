@@ -1,9 +1,7 @@
 package com.itv.aws.iam
 
 import com.amazonaws.services.identitymanagement.model.{CreateRoleRequest => AWSCreateRoleRequest}
-import com.itv.aws.{ARN, AWSService, Role, RoleName}
-
-import scala.annotation.tailrec
+import com.itv.aws.AWSService
 
 case class CreateRoleRequest(roleDeclaration: RoleDeclaration)
 case class CreateRoleResponse(role: Role)

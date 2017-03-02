@@ -1,6 +1,6 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.aws.ARN
+import com.itv.aws.iam.ARN
 import com.itv.aws.lambda.{AliasName, LambdaName, VpcConfigDeclaration}
 
 case class Environment(name: String) {

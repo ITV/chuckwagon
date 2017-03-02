@@ -6,7 +6,7 @@ import fansi.Str
 import sbt._
 import sbt.Keys._
 import LoggingUtils._
-import com.itv.aws.ARN
+import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 
 object ChuckwagonBasePlugin extends AutoPlugin {
