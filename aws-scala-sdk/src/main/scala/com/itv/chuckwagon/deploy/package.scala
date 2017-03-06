@@ -1,6 +1,6 @@
 package com.itv.chuckwagon
 
-import java.io.File
+import java.io.{File, InputStream}
 
 import com.itv.aws.iam.{ARN, Role, RoleName}
 import com.itv.aws.lambda._
@@ -17,6 +17,8 @@ import com.itv.aws.iam.{PutRolePolicyRequest, RoleDeclaration, RolePolicy}
 import scala.annotation.tailrec
 
 package deploy {
+
+  import java.io.InputStream
 
   sealed trait DeployLambdaA[A]
 
@@ -41,14 +43,16 @@ package deploy {
   case class UpdateLambdaConfiguration(lambda: Lambda)                          extends DeployLambdaA[Unit]
   case class UpdateLambdaCode(lambda: Lambda, s3Location: S3Location)           extends DeployLambdaA[PublishedLambda]
   case class DeleteLambdaVersion(publishedLambda: PublishedLambda)              extends DeployLambdaA[LambdaVersion]
+  case class GetLambdaVersion(lambdaName: LambdaName, aliasName: AliasName)
+      extends DeployLambdaA[DownloadablePublishedLambda]
 
   case class CreateRole(roleDeclaration: RoleDeclaration) extends DeployLambdaA[Role]
   case class PutRolePolicy(rolePolicy: RolePolicy)        extends DeployLambdaA[Role]
   case class ListRoles()                                  extends DeployLambdaA[List[Role]]
 
-  case class CreateBucket(name: BucketName)                              extends DeployLambdaA[Bucket]
-  case class ListBuckets()                                               extends DeployLambdaA[List[Bucket]]
-  case class PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) extends DeployLambdaA[S3Location]
+  case class CreateBucket(name: BucketName)                          extends DeployLambdaA[Bucket]
+  case class ListBuckets()                                           extends DeployLambdaA[List[Bucket]]
+  case class PutObject(bucket: Bucket, putObjectType: PutObjectType) extends DeployLambdaA[S3Location]
 
 }
 
@@ -121,6 +125,9 @@ package object deploy {
       publishedLambda: PublishedLambda
   ): DeployLambda[LambdaVersion] =
     liftF[DeployLambdaA, LambdaVersion](DeleteLambdaVersion(publishedLambda))
+  def getDownloadablePublishedLambdaVersion(lambdaName: LambdaName,
+                                            aliasName: AliasName): DeployLambda[DownloadablePublishedLambda] =
+    liftF[DeployLambdaA, DownloadablePublishedLambda](GetLambdaVersion(lambdaName, aliasName))
 
   def createRole(roleDeclaration: RoleDeclaration): DeployLambda[Role] =
     liftF[DeployLambdaA, Role](CreateRole(roleDeclaration))
@@ -133,8 +140,8 @@ package object deploy {
     liftF[DeployLambdaA, Bucket](CreateBucket(name))
   def listBuckets(): DeployLambda[List[Bucket]] =
     liftF[DeployLambdaA, List[Bucket]](ListBuckets())
-  def putFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File): DeployLambda[S3Location] =
-    liftF[DeployLambdaA, S3Location](PutFile(bucket, keyPrefix, file))
+  def putObject(bucket: Bucket, putObjectType: PutObjectType): DeployLambda[S3Location] =
+    liftF[DeployLambdaA, S3Location](PutObject(bucket, putObjectType))
 
   def findRole(test: Role => Boolean): DeployLambda[Option[Role]] =
     for {
@@ -191,17 +198,8 @@ package object deploy {
       case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
     }
 
-  def publishLambda(lambda: Lambda, s3Address: S3Address, file: File): DeployLambda[PublishedLambda] = {
+  def publishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     for {
-      buckets <- listBuckets()
-      uploadBucketOrEmpty = buckets.find(
-        b => b.name.value == s3Address.bucketName.value
-      )
-      uploadBucket <- uploadBucketOrEmpty match {
-        case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
-        case None         => createBucket(s3Address.bucketName)
-      }
-      s3Location              <- putFile(uploadBucket, s3Address.keyPrefix, file)
       alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.deployment.name)
       publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
         createLambda(lambda, s3Location)
@@ -210,6 +208,28 @@ package object deploy {
           _ => updateLambdaCode(lambda, s3Location)
         )
     } yield publishedLambda
+
+  def uploadAndPublishLambdaToAlias(lambda: Lambda,
+                                    bucketName: BucketName,
+                                    putObjectType: PutObjectType,
+                                    aliasName: AliasName): DeployLambda[Alias] = {
+    for {
+      buckets <- listBuckets()
+      uploadBucketOrEmpty = buckets.find(
+        b => b.name.value == bucketName.value
+      )
+      uploadBucket <- uploadBucketOrEmpty match {
+        case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
+        case None         => createBucket(bucketName)
+      }
+      s3Location      <- putObject(uploadBucket, putObjectType)
+      publishedLambda <- publishLambda(lambda, s3Location)
+      alias <- aliasLambdaVersion(
+        publishedLambda.lambda.deployment.name,
+        publishedLambda.version,
+        aliasName
+      )
+    } yield alias
   }
 
   def aliasPublishedLambda(publishedLambda: PublishedLambda, aliasName: AliasName): DeployLambda[Alias] =
@@ -221,13 +241,19 @@ package object deploy {
       )
     } yield alias
 
+  def findAlias(lambdaName: LambdaName, aliasName: AliasName): DeployLambda[Option[Alias]] =
+    for {
+      alreadyCreatedAliases <- listAliases(lambdaName)
+      alias = alreadyCreatedAliases.toList.flatten
+        .find(a => a.name == aliasName)
+    } yield alias
+
   def aliasLambdaVersion(lambdaName: LambdaName,
                          lambdaVersion: LambdaVersion,
                          aliasName: AliasName): DeployLambda[Alias] =
     for {
-      alreadyCreatedAliases <- listAliases(lambdaName)
-      alias <- alreadyCreatedAliases.toList.flatten
-        .find(a => a.name == aliasName) match {
+      maybeAlias <- findAlias(lambdaName, aliasName)
+      alias <- maybeAlias match {
         case Some(alreadyCreatedAlias) =>
           updateAlias(alreadyCreatedAlias, lambdaVersion)
         case None => createAlias(aliasName, lambdaName, lambdaVersion)
@@ -312,4 +338,20 @@ package object deploy {
       _ <- putTargets(createdEventRule.eventRule, alias.arn)
       _ <- putLambdaPermission(alias, LAMBDA_SCHEDULED_TRIGGER_NAME, createdEventRule.arn)
     } yield ()
+
+  def getPublishedLambdaForAliasName(lambdaName: LambdaName, aliasName: AliasName): DeployLambda[PublishedLambda] =
+    for {
+      maybeAlias <- findAlias(lambdaName, aliasName)
+      alias = maybeAlias.getOrElse(
+        throw new Exception(
+          s"There should be an alias '${aliasName.value}' for '${lambdaName.value}' but there was not."))
+      publishedLambdas <- listPublishedLambdasWithName(alias.lambdaName)
+      publishedLambda = publishedLambdas.getOrElse(Nil).find(_.version == alias.lambdaVersion)
+    } yield
+      publishedLambda match {
+        case Some(pl) => pl
+        case None =>
+          throw new Exception(
+            s"There should be a published Lambda for '${alias.name.value}' with version '${alias.lambdaVersion.value}' but there wasn't")
+      }
 }

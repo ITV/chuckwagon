@@ -1,5 +1,6 @@
 package com.itv.aws.ec2
 
+import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{
   DescribeSecurityGroupsRequest,
   Filter => AWSFilter,
@@ -13,7 +14,7 @@ case class FindSecurityGroupsRequest(vpc: VPC, filters: List[Filter])
 
 case class FindSecurityGroupsResponse(securityGroups: List[SecurityGroup])
 
-object AWSFindSecurityGroups extends AWSService[FindSecurityGroupsRequest, FindSecurityGroupsResponse] {
+class AWSFindSecurityGroups(ec2: AmazonEC2) extends AWSService[FindSecurityGroupsRequest, FindSecurityGroupsResponse] {
   override def apply(findSecurityGroupsRequest: FindSecurityGroupsRequest): FindSecurityGroupsResponse = {
 
     val userFilters: List[AWSFilter] = findSecurityGroupsRequest.filters.map { tag =>

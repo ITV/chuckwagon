@@ -1,12 +1,13 @@
 package com.itv.aws.iam
 
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagement
 import com.amazonaws.services.identitymanagement.model.{CreateRoleRequest => AWSCreateRoleRequest}
 import com.itv.aws.AWSService
 
 case class CreateRoleRequest(roleDeclaration: RoleDeclaration)
 case class CreateRoleResponse(role: Role)
 
-object AWSCreateRole extends AWSService[CreateRoleRequest, CreateRoleResponse] {
+class AWSCreateRole(iam: AmazonIdentityManagement) extends AWSService[CreateRoleRequest, CreateRoleResponse] {
 
   override def apply(
       createRoleRequest: CreateRoleRequest

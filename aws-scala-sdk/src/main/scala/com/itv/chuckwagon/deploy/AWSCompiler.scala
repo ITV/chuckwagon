@@ -1,16 +1,35 @@
 package com.itv.chuckwagon.deploy
 
-import java.io.File
+import java.io.{File, InputStream}
 
 import cats.{~>, Id}
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.AWSLambda
+import com.amazonaws.services.s3.AmazonS3
 import com.itv.aws.ec2._
 import com.itv.aws.events._
 import com.itv.aws.iam.{AWSPutRolePolicy, _}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 
-class AWSCompiler(val awsLambda: AWSLambda) {
+class AWSCompiler(region: Regions) {
+
+  val awsEc2    = ec2(region)
+  val awsEvents = events(region)
+  val awsIam    = iam(region)
+  val awsLambda = lambda(region)
+  val awsS3     = s3(region)
+
+  val findSecurityGroups = new AWSFindSecurityGroups(awsEc2)
+  val findSubnets        = new AWSFindSubnets(awsEc2)
+  val findVPC            = new AWSFindVPC(awsEc2)
+
+  val putRule    = new AWSPutRule(awsEvents)
+  val putTargets = new AWSPutTargets(awsEvents)
+
+  val createRole    = new AWSCreateRole(awsIam)
+  val listRoles     = new AWSListRoles(awsIam)
+  val putRolePolicy = new AWSPutRolePolicy(awsIam)
 
   val addPermission       = new AWSAddPermission(awsLambda)
   val createAlias         = new AWSCreateAlias(awsLambda)
@@ -26,18 +45,23 @@ class AWSCompiler(val awsLambda: AWSLambda) {
   val updateAlias               = new AWSUpdateAlias(awsLambda)
   val updateLambdaCode          = new AWSUpdateLambdaCode(awsLambda)
   val updateLambdaConfiguration = new AWSUpdateLambdaConfiguration(awsLambda)
+  val getLambdaVersion          = new AWSGetLambdaVersion(awsLambda)
+
+  val createBucket = new AWSCreateBucket(awsS3)
+  val listBuckets  = new AWSListBuckets(awsS3)
+  val putObject    = new AWSPutObject(awsS3)
 
   def compiler: DeployLambdaA ~> Id = {
     new (DeployLambdaA ~> Id) {
       def apply[A](command: DeployLambdaA[A]): Id[A] = command match {
         case FindSecurityGroups(vpc, filters) =>
-          AWSFindSecurityGroups(FindSecurityGroupsRequest(vpc, filters)).securityGroups
+          findSecurityGroups(FindSecurityGroupsRequest(vpc, filters)).securityGroups
         case FindSubnets(vpc, filters) =>
-          AWSFindSubnets(FindSubnetsRequest(vpc, filters)).subnets
-        case FindVPC(filters)   => AWSFindVPC(FindVPCRequest(filters)).vpc
-        case PutRule(eventRule) => AWSPutRule(PutRuleRequest(eventRule)).createdEventRule
+          findSubnets(FindSubnetsRequest(vpc, filters)).subnets
+        case FindVPC(filters)   => findVPC(FindVPCRequest(filters)).vpc
+        case PutRule(eventRule) => putRule(PutRuleRequest(eventRule)).createdEventRule
         case PutTargets(eventRule: EventRule, targetARN: ARN) => {
-          AWSPutTargets(PutTargetsRequest(eventRule, targetARN))
+          putTargets(PutTargetsRequest(eventRule, targetARN))
           ()
         }
         case AddPermission(alias, lambdaPermission) => {
@@ -58,6 +82,8 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           deleteAlias(DeleteAliasRequest(alias)).name
         case DeleteLambdaVersion(publishedLambda: PublishedLambda) =>
           deleteLambdaVersion(DeleteLambdaVersionRequest(publishedLambda)).deletedVersion
+        case GetLambdaVersion(lambdaName, aliasName) =>
+          getLambdaVersion(GetLambdaVersionRequest(lambdaName, aliasName)).downloadablePublishedLambda
         case ListAliases(lambdaName: LambdaName) =>
           listAliases(ListAliasesRequest(lambdaName)).aliases
         case ListPermissions(alias) =>
@@ -79,18 +105,18 @@ class AWSCompiler(val awsLambda: AWSLambda) {
           ()
         }
         case ListBuckets() =>
-          AWSListBuckets(ListBucketsRequest()).buckets
+          listBuckets(ListBucketsRequest()).buckets
         case CreateBucket(name: BucketName) =>
-          AWSCreateBucket(CreateBucketRequest(name)).bucket
-        case PutFile(bucket: Bucket, keyPrefix: S3KeyPrefix, file: File) =>
-          AWSPutFile(PutFileRequest(bucket, keyPrefix, file)).key
+          createBucket(CreateBucketRequest(name)).bucket
+        case PutObject(bucket: Bucket, putObjectType: PutObjectType) =>
+          putObject(PutObjectRequest(bucket, putObjectType)).key
         case CreateRole(roleDeclaration) =>
-          AWSCreateRole(CreateRoleRequest(roleDeclaration)).role
+          createRole(CreateRoleRequest(roleDeclaration)).role
         case PutRolePolicy(rolePolicy) => {
-          AWSPutRolePolicy(PutRolePolicyRequest(rolePolicy)).role
+          putRolePolicy(PutRolePolicyRequest(rolePolicy)).role
         }
         case ListRoles() =>
-          AWSListRoles(ListRolesRequest()).roles
+          listRoles(ListRolesRequest()).roles
       }
     }
   }

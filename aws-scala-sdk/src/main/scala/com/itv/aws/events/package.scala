@@ -1,15 +1,14 @@
 package com.itv.aws
 
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudwatchevents.{AmazonCloudWatchEvents, AmazonCloudWatchEventsClientBuilder}
 import com.itv.aws.iam.ARN
 
 package object events {
 
-  val events: AmazonCloudWatchEvents =
-    AmazonCloudWatchEventsClientBuilder
-      .standard()
-      .withCredentials(provider)
-      .build()
+  def events(region: Regions): AmazonCloudWatchEvents = {
+    new SyncClientBuilder(AmazonCloudWatchEventsClientBuilder.standard()).withRegion(region).build
+  }
 }
 
 package events {

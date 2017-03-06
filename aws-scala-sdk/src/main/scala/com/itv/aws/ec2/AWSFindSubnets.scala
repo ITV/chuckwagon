@@ -1,5 +1,6 @@
 package com.itv.aws.ec2
 
+import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{DescribeSubnetsRequest, Filter => AWSFilter, Subnet => AWSSubnet}
 import com.itv.aws.AWSService
 
@@ -9,7 +10,7 @@ case class FindSubnetsRequest(vpc: VPC, filters: List[Filter])
 
 case class FindSubnetsResponse(subnets: List[Subnet])
 
-object AWSFindSubnets extends AWSService[FindSubnetsRequest, FindSubnetsResponse] {
+class AWSFindSubnets(ec2: AmazonEC2) extends AWSService[FindSubnetsRequest, FindSubnetsResponse] {
 
   override def apply(findSubnetsRequest: FindSubnetsRequest): FindSubnetsResponse = {
 

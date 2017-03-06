@@ -16,11 +16,9 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckSDKFreeCompiler := new AWSCompiler(chuckLambdaRegion.value),
       chuckRoleARN := None,
       chuckVpnConfigDeclaration := None,
-      chuckSDKFreeCompiler := new AWSCompiler(
-        com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
-      ),
       chuckVpcConfig := {
         val maybeVpcConfig =
           com.itv.chuckwagon.deploy
@@ -58,6 +56,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
       },
       chuckDeploymentConfiguration := {
         LambdaDeploymentConfiguration(LambdaName(chuckLambdaName.value), chuckRole.value.arn, chuckVpcConfig.value)
-      }
+      },
+      chuckJarStagingBucketKeyPrefix := ""
     )
 }

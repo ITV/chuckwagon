@@ -1,6 +1,5 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.chuckwagon.deploy.AWSCompiler
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
 import sbt.Keys.streams
 import sbt.AutoPlugin
@@ -11,23 +10,21 @@ import fansi.Str
 import sbt.complete.DefaultParsers.{token, StringBasic}
 import Parsers._
 import com.itv.aws.lambda._
+import com.itv.aws.s3.{BucketName, PutFile, S3KeyPrefix}
 
 import scala.concurrent.duration._
 
-object ChuckwagonPublishPlugin extends AutoPlugin {
+object ChuckwagonDevelopmentPlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin && com.itv.chuckwagon.sbt.ChuckwagonBasePlugin
 
-  object autoImport extends Keys.Publish
+  object autoImport extends Keys.Development
   import autoImport._
 
   override lazy val projectSettings =
     Seq(
       chuckEnvironments := chuckDefineEnvironments("blue-qa", "qa"),
       chuckVpnConfigDeclaration := None,
-      chuckSDKFreeCompiler := new AWSCompiler(
-        com.itv.aws.lambda.awsLambda(chuckLambdaRegion.value)
-      ),
       chuckRuntimeConfiguration := {
         val handler          = chuckHandler.value
         val timeoutInSeconds = chuckTimeoutInSeconds.value
@@ -101,19 +98,15 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
           runtime = chuckRuntimeConfiguration.value
         )
 
-        val publishedLambda =
-          com.itv.chuckwagon.deploy
-            .publishLambda(
-              lambda,
-              chuckStagingS3Address.value,
-              sbtassembly.AssemblyKeys.assembly.value
-            )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
-
         val alias =
           com.itv.chuckwagon.deploy
-            .aliasPublishedLambda(
-              publishedLambda,
+            .uploadAndPublishLambdaToAlias(
+              lambda,
+              BucketName(chuckJarStagingBucketName.value),
+              PutFile(
+                S3KeyPrefix(chuckJarStagingBucketKeyPrefix.value),
+                sbtassembly.AssemblyKeys.assembly.value
+              ),
               chuckEnvironments.value.head.aliasName
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -121,7 +114,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         streams.value.log.info(
           logMessage(
             (Str("Just Published Version '") ++ Green(
-              publishedLambda.version.value.toString
+              alias.lambdaVersion.value.toString
             ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
               "' as '"
             ) ++ Green(alias.arn.value) ++ Str("'")).render

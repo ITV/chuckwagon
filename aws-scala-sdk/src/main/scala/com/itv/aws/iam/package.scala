@@ -1,14 +1,13 @@
 package com.itv.aws
 
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.identitymanagement.{AmazonIdentityManagement, AmazonIdentityManagementClientBuilder}
 
 package object iam {
 
-  val iam: AmazonIdentityManagement =
-    AmazonIdentityManagementClientBuilder
-      .standard()
-      .withCredentials(provider)
-      .build()
+  def iam(region: Regions): AmazonIdentityManagement = {
+    new SyncClientBuilder(AmazonIdentityManagementClientBuilder.standard()).withRegion(region).build
+  }
 
 }
 

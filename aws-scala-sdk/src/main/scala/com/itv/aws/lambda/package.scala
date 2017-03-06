@@ -1,5 +1,6 @@
 package com.itv.aws
 
+import com.amazonaws.auth.{AWSCredentialsProviderChain, AWSStaticCredentialsProvider, BasicSessionCredentials}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.{AWSLambda, AWSLambdaClientBuilder}
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
@@ -34,6 +35,10 @@ package lambda {
   case class Lambda(deployment: LambdaDeploymentConfiguration, runtime: LambdaRuntimeConfiguration)
   case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)
 
+  case class DownloadableLambdaLocation(value: String) extends AnyVal
+  case class DownloadablePublishedLambda(publishedLambda: PublishedLambda,
+                                         downloadableLocation: DownloadableLambdaLocation)
+
   case class VpcConfigDeclaration(
       vpcLookupFilters: List[Filter],
       subnetsLookupFilters: List[Filter],
@@ -53,7 +58,15 @@ package lambda {
 }
 
 package object lambda {
-  def awsLambda(region: Regions): AWSLambda =
-    configuredClientForRegion(AWSLambdaClientBuilder.standard())(region)
+  def lambda(region: Regions): AWSLambda = {
+    new SyncClientBuilder(AWSLambdaClientBuilder.standard()).withRegion(region).build
+  }
+
+  def lambda(region: Regions, sessionCredentials: BasicSessionCredentials): AWSLambda = {
+    val sessionCredentialsProvider =
+      new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(sessionCredentials))
+
+    AWSLambdaClientBuilder.standard().withRegion(region).withCredentials(sessionCredentialsProvider).build()
+  }
 
 }

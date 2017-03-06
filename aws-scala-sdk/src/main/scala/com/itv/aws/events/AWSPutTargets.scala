@@ -1,5 +1,6 @@
 package com.itv.aws.events
 
+import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEvents
 import com.itv.aws.AWSService
 import com.amazonaws.services.cloudwatchevents.model.{Target, PutTargetsRequest => AWSPutTargetsRequest}
 import com.itv.aws.iam.ARN
@@ -7,7 +8,7 @@ import com.itv.aws.iam.ARN
 case class PutTargetsRequest(eventRule: EventRule, targetARN: ARN)
 case class PutTargetsResponse()
 
-object AWSPutTargets extends AWSService[PutTargetsRequest, PutTargetsResponse] {
+class AWSPutTargets(events: AmazonCloudWatchEvents) extends AWSService[PutTargetsRequest, PutTargetsResponse] {
   override def apply(putTargetsRequest: PutTargetsRequest): PutTargetsResponse = {
     import putTargetsRequest._
 

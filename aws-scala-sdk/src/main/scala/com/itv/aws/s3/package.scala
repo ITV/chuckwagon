@@ -1,11 +1,15 @@
 package com.itv.aws
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 package object s3 {
 
-  val awsS3: AmazonS3 =
-    com.itv.aws.configuredClient(AmazonS3ClientBuilder.standard())
+  def s3(region: Regions): AmazonS3 = {
+    new SyncClientBuilder(AmazonS3ClientBuilder.standard()).withRegion(region).build
+  }
+
 }
 
 package s3 {
@@ -18,4 +22,5 @@ package s3 {
 
   case class BucketName(value: String) extends AnyVal
   case class Bucket(name: BucketName)
+
 }

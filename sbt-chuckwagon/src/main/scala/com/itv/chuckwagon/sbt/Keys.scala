@@ -5,7 +5,6 @@ import com.amazonaws.regions.Regions
 import com.itv.aws.iam.Role
 import com.itv.aws.ec2.Filter
 import com.itv.aws.lambda._
-import com.itv.aws.s3.{BucketName, S3Address, S3KeyPrefix}
 import com.itv.chuckwagon.deploy.AWSCompiler
 import sbt._
 
@@ -73,6 +72,13 @@ object Keys {
       "Either check that the defined chuckRoleARN is valid or ensure that a suitable role is created"
     )
 
+    val chuckJarStagingBucketName = settingKey[String](
+      "The S3 bucket name into which to upload the JAR file for creating Lambdas from"
+    )
+    val chuckJarStagingBucketKeyPrefix = settingKey[String](
+      "Combined with the name of the JAR for use as the S3 key in the Staging bucket."
+    )
+
     val chuckPromote =
       inputKey[Unit]("Promote a published Lambda by attaching it to an alias")
     val chuckCleanUp =
@@ -86,14 +92,8 @@ object Keys {
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
   }
 
-  trait Publish {
+  trait Development {
 
-    val chuckStagingS3Address = settingKey[S3Address](
-      "The S3 address we want to use for staging our Scala Assembly JAR for Lambda create/update"
-    )
-    def chuckDefineS3Address(bucketName: String, keyPrefix: String): S3Address = {
-      S3Address(BucketName(bucketName), S3KeyPrefix(keyPrefix))
-    }
     val chuckHandler = settingKey[String]("The Handler Class/Method to be executed by the Lambda")
     val chuckTimeoutInSeconds =
       settingKey[Int]("The Handler Class/Method to be executed by the Lambda")
@@ -108,6 +108,9 @@ object Keys {
       taskKey[Unit]("Upload latest code to Lambda and Publish it")
   }
 
-  trait Copy {}
+  trait Production {
+    val chuckPublishCopyFrom =
+      inputKey[Unit]("Upload latest code to Lambda and Publish it")
+  }
 
 }

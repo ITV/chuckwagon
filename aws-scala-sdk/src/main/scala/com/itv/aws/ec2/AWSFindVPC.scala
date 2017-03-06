@@ -1,5 +1,6 @@
 package com.itv.aws.ec2
 
+import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{DescribeVpcsRequest, Filter => AWSFilter}
 import com.itv.aws.AWSService
 
@@ -9,7 +10,7 @@ case class FindVPCRequest(filters: List[Filter])
 
 case class FindVPCResponse(vpc: VPC)
 
-object AWSFindVPC extends AWSService[FindVPCRequest, FindVPCResponse] {
+class AWSFindVPC(ec2: AmazonEC2) extends AWSService[FindVPCRequest, FindVPCResponse] {
   override def apply(listRolesRequest: FindVPCRequest): FindVPCResponse = {
 
     val filters: List[AWSFilter] = listRolesRequest.filters.map { tag =>
