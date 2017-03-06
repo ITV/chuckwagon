@@ -6,7 +6,7 @@ import com.amazonaws.services.ec2.{AmazonEC2, AmazonEC2ClientBuilder}
 package object ec2 {
 
   def ec2(region: Regions): AmazonEC2 = {
-    new SyncClientBuilder(AmazonEC2ClientBuilder.standard()).withRegion(region).build
+    AmazonEC2ClientBuilder.standard().withRegion(region).build
   }
 }
 

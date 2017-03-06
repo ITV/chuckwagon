@@ -59,7 +59,7 @@ package lambda {
 
 package object lambda {
   def lambda(region: Regions): AWSLambda = {
-    new SyncClientBuilder(AWSLambdaClientBuilder.standard()).withRegion(region).build
+    AWSLambdaClientBuilder.standard().withRegion(region).build
   }
 
   def lambda(region: Regions, sessionCredentials: BasicSessionCredentials): AWSLambda = {

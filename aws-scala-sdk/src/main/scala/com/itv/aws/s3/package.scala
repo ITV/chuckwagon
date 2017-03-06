@@ -1,13 +1,12 @@
 package com.itv.aws
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 package object s3 {
 
   def s3(region: Regions): AmazonS3 = {
-    new SyncClientBuilder(AmazonS3ClientBuilder.standard()).withRegion(region).build
+    AmazonS3ClientBuilder.standard().withRegion(region).build
   }
 
 }

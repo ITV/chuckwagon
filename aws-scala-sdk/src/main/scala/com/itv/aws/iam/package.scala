@@ -6,7 +6,7 @@ import com.amazonaws.services.identitymanagement.{AmazonIdentityManagement, Amaz
 package object iam {
 
   def iam(region: Regions): AmazonIdentityManagement = {
-    new SyncClientBuilder(AmazonIdentityManagementClientBuilder.standard()).withRegion(region).build
+    AmazonIdentityManagementClientBuilder.standard().withRegion(region).build
   }
 
 }

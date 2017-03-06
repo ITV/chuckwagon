@@ -7,7 +7,7 @@ import com.itv.aws.iam.ARN
 package object events {
 
   def events(region: Regions): AmazonCloudWatchEvents = {
-    new SyncClientBuilder(AmazonCloudWatchEventsClientBuilder.standard()).withRegion(region).build
+    AmazonCloudWatchEventsClientBuilder.standard().withRegion(region).build
   }
 }
 
