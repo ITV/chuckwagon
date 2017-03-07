@@ -11,14 +11,16 @@ import com.itv.aws.events._
 import com.itv.aws.iam.{AWSPutRolePolicy, _}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
+import com.itv.aws.sts._
 
-class AWSCompiler(region: Regions) {
+class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
 
   val awsEc2    = ec2(region)
   val awsEvents = events(region)
   val awsIam    = iam(region)
-  val awsLambda = lambda(region)
+  val awsLambda = lambda(region, credentials.map(_.awsCredentials))
   val awsS3     = s3(region)
+  val awsSTS    = sts(region)
 
   val findSecurityGroups = new AWSFindSecurityGroups(awsEc2)
   val findSubnets        = new AWSFindSubnets(awsEc2)
@@ -50,6 +52,8 @@ class AWSCompiler(region: Regions) {
   val createBucket = new AWSCreateBucket(awsS3)
   val listBuckets  = new AWSListBuckets(awsS3)
   val putObject    = new AWSPutObject(awsS3)
+
+  val assumeRole = new AWSAssumeRole(awsSTS)
 
   def compiler: DeployLambdaA ~> Id = {
     new (DeployLambdaA ~> Id) {
@@ -117,6 +121,9 @@ class AWSCompiler(region: Regions) {
         }
         case ListRoles() =>
           listRoles(ListRolesRequest()).roles
+        case AssumeRole(roleARN, sessionName) => {
+          assumeRole(AssumeRoleRequest(roleARN, sessionName)).credentials
+        }
       }
     }
   }

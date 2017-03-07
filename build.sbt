@@ -34,6 +34,7 @@ lazy val `aws-scala-sdk` = project
           "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-ec2"    % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-events" % awsSdkVersion,
+          "com.amazonaws"  % "aws-java-sdk-sts"    % awsSdkVersion,
           "io.circe"       %% "circe-core"         % circeVersion,
           "io.circe"       %% "circe-generic"      % circeVersion,
           "io.circe"       %% "circe-parser"       % circeVersion,

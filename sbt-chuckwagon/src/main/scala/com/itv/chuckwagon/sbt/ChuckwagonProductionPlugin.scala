@@ -1,7 +1,10 @@
 package com.itv.chuckwagon.sbt
 
+import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
+import com.itv.aws.sts.AssumeRoleSessionName
+import com.itv.chuckwagon.deploy.AWSCompiler
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
 import com.itv.chuckwagon.sbt.LoggingUtils.logMessage
 import fansi.Color.Green
@@ -26,13 +29,26 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
       chuckPublishCopyFrom := {
         val args: Seq[String] = spaceDelimited("<arg>").parsed
 
+        val credentials =
+          com.itv.chuckwagon.deploy
+            .assumeRole(
+              ARN(chuckAssumableDevelopmentAccountRoleARN.value),
+              AssumeRoleSessionName("chuckwagon-production-deployment")
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        val temporaryCompiler = new AWSCompiler(
+          region = chuckLambdaRegion.value,
+          credentials = Some(credentials)
+        )
+
         val downloadablePublishedLambda: DownloadablePublishedLambda =
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(
               LambdaName(chuckLambdaName.value),
               AliasName(args.head)
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(temporaryCompiler.compiler)
 
         val httpClient = HttpClients.createDefault()
         val responseEntity =

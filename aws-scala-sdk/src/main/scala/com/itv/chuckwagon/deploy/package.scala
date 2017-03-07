@@ -13,12 +13,15 @@ import cats.syntax.traverse._
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
 import com.itv.aws.events._
 import com.itv.aws.iam.{PutRolePolicyRequest, RoleDeclaration, RolePolicy}
+import com.itv.aws.sts.{AssumeRoleSessionName, Credentials}
 
 import scala.annotation.tailrec
 
 package deploy {
 
   import java.io.InputStream
+
+  import com.itv.aws.sts.AssumeRoleSessionName
 
   sealed trait DeployLambdaA[A]
 
@@ -53,6 +56,8 @@ package deploy {
   case class CreateBucket(name: BucketName)                          extends DeployLambdaA[Bucket]
   case class ListBuckets()                                           extends DeployLambdaA[List[Bucket]]
   case class PutObject(bucket: Bucket, putObjectType: PutObjectType) extends DeployLambdaA[S3Location]
+
+  case class AssumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName) extends DeployLambdaA[Credentials]
 
 }
 
@@ -142,6 +147,9 @@ package object deploy {
     liftF[DeployLambdaA, List[Bucket]](ListBuckets())
   def putObject(bucket: Bucket, putObjectType: PutObjectType): DeployLambda[S3Location] =
     liftF[DeployLambdaA, S3Location](PutObject(bucket, putObjectType))
+
+  def assumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName): DeployLambda[Credentials] =
+    liftF[DeployLambdaA, Credentials](AssumeRole(roleARN, sessionName))
 
   def findRole(test: Role => Boolean): DeployLambda[Option[Role]] =
     for {

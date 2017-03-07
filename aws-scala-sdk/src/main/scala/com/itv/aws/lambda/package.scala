@@ -1,6 +1,11 @@
 package com.itv.aws
 
-import com.amazonaws.auth.{AWSCredentialsProviderChain, AWSStaticCredentialsProvider, BasicSessionCredentials}
+import com.amazonaws.auth.{
+  AWSCredentials,
+  AWSCredentialsProviderChain,
+  AWSStaticCredentialsProvider,
+  BasicSessionCredentials
+}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.{AWSLambda, AWSLambdaClientBuilder}
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
@@ -62,11 +67,18 @@ package object lambda {
     AWSLambdaClientBuilder.standard().withRegion(region).build
   }
 
-  def lambda(region: Regions, sessionCredentials: BasicSessionCredentials): AWSLambda = {
-    val sessionCredentialsProvider =
-      new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(sessionCredentials))
+  def lambda(region: Regions, maybeSessionCredentials: Option[AWSCredentials]): AWSLambda = {
 
-    AWSLambdaClientBuilder.standard().withRegion(region).withCredentials(sessionCredentialsProvider).build()
+    maybeSessionCredentials match {
+      case None => lambda(region)
+      case Some(sessionCredentials) => {
+        val sessionCredentialsProvider =
+          new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(sessionCredentials))
+
+        AWSLambdaClientBuilder.standard().withRegion(region).withCredentials(sessionCredentialsProvider).build()
+      }
+    }
+
   }
 
 }

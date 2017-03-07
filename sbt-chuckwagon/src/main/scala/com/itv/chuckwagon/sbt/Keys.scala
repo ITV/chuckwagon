@@ -111,6 +111,10 @@ object Keys {
   trait Production {
     val chuckPublishCopyFrom =
       inputKey[Unit]("Upload latest code to Lambda and Publish it")
+
+    val chuckAssumableDevelopmentAccountRoleARN =
+      settingKey[String](
+        "ARN of role in development account that production account can assume to query the function details")
   }
 
 }
