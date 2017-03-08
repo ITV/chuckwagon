@@ -65,7 +65,7 @@ object Keys {
       "The currently published versions of this Lambda (if Lambda exists)"
     )
 
-    val chuckVpcConfig = taskKey[Option[VpcConfig]](
+    val chuckVpcConfig = settingKey[Option[VpcConfig]](
       "Lookup desired vpn config for sbt defined VpcConfigDeclaration"
     )
     val chuckRole = taskKey[Role](

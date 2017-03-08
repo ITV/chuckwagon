@@ -32,7 +32,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
         maybeVpcConfig match {
           case Some(vpcConfig) => {
-            streams.value.log.info(
+            sLog.value.info(
               logMessage(
                 (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets
                   .map(s => Green(s.id).render)
@@ -42,7 +42,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               ))
           }
           case None =>
-            streams.value.log.info(
+            sLog.value.info(
               logMessage(
                 "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
               ))
