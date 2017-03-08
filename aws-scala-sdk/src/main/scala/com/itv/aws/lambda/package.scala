@@ -63,22 +63,6 @@ package lambda {
 }
 
 package object lambda {
-  def lambda(region: Regions): AWSLambda = {
-    AWSLambdaClientBuilder.standard().withRegion(region).build
-  }
-
-  def lambda(region: Regions, maybeSessionCredentials: Option[AWSCredentials]): AWSLambda = {
-
-    maybeSessionCredentials match {
-      case None => lambda(region)
-      case Some(sessionCredentials) => {
-        val sessionCredentialsProvider =
-          new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(sessionCredentials))
-
-        AWSLambdaClientBuilder.standard().withRegion(region).withCredentials(sessionCredentialsProvider).build()
-      }
-    }
-
-  }
+  def lambda: AwsClientBuilder[AWSLambda] = configuredClientForRegion(AWSLambdaClientBuilder.standard())
 
 }

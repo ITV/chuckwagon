@@ -1,13 +1,11 @@
 package com.itv.aws
 
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.identitymanagement.{AmazonIdentityManagement, AmazonIdentityManagementClientBuilder}
 
 package object iam {
 
-  def iam(region: Regions): AmazonIdentityManagement = {
-    AmazonIdentityManagementClientBuilder.standard().withRegion(region).build
-  }
+  def iam: AwsClientBuilder[AmazonIdentityManagement] =
+    configuredClientForRegion(AmazonIdentityManagementClientBuilder.standard())
 
 }
 

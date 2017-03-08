@@ -35,36 +35,40 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
               ARN(chuckAssumableDevelopmentAccountRoleARN.value),
               AssumeRoleSessionName("chuckwagon-production-deployment")
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(new AWSCompiler(chuckLambdaRegion.value).compiler)
 
-        val temporaryCompiler = new AWSCompiler(
+        val assumedDevelopmentRoleCompiler = new AWSCompiler(
           region = chuckLambdaRegion.value,
           credentials = Some(credentials)
         )
 
-        val downloadablePublishedLambda: DownloadablePublishedLambda =
+        val downloadableDevelopmentPublishedLambda: DownloadablePublishedLambda =
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(
               LambdaName(chuckLambdaName.value),
               AliasName(args.head)
             )
-            .foldMap(temporaryCompiler.compiler)
+            .foldMap(assumedDevelopmentRoleCompiler.compiler)
 
         val httpClient = HttpClients.createDefault()
-        val responseEntity =
-          httpClient.execute(new HttpGet(downloadablePublishedLambda.downloadableLocation.value)).getEntity
-        val is = responseEntity.getContent
+        val developmentLambdaCodeEntity =
+          httpClient.execute(new HttpGet(downloadableDevelopmentPublishedLambda.downloadableLocation.value)).getEntity
+        val developmentLambdaInputStream = developmentLambdaCodeEntity.getContent
+
+        val productionLambda =
+          downloadableDevelopmentPublishedLambda.publishedLambda.lambda
+            .copy(deployment = chuckDeploymentConfiguration.value)
 
         try {
           val alias =
             com.itv.chuckwagon.deploy
               .uploadAndPublishLambdaToAlias(
-                downloadablePublishedLambda.publishedLambda.lambda,
+                productionLambda,
                 BucketName(chuckJarStagingBucketName.value),
                 PutInputStream(
                   S3Key(s"${chuckJarStagingBucketKeyPrefix.value}${chuckLambdaName.value}-copy.jar"),
-                  responseEntity.getContent,
-                  responseEntity.getContentLength
+                  developmentLambdaInputStream,
+                  developmentLambdaCodeEntity.getContentLength
                 ),
                 chuckEnvironments.value.head.aliasName
               )
@@ -80,7 +84,7 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
             )
           )
         } finally {
-          is.close()
+          developmentLambdaInputStream.close()
         }
       }
     )

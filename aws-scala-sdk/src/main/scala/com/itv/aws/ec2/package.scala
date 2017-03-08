@@ -1,13 +1,9 @@
 package com.itv.aws
 
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.ec2.{AmazonEC2, AmazonEC2ClientBuilder}
 
 package object ec2 {
-
-  def ec2(region: Regions): AmazonEC2 = {
-    AmazonEC2ClientBuilder.standard().withRegion(region).build
-  }
+  def ec2: AwsClientBuilder[AmazonEC2] = configuredClientForRegion(AmazonEC2ClientBuilder.standard())
 }
 
 package ec2 {

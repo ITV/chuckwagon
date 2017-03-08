@@ -15,12 +15,12 @@ import com.itv.aws.sts._
 
 class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
 
-  val awsEc2    = ec2(region)
-  val awsEvents = events(region)
-  val awsIam    = iam(region)
-  val awsLambda = lambda(region, credentials.map(_.awsCredentials))
-  val awsS3     = s3(region)
-  val awsSTS    = sts(region)
+  val awsEc2    = ec2(region)(credentials)
+  val awsEvents = events(region)(credentials)
+  val awsIam    = iam(region)(credentials)
+  val awsLambda = lambda(region)(credentials)
+  val awsS3     = s3(region)(credentials)
+  val awsSTS    = sts(region)(credentials)
 
   val findSecurityGroups = new AWSFindSecurityGroups(awsEc2)
   val findSubnets        = new AWSFindSubnets(awsEc2)

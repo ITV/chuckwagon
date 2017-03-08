@@ -1,13 +1,11 @@
 package com.itv.aws
 
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.securitytoken.{AWSSecurityTokenService, AWSSecurityTokenServiceClientBuilder}
 
 package object sts {
 
-  def sts(region: Regions): AWSSecurityTokenService = {
-    AWSSecurityTokenServiceClientBuilder.standard().withRegion(region).build
-  }
+  def sts: AwsClientBuilder[AWSSecurityTokenService] =
+    configuredClientForRegion(AWSSecurityTokenServiceClientBuilder.standard())
 
 }
 
