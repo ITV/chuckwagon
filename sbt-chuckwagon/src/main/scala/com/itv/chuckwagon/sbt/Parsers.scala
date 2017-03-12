@@ -1,7 +1,7 @@
 package com.itv.chuckwagon.sbt
 
 import com.itv.aws.lambda.AliasName
-import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport.chuckEnvironments
+import com.itv.chuckwagon.sbt.Keys.Base.chuckEnvironments
 import sbt.Def
 import sbt.complete.DefaultParsers._
 import sbt.complete.{FixedSetExamples, Parser}

@@ -10,10 +10,11 @@ import cats.free.Free._
 import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
+import com.itv.aws.Credentials
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
 import com.itv.aws.events._
 import com.itv.aws.iam.{PutRolePolicyRequest, RoleDeclaration, RolePolicy}
-import com.itv.aws.sts.{AssumeRoleSessionName, Credentials}
+import com.itv.aws.sts.AssumeRoleSessionName
 
 import scala.annotation.tailrec
 
@@ -21,6 +22,7 @@ package deploy {
 
   import java.io.InputStream
 
+  import com.itv.aws.Credentials
   import com.itv.aws.sts.AssumeRoleSessionName
 
   sealed trait DeployLambdaA[A]

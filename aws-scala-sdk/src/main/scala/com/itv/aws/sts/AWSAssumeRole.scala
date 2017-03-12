@@ -2,7 +2,7 @@ package com.itv.aws.sts
 
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService
 import com.amazonaws.services.securitytoken.model.{AssumeRoleRequest => AWSAssumeRoleRequest}
-import com.itv.aws.AWSService
+import com.itv.aws._
 import com.itv.aws.iam.ARN
 
 case class AssumeRoleRequest(roleARN: ARN, sessionName: AssumeRoleSessionName)

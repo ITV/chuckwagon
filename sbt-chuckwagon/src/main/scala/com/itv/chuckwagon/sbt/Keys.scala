@@ -91,6 +91,7 @@ object Keys {
     val chuckSetLambdaTrigger =
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
   }
+  object Base extends Base
 
   trait Development {
 
@@ -108,6 +109,8 @@ object Keys {
       taskKey[Unit]("Upload latest code to Lambda and Publish it")
   }
 
+  object Development extends Development
+
   trait Production {
     val chuckPublishCopyFrom =
       inputKey[Unit]("Upload latest code to Lambda and Publish it")
@@ -116,5 +119,7 @@ object Keys {
       settingKey[String](
         "ARN of role in development account that production account can assume to query the function details")
   }
+
+  object Production extends Production
 
 }

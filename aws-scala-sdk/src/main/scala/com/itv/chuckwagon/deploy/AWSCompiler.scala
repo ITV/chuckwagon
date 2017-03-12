@@ -6,6 +6,7 @@ import cats.{~>, Id}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.s3.AmazonS3
+import com.itv.aws.Credentials
 import com.itv.aws.ec2._
 import com.itv.aws.events._
 import com.itv.aws.iam.{AWSPutRolePolicy, _}

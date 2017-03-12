@@ -3,7 +3,6 @@ package com.itv
 import com.amazonaws.auth.{AWSCredentialsProviderChain, AWSStaticCredentialsProvider}
 import com.amazonaws.client.builder.AwsSyncClientBuilder
 import com.amazonaws.regions.Regions
-import com.itv.aws.sts.Credentials
 
 package object aws {
 
@@ -33,6 +32,23 @@ package object aws {
 
 package aws {
 
+  import com.amazonaws.auth.{AWSCredentials, BasicSessionCredentials}
+
   trait AWSService[Req, Res] extends (Req => Res)
+
+  case class AccessKeyId(value: String)     extends AnyVal
+  case class SecretAccessKey(value: String) extends AnyVal
+  case class SessionToken(value: String)    extends AnyVal
+
+  case class Credentials(accessKeyId: AccessKeyId, secretAccessKey: SecretAccessKey, sessionToken: SessionToken) {
+
+    val awsCredentials: AWSCredentials = {
+      new BasicSessionCredentials(
+        accessKeyId.value,
+        secretAccessKey.value,
+        sessionToken.value
+      )
+    }
+  }
 
 }
