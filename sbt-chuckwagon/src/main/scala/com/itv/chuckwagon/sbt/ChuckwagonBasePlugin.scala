@@ -113,6 +113,33 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         }
         ()
       },
+      chuckRemoveLambdaTrigger := {
+        val targetAliasName = environmentArgParser.value.parsed
+
+        val maybeAliases = com.itv.chuckwagon.deploy
+          .listAliases(chuckDeploymentConfiguration.value.name)
+          .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
+          case Some(alias) => {
+
+            com.itv.chuckwagon.deploy
+              .removeLambdaTrigger(alias)
+              .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+            streams.value.log
+              .info(
+                logMessage(
+                  (Str("Just Removed Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str("'")).render
+                )
+              )
+          }
+          case None =>
+            throw new Exception(
+              s"Cannot remove Lambda Trigger on '${chuckDeploymentConfiguration.value.name.value}' because '${targetAliasName.value}' does not exist yet.")
+        }
+        ()
+      },
       chuckCurrentAliases := {
         val maybeAliases = com.itv.chuckwagon.deploy
           .listAliases(chuckDeploymentConfiguration.value.name)

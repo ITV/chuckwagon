@@ -6,6 +6,8 @@ import com.itv.aws.iam.ARN
 
 package object events {
 
+  val RULE_TARGET_ID = "1"
+
   def events: AwsClientBuilder[AmazonCloudWatchEvents] =
     configuredClientForRegion(AmazonCloudWatchEventsClientBuilder.standard())
 }

@@ -27,8 +27,10 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
   val findSubnets        = new AWSFindSubnets(awsEc2)
   val findVPC            = new AWSFindVPC(awsEc2)
 
-  val putRule    = new AWSPutRule(awsEvents)
-  val putTargets = new AWSPutTargets(awsEvents)
+  val putRule       = new AWSPutRule(awsEvents)
+  val putTargets    = new AWSPutTargets(awsEvents)
+  val deleteRule    = new AWSDeleteRule(awsEvents)
+  val removeTargets = new AWSRemoveTargets(awsEvents)
 
   val createRole    = new AWSCreateRole(awsIam)
   val listRoles     = new AWSListRoles(awsIam)
@@ -67,6 +69,14 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
         case PutRule(eventRule) => putRule(PutRuleRequest(eventRule)).createdEventRule
         case PutTargets(eventRule: EventRule, targetARN: ARN) => {
           putTargets(PutTargetsRequest(eventRule, targetARN))
+          ()
+        }
+        case DeleteRule(ruleName) => {
+          deleteRule(DeleteRuleRequest(ruleName))
+          ()
+        }
+        case RemoveTargets(ruleName) => {
+          removeTargets(RemoveTargetsRequest(ruleName))
           ()
         }
         case AddPermission(alias, lambdaPermission) => {

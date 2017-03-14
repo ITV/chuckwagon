@@ -14,7 +14,7 @@ class AWSPutTargets(events: AmazonCloudWatchEvents) extends AWSService[PutTarget
 
     val awsAWSPutTargetsRequest = new AWSPutTargetsRequest()
       .withRule(eventRule.name.value)
-      .withTargets(new Target().withId("1").withArn(targetARN.value))
+      .withTargets(new Target().withId(RULE_TARGET_ID).withArn(targetARN.value))
 
     val _ = events.putTargets(awsAWSPutTargetsRequest)
 

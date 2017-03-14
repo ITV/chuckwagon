@@ -65,7 +65,7 @@ object Keys {
       "The currently published versions of this Lambda (if Lambda exists)"
     )
 
-    val chuckVpcConfig = settingKey[Option[VpcConfig]](
+    val chuckVpcConfig = taskKey[Option[VpcConfig]](
       "Lookup desired vpn config for sbt defined VpcConfigDeclaration"
     )
     val chuckRole = taskKey[Role](
@@ -90,6 +90,8 @@ object Keys {
       taskKey[Unit]("Run the entire Deployment Pipeline")
     val chuckSetLambdaTrigger =
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
+    val chuckRemoveLambdaTrigger =
+      inputKey[Unit]("Remove invoke cron trigger for Lambda")
   }
   object Base extends Base
 

@@ -33,6 +33,8 @@ package deploy {
 
   case class PutRule(eventRule: EventRule)                    extends DeployLambdaA[CreatedEventRule]
   case class PutTargets(eventRule: EventRule, targetARN: ARN) extends DeployLambdaA[Unit]
+  case class DeleteRule(ruleName: RuleName)                   extends DeployLambdaA[Unit]
+  case class RemoveTargets(ruleName: RuleName)                extends DeployLambdaA[Unit]
 
   case class AddPermission(alias: Alias, lambdaPermission: LambdaPermission) extends DeployLambdaA[Unit]
   case class CreateAlias(name: AliasName, lambdaName: LambdaName, lambdaVersionToAlias: LambdaVersion)
@@ -92,6 +94,12 @@ package object deploy {
     liftF[DeployLambdaA, Unit](
       PutTargets(eventRule, targetARN)
     )
+  }
+  def deleteRule(ruleName: RuleName): DeployLambda[Unit] = {
+    liftF[DeployLambdaA, Unit](DeleteRule(ruleName))
+  }
+  def removeTargets(ruleName: RuleName): DeployLambda[Unit] = {
+    liftF[DeployLambdaA, Unit](RemoveTargets(ruleName))
   }
 
   def addPermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] = {
@@ -337,17 +345,26 @@ package object deploy {
   }
 
   private val LAMBDA_SCHEDULED_TRIGGER_NAME = "scheduled-trigger"
+  def ruleNameFor(alias: Alias): RuleName =
+    RuleName(s"${alias.derivedId}-$LAMBDA_SCHEDULED_TRIGGER_NAME")
   def setLambdaTrigger(alias: Alias, scheduleExpression: ScheduleExpression): DeployLambda[Unit] =
     for {
       createdEventRule <- putRule(
         EventRule(
-          name = RuleName(s"${alias.derivedId}-$LAMBDA_SCHEDULED_TRIGGER_NAME"),
+          name = ruleNameFor(alias),
           scheduleExpression = scheduleExpression,
           description = s"Periodic Trigger for Lambda '${alias.lambdaName.value}' in environment '${alias.name.value}'"
         ))
       _ <- putTargets(createdEventRule.eventRule, alias.arn)
       _ <- putLambdaPermission(alias, LAMBDA_SCHEDULED_TRIGGER_NAME, createdEventRule.arn)
     } yield ()
+  def removeLambdaTrigger(alias: Alias): DeployLambda[Unit] = {
+    val ruleName = ruleNameFor(alias)
+    for {
+      _ <- removeTargets(ruleName)
+      _ <- deleteRule(ruleName)
+    } yield ()
+  }
 
   def getPublishedLambdaForAliasName(lambdaName: LambdaName, aliasName: AliasName): DeployLambda[PublishedLambda] =
     for {
