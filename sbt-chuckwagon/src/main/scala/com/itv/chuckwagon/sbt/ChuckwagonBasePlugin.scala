@@ -24,7 +24,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           (environmentArgParser.value ~ environmentArgParser.value).parsed
         val promotedToAlias = com.itv.chuckwagon.deploy
           .promoteLambda(
-            LambdaName(chuckName.value),
+            chuckName.value,
             fromAliasName,
             toAliasName
           )
@@ -48,7 +48,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           (environmentArgParser.value ~ (token(' ') ~> token(StringBasic))).parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckName.value))
+          .listAliases(chuckName.value)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -75,7 +75,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val targetAliasName = environmentArgParser.value.parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckName.value))
+          .listAliases(chuckName.value)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -100,7 +100,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
       },
       chuckCurrentAliases := {
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckName.value))
+          .listAliases(chuckName.value)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases match {
@@ -122,7 +122,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
       },
       chuckCurrentlyPublished := {
         val maybePublishedLambdas = com.itv.chuckwagon.deploy
-          .listPublishedLambdasWithName(LambdaName(chuckName.value))
+          .listPublishedLambdasWithName(chuckName.value)
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybePublishedLambdas match {
@@ -148,7 +148,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val deletedAliases =
           com.itv.chuckwagon.deploy
             .deleteRedundantAliases(
-              LambdaName(chuckName.value),
+              chuckName.value,
               chuckEnvironments.value.toList.map(_.aliasName)
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -162,7 +162,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
         val deletedLambdaVersions =
           com.itv.chuckwagon.deploy
-            .deleteRedundantPublishedLambdas(LambdaName(chuckName.value))
+            .deleteRedundantPublishedLambdas(chuckName.value)
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         streams.value.log.info(

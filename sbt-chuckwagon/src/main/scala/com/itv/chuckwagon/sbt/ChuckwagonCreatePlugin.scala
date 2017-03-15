@@ -30,7 +30,7 @@ object ChuckwagonCreatePlugin extends AutoPlugin {
 
         val lambda = Lambda(
           deployment = LambdaDeploymentConfiguration(
-            name = LambdaName(chuckName.value),
+            name = chuckName.value,
             roleARN = chuckRoleTask.value.arn,
             vpcConfig = maybeVpcConfig
           ),
@@ -76,7 +76,7 @@ object ChuckwagonCreatePlugin extends AutoPlugin {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
           chuckCreateConfig.value.roleARN,
-          LambdaName(chuckName.value)
+          chuckName.value
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)
     }

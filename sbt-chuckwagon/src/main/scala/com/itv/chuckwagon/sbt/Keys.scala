@@ -13,25 +13,26 @@ case class Publish(roleARN: ARN, vpcConfigDeclaration: VpcConfigDeclaration)
 object Keys {
 
   trait Base {
+    import scala.language.implicitConversions
 
     val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
 
-    val chuckEnvironments = settingKey[NonEmptyList[Environment]](
+    val chuckEnvironments = settingKey[Set[Environment]](
       "The environments through which our lambda will be promoted and tested"
     )
-    def chuckDefineEnvironments(environments: String*): NonEmptyList[Environment] = {
-      NonEmptyList.of[String](environments.head, environments.tail: _*).map(Environment)
-    }
+    implicit def getChuckEnvironmentsFor(environments: Set[String]): Set[Environment] =
+      environments.map(Environment)
 
     val chuckRegion =
       settingKey[Regions]("AWS region within which to manage Lambda")
-    def chuckDefineRegion(region: String): Regions = {
-      Regions.fromName(region)
-    }
 
-    val chuckName = settingKey[String]("The name of the Lambda.")
+    implicit def getChuckRegionFor(regionName: String): Regions = Regions.fromName(regionName)
+
+    val chuckName = settingKey[LambdaName]("The name of the Lambda.")
+
+    implicit def getChuckNameFor(lambdaName: String): LambdaName = LambdaName(lambdaName)
 
     val chuckCurrentAliases = taskKey[Option[List[Alias]]](
       "The Aliases currently configured in AWS (if Lambda exists)"

@@ -51,7 +51,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
         val downloadableDevelopmentPublishedLambda: DownloadablePublishedLambda =
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(
-              LambdaName(chuckName.value),
+              chuckName.value,
               AliasName(fromAliasNameString)
             )
             .foldMap(assumedDevelopmentRoleCompiler.compiler)
@@ -65,7 +65,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
           downloadableDevelopmentPublishedLambda.publishedLambda.lambda
             .copy(
               deployment = LambdaDeploymentConfiguration(
-                name = LambdaName(chuckName.value),
+                name = chuckName.value,
                 roleARN = chuckRoleTask.value.arn,
                 vpcConfig = maybeVpcConfig
               ))
@@ -109,7 +109,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
           chuckCopyConfig.value.roleARN,
-          LambdaName(chuckName.value)
+          chuckName.value
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)
     }
