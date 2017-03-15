@@ -1,16 +1,9 @@
 package com.itv.aws
 
-import com.amazonaws.auth.{
-  AWSCredentials,
-  AWSCredentialsProviderChain,
-  AWSStaticCredentialsProvider,
-  BasicSessionCredentials
-}
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.{AWSLambda, AWSLambdaClientBuilder}
 import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 package lambda {
 
@@ -30,7 +23,19 @@ package lambda {
     val derivedId = s"${lambdaName.value}-${name.value}"
   }
 
-  case class LambdaRuntimeConfiguration(handler: LambdaHandler, timeout: FiniteDuration, memorySize: MemorySize)
+  case class LambdaRuntimeConfiguration(handler: LambdaHandler, timeout: FiniteDuration, memorySize: MemorySize) {
+
+    require(
+      timeout > 0.seconds && timeout <= 300.seconds,
+      "Lambda timeout must be between 1 and 300 seconds"
+    )
+
+    require(
+      memorySize.value >= 128 && memorySize.value <= 1536,
+      "Lambda memory must be between 128 and 1536 MBs"
+    )
+
+  }
   case class LambdaDeploymentConfiguration(
       name: LambdaName,
       roleARN: ARN,

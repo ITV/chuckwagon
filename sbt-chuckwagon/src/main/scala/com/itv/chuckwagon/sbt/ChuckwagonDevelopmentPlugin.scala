@@ -2,17 +2,14 @@ package com.itv.chuckwagon.sbt
 
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
 import sbt.Keys.streams
-import sbt.AutoPlugin
+import sbt.{AutoPlugin, Def, File, Task}
 import LoggingUtils._
-import com.itv.aws.events.ScheduleExpression
 import fansi.Color.Green
 import fansi.Str
-import sbt.complete.DefaultParsers.{token, StringBasic}
 import Parsers._
+import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
-import com.itv.aws.s3.{BucketName, PutFile, S3KeyPrefix}
-
-import scala.concurrent.duration._
+import com.itv.aws.s3.PutFile
 
 object ChuckwagonDevelopmentPlugin extends AutoPlugin {
 
@@ -23,44 +20,33 @@ object ChuckwagonDevelopmentPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckEnvironments := chuckDefineEnvironments("blue-qa", "qa"),
-      chuckRuntimeConfiguration := {
-        val handler          = chuckHandler.value
-        val timeoutInSeconds = chuckTimeoutInSeconds.value
-        val memorySizeInMB   = chuckMemorySizeInMB.value
+      chuckPublishTo := {
+        val toAliasName = environmentArgParser.value.parsed
 
-        require(
-          timeoutInSeconds > 0 && timeoutInSeconds <= 300,
-          "Lambda timeout must be between 1 and 300 seconds"
-        )
+        val developmentLambdaConfiguration = chuckDevConfig.value
+        import developmentLambdaConfiguration._
 
-        require(
-          memorySizeInMB >= 128 && memorySizeInMB <= 1536,
-          "Lambda memory must be between 128 and 1536 MBs"
-        )
+        val maybeVpcConfig = maybeVpcConfigTask.value
 
-        LambdaRuntimeConfiguration(
-          handler = LambdaHandler(handler),
-          timeout = timeoutInSeconds.seconds,
-          memorySize = MemorySize(memorySizeInMB)
-        )
-      },
-      chuckPublish := {
         val lambda = Lambda(
-          deployment = chuckDeploymentConfiguration.value,
-          runtime = chuckRuntimeConfiguration.value
+          deployment = LambdaDeploymentConfiguration(
+            name = LambdaName(chuckLambdaName.value),
+            roleARN = chuckRoleTask.value.arn,
+            vpcConfig = maybeVpcConfig
+          ),
+          runtime = lambdaRuntimeConfiguration
         )
 
         val alias =
           com.itv.chuckwagon.deploy
             .uploadAndPublishLambdaToAlias(
               lambda,
-              BucketName(chuckJarStagingBucketName.value),
+              jarStagingBucketName,
               PutFile(
-                S3KeyPrefix(chuckJarStagingBucketKeyPrefix.value),
-                sbtassembly.AssemblyKeys.assembly.value
+                jarStagingS3KeyPrefix,
+                codeGeneratorTask.value
               ),
-              chuckEnvironments.value.head.aliasName
+              toAliasName
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
@@ -77,4 +63,22 @@ object ChuckwagonDevelopmentPlugin extends AutoPlugin {
         ()
       }
     )
+
+  private def maybeVpcConfigTask: Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
+    BaseHelpers.maybeVpcConfig(chuckDevConfig.value.vpcConfigDeclaration)
+  }
+  private def codeGeneratorTask: Def.Initialize[Task[File]] = Def.taskDyn {
+    chuckDevConfig.value.codeGenerator
+  }
+
+  private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
+    Def.task {
+      com.itv.chuckwagon.deploy
+        .getPredefinedOrChuckwagonRole(
+          chuckDevConfig.value.roleARN,
+          LambdaName(chuckLambdaName.value)
+        )
+        .foldMap(chuckSDKFreeCompiler.value.compiler)
+    }
+  }
 }

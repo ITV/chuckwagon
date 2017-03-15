@@ -6,7 +6,6 @@ import fansi.Str
 import sbt._
 import sbt.Keys._
 import LoggingUtils._
-import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 import Parsers._
 import com.itv.aws.events.ScheduleExpression
@@ -20,53 +19,12 @@ object ChuckwagonBasePlugin extends AutoPlugin {
   override lazy val projectSettings =
     Seq(
       chuckSDKFreeCompiler := new AWSCompiler(chuckLambdaRegion.value),
-      chuckRoleARN := None,
-      chuckVpnConfigDeclaration := None,
-      chuckVpcConfig := {
-        val maybeVpcConfig =
-          com.itv.chuckwagon.deploy
-            .getVpcConfig(
-              chuckVpnConfigDeclaration.value
-            )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-        maybeVpcConfig match {
-          case Some(vpcConfig) => {
-            sLog.value.info(
-              logMessage(
-                (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets
-                  .map(s => Green(s.id).render)
-                  .mkString(Str(", ").render) ++ Str("' security groups: '") ++ vpcConfig.securityGroups
-                  .map(sg => Green(sg.id).render)
-                  .mkString(Str(", ").render) ++ Str("'")).render
-              ))
-          }
-          case None =>
-            sLog.value.info(
-              logMessage(
-                "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
-              ))
-        }
-        maybeVpcConfig
-      },
-      chuckRole := {
-        com.itv.chuckwagon.deploy
-          .getPredefinedOrChuckwagonRole(
-            chuckRoleARN.value.map(ARN),
-            LambdaName(chuckLambdaName.value)
-          )
-          .foldMap(chuckSDKFreeCompiler.value.compiler)
-      },
-      chuckDeploymentConfiguration := {
-        LambdaDeploymentConfiguration(LambdaName(chuckLambdaName.value), chuckRole.value.arn, chuckVpcConfig.value)
-      },
-      chuckJarStagingBucketKeyPrefix := "",
       chuckPromote := {
         val (fromAliasName, toAliasName) =
           (environmentArgParser.value ~ environmentArgParser.value).parsed
         val promotedToAlias = com.itv.chuckwagon.deploy
           .promoteLambda(
-            chuckDeploymentConfiguration.value.name,
+            LambdaName(chuckLambdaName.value),
             fromAliasName,
             toAliasName
           )
@@ -90,7 +48,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           (environmentArgParser.value ~ (token(' ') ~> token(StringBasic))).parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(chuckDeploymentConfiguration.value.name)
+          .listAliases(LambdaName(chuckLambdaName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -109,7 +67,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           }
           case None =>
             throw new Exception(
-              s"Cannot set Lambda Trigger on '${chuckDeploymentConfiguration.value.name.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot set Lambda Trigger on '${chuckLambdaName.value}' because '${targetAliasName.value}' does not exist yet.")
         }
         ()
       },
@@ -117,7 +75,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val targetAliasName = environmentArgParser.value.parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(chuckDeploymentConfiguration.value.name)
+          .listAliases(LambdaName(chuckLambdaName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -136,13 +94,13 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           }
           case None =>
             throw new Exception(
-              s"Cannot remove Lambda Trigger on '${chuckDeploymentConfiguration.value.name.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot remove Lambda Trigger on '${chuckLambdaName.value}' because '${targetAliasName.value}' does not exist yet.")
         }
         ()
       },
       chuckCurrentAliases := {
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(chuckDeploymentConfiguration.value.name)
+          .listAliases(LambdaName(chuckLambdaName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases match {
@@ -164,7 +122,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
       },
       chuckCurrentPublishedLambdas := {
         val maybePublishedLambdas = com.itv.chuckwagon.deploy
-          .listPublishedLambdasWithName(chuckDeploymentConfiguration.value.name)
+          .listPublishedLambdasWithName(LambdaName(chuckLambdaName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybePublishedLambdas match {
@@ -190,7 +148,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val deletedAliases =
           com.itv.chuckwagon.deploy
             .deleteRedundantAliases(
-              chuckDeploymentConfiguration.value.name,
+              LambdaName(chuckLambdaName.value),
               chuckEnvironments.value.toList.map(_.aliasName)
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -204,7 +162,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
         val deletedLambdaVersions =
           com.itv.chuckwagon.deploy
-            .deleteRedundantPublishedLambdas(chuckDeploymentConfiguration.value.name)
+            .deleteRedundantPublishedLambdas(LambdaName(chuckLambdaName.value))
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         streams.value.log.info(

@@ -1,12 +1,13 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.aws.iam.ARN
+import com.itv.aws.iam.{ARN, Role}
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.aws.sts.AssumeRoleSessionName
 import com.itv.chuckwagon.deploy.AWSCompiler
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
 import com.itv.chuckwagon.sbt.LoggingUtils.logMessage
+import com.itv.chuckwagon.sbt.Parsers.environmentArgParser
 import fansi.Color.Green
 import fansi.Str
 import org.apache.http.client.methods.HttpGet
@@ -25,14 +26,19 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckEnvironments := chuckDefineEnvironments("blue-prd", "prd"),
-      chuckPublishCopyFrom := {
-        val args: Seq[String] = spaceDelimited("<arg>").parsed
+      chuckCopyDev := {
+        val (fromAliasNameString, toAliasName) =
+          (token(' ') ~> token(NotQuoted) ~ environmentArgParser.value).parsed
+
+        val prodLambdaConfiguration = chuckProdConfig.value
+        import prodLambdaConfiguration._
+
+        val maybeVpcConfig = maybeVpcConfigFromProductionLambdaConfiguration().value
 
         val credentials =
           com.itv.chuckwagon.deploy
             .assumeRole(
-              ARN(chuckAssumableDevelopmentAccountRoleARN.value),
+              ARN(assumableDevAccountRoleARN.value),
               AssumeRoleSessionName("chuckwagon-production-deployment")
             )
             .foldMap(new AWSCompiler(chuckLambdaRegion.value).compiler)
@@ -46,7 +52,7 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(
               LambdaName(chuckLambdaName.value),
-              AliasName(args.head)
+              AliasName(fromAliasNameString)
             )
             .foldMap(assumedDevelopmentRoleCompiler.compiler)
 
@@ -57,20 +63,25 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
 
         val productionLambda =
           downloadableDevelopmentPublishedLambda.publishedLambda.lambda
-            .copy(deployment = chuckDeploymentConfiguration.value)
+            .copy(
+              deployment = LambdaDeploymentConfiguration(
+                name = LambdaName(chuckLambdaName.value),
+                roleARN = chuckRoleTask.value.arn,
+                vpcConfig = maybeVpcConfig
+              ))
 
         try {
           val alias =
             com.itv.chuckwagon.deploy
               .uploadAndPublishLambdaToAlias(
                 productionLambda,
-                BucketName(chuckJarStagingBucketName.value),
+                jarStagingBucketName,
                 PutInputStream(
-                  S3Key(s"${chuckJarStagingBucketKeyPrefix.value}${chuckLambdaName.value}-copy.jar"),
+                  S3Key(s"${jarStagingS3KeyPrefix.value}${chuckLambdaName.value}-copy.jar"),
                   developmentLambdaInputStream,
                   developmentLambdaCodeEntity.getContentLength
                 ),
-                chuckEnvironments.value.head.aliasName
+                toAliasName
               )
               .foldMap(chuckSDKFreeCompiler.value.compiler)
 
@@ -88,4 +99,19 @@ object ChuckwagonProductionPlugin extends AutoPlugin {
         }
       }
     )
+
+  def maybeVpcConfigFromProductionLambdaConfiguration(): Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
+    BaseHelpers.maybeVpcConfig(chuckProdConfig.value.vpcConfigDeclaration)
+  }
+
+  private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
+    Def.task {
+      com.itv.chuckwagon.deploy
+        .getPredefinedOrChuckwagonRole(
+          chuckProdConfig.value.roleARN,
+          LambdaName(chuckLambdaName.value)
+        )
+        .foldMap(chuckSDKFreeCompiler.value.compiler)
+    }
+  }
 }

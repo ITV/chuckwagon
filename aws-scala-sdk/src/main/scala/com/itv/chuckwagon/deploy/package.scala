@@ -200,20 +200,16 @@ package object deploy {
       }
     } yield role
 
-  def getVpcConfig(maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]): DeployLambda[Option[VpcConfig]] =
-    maybeVpcConfigDeclaration match {
-      case Some(vpcConfigDeclaration) =>
-        for {
-          vpc     <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
-          subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
-          securityGroups <- findSecurityGroups(
-            vpc,
-            vpcConfigDeclaration.securityGroupsLookupFilters
-          )
-        } yield {
-          Some(VpcConfig(vpc, subnets, securityGroups))
-        }
-      case None => pure[DeployLambdaA, Option[VpcConfig]](Option.empty[VpcConfig])
+  def getVpcConfig(vpcConfigDeclaration: VpcConfigDeclaration): DeployLambda[Option[VpcConfig]] =
+    for {
+      vpc     <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
+      subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
+      securityGroups <- findSecurityGroups(
+        vpc,
+        vpcConfigDeclaration.securityGroupsLookupFilters
+      )
+    } yield {
+      Some(VpcConfig(vpc, subnets, securityGroups))
     }
 
   def publishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =

@@ -2,13 +2,13 @@ package com.itv.chuckwagon.sbt
 
 import cats.data.NonEmptyList
 import com.amazonaws.regions.Regions
-import com.itv.aws.iam.Role
-import com.itv.aws.ec2.Filter
+import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 import com.itv.chuckwagon.deploy.AWSCompiler
+import com.itv.chuckwagon.sbt.builder._
 import sbt._
 
-import scala.concurrent.duration._
+case class Publish(roleARN: ARN, vpcConfigDeclaration: VpcConfigDeclaration)
 
 object Keys {
 
@@ -32,51 +32,12 @@ object Keys {
     }
 
     val chuckLambdaName = settingKey[String]("The name of the Lambda.")
-    val chuckRoleARN =
-      settingKey[Option[String]]("The (optional) ARN that the Lambda should run with")
-
-    val chuckVpnConfigDeclaration = settingKey[Option[VpcConfigDeclaration]](
-      "Optional VPN Configuration Lookup Parameters"
-    )
-    def chuckDefineVpnConfigDeclaration(
-        vpcLookupFilters: List[(String, String)],
-        subnetsLookupFilters: List[(String, String)],
-        securityGroupsLookupFilters: List[(String, String)]
-    ): Option[VpcConfigDeclaration] = {
-      Option(
-        VpcConfigDeclaration(
-          vpcLookupFilters = toFilters(vpcLookupFilters),
-          subnetsLookupFilters = toFilters(subnetsLookupFilters),
-          securityGroupsLookupFilters = toFilters(securityGroupsLookupFilters)
-        ))
-    }
-    private def toFilters(stringFilters: List[(String, String)]): List[Filter] = {
-      stringFilters.map(t => Filter(t._1, t._2))
-    }
-
-    val chuckDeploymentConfiguration = taskKey[LambdaDeploymentConfiguration](
-      "The environmental situation into which to deploy the Lambda"
-    )
 
     val chuckCurrentAliases = taskKey[Option[List[Alias]]](
       "The Aliases currently configured in AWS (if Lambda exists)"
     )
     val chuckCurrentPublishedLambdas = taskKey[Option[List[PublishedLambda]]](
       "The currently published versions of this Lambda (if Lambda exists)"
-    )
-
-    val chuckVpcConfig = taskKey[Option[VpcConfig]](
-      "Lookup desired vpn config for sbt defined VpcConfigDeclaration"
-    )
-    val chuckRole = taskKey[Role](
-      "Either check that the defined chuckRoleARN is valid or ensure that a suitable role is created"
-    )
-
-    val chuckJarStagingBucketName = settingKey[String](
-      "The S3 bucket name into which to upload the JAR file for creating Lambdas from"
-    )
-    val chuckJarStagingBucketKeyPrefix = settingKey[String](
-      "Combined with the name of the JAR for use as the S3 key in the Staging bucket."
     )
 
     val chuckPromote =
@@ -92,34 +53,34 @@ object Keys {
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
     val chuckRemoveLambdaTrigger =
       inputKey[Unit]("Remove invoke cron trigger for Lambda")
+
+    def chuckVpcBuilder = VpcConfigDeclarationBuilder()
   }
   object Base extends Base
 
   trait Development {
 
-    val chuckHandler = settingKey[String]("The Handler Class/Method to be executed by the Lambda")
-    val chuckTimeoutInSeconds =
-      settingKey[Int]("The Handler Class/Method to be executed by the Lambda")
-    val chuckMemorySizeInMB =
-      settingKey[Int]("The amount of memory with which to provision the Lambda")
+    val chuckPublishTo =
+      inputKey[Unit]("Upload latest code to Lambda and Publish it")
 
-    val chuckRuntimeConfiguration = taskKey[LambdaRuntimeConfiguration](
-      "The validated runtime configuration for the Lambda"
-    )
+    val chuckDevConfig =
+      settingKey[DevelopmentLambdaConfiguration]("Configuration for publishing")
 
-    val chuckPublish =
-      taskKey[Unit]("Upload latest code to Lambda and Publish it")
+    def chuckDevConfigBuilder = DevelopmentLambdaConfigurationBuilder()
+
   }
 
   object Development extends Development
 
   trait Production {
-    val chuckPublishCopyFrom =
+
+    val chuckProdConfig =
+      settingKey[ProductionLambdaConfiguration]("Configuration for publishing")
+
+    val chuckCopyDev =
       inputKey[Unit]("Upload latest code to Lambda and Publish it")
 
-    val chuckAssumableDevelopmentAccountRoleARN =
-      settingKey[String](
-        "ARN of role in development account that production account can assume to query the function details")
+    def chuckProdConfigBuilder = ProductionLambdaConfigurationBuilder()
   }
 
   object Production extends Production
