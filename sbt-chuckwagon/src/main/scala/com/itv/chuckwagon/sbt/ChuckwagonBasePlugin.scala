@@ -18,13 +18,13 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckSDKFreeCompiler := new AWSCompiler(chuckLambdaRegion.value),
+      chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value),
       chuckPromote := {
         val (fromAliasName, toAliasName) =
           (environmentArgParser.value ~ environmentArgParser.value).parsed
         val promotedToAlias = com.itv.chuckwagon.deploy
           .promoteLambda(
-            LambdaName(chuckLambdaName.value),
+            LambdaName(chuckName.value),
             fromAliasName,
             toAliasName
           )
@@ -48,7 +48,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           (environmentArgParser.value ~ (token(' ') ~> token(StringBasic))).parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckLambdaName.value))
+          .listAliases(LambdaName(chuckName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -67,7 +67,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           }
           case None =>
             throw new Exception(
-              s"Cannot set Lambda Trigger on '${chuckLambdaName.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot set Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet.")
         }
         ()
       },
@@ -75,7 +75,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val targetAliasName = environmentArgParser.value.parsed
 
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckLambdaName.value))
+          .listAliases(LambdaName(chuckName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
@@ -94,13 +94,13 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           }
           case None =>
             throw new Exception(
-              s"Cannot remove Lambda Trigger on '${chuckLambdaName.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot remove Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet.")
         }
         ()
       },
       chuckCurrentAliases := {
         val maybeAliases = com.itv.chuckwagon.deploy
-          .listAliases(LambdaName(chuckLambdaName.value))
+          .listAliases(LambdaName(chuckName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybeAliases match {
@@ -120,9 +120,9 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         }
         maybeAliases
       },
-      chuckCurrentPublishedLambdas := {
+      chuckCurrentlyPublished := {
         val maybePublishedLambdas = com.itv.chuckwagon.deploy
-          .listPublishedLambdasWithName(LambdaName(chuckLambdaName.value))
+          .listPublishedLambdasWithName(LambdaName(chuckName.value))
           .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         maybePublishedLambdas match {
@@ -148,7 +148,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val deletedAliases =
           com.itv.chuckwagon.deploy
             .deleteRedundantAliases(
-              LambdaName(chuckLambdaName.value),
+              LambdaName(chuckName.value),
               chuckEnvironments.value.toList.map(_.aliasName)
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -162,7 +162,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
         val deletedLambdaVersions =
           com.itv.chuckwagon.deploy
-            .deleteRedundantPublishedLambdas(LambdaName(chuckLambdaName.value))
+            .deleteRedundantPublishedLambdas(LambdaName(chuckName.value))
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         streams.value.log.info(

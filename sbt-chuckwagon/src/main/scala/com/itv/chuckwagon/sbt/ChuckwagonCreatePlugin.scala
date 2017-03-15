@@ -11,26 +11,26 @@ import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
 import com.itv.aws.s3.PutFile
 
-object ChuckwagonDevelopmentPlugin extends AutoPlugin {
+object ChuckwagonCreatePlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin && com.itv.chuckwagon.sbt.ChuckwagonBasePlugin
 
-  object autoImport extends Keys.Development
+  object autoImport extends Keys.Create
   import autoImport._
 
   override lazy val projectSettings =
     Seq(
-      chuckPublishTo := {
+      chuckCreate := {
         val toAliasName = environmentArgParser.value.parsed
 
-        val developmentLambdaConfiguration = chuckDevConfig.value
+        val developmentLambdaConfiguration = chuckCreateConfig.value
         import developmentLambdaConfiguration._
 
         val maybeVpcConfig = maybeVpcConfigTask.value
 
         val lambda = Lambda(
           deployment = LambdaDeploymentConfiguration(
-            name = LambdaName(chuckLambdaName.value),
+            name = LambdaName(chuckName.value),
             roleARN = chuckRoleTask.value.arn,
             vpcConfig = maybeVpcConfig
           ),
@@ -65,18 +65,18 @@ object ChuckwagonDevelopmentPlugin extends AutoPlugin {
     )
 
   private def maybeVpcConfigTask: Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
-    BaseHelpers.maybeVpcConfig(chuckDevConfig.value.vpcConfigDeclaration)
+    BaseHelpers.maybeVpcConfig(chuckCreateConfig.value.vpcConfigDeclaration)
   }
   private def codeGeneratorTask: Def.Initialize[Task[File]] = Def.taskDyn {
-    chuckDevConfig.value.codeGenerator
+    chuckCreateConfig.value.codeFile
   }
 
   private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
     Def.task {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
-          chuckDevConfig.value.roleARN,
-          LambdaName(chuckLambdaName.value)
+          chuckCreateConfig.value.roleARN,
+          LambdaName(chuckName.value)
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)
     }

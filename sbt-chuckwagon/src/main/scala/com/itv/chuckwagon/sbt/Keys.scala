@@ -25,18 +25,18 @@ object Keys {
       NonEmptyList.of[String](environments.head, environments.tail: _*).map(Environment)
     }
 
-    val chuckLambdaRegion =
+    val chuckRegion =
       settingKey[Regions]("AWS region within which to manage Lambda")
     def chuckDefineRegion(region: String): Regions = {
       Regions.fromName(region)
     }
 
-    val chuckLambdaName = settingKey[String]("The name of the Lambda.")
+    val chuckName = settingKey[String]("The name of the Lambda.")
 
     val chuckCurrentAliases = taskKey[Option[List[Alias]]](
       "The Aliases currently configured in AWS (if Lambda exists)"
     )
-    val chuckCurrentPublishedLambdas = taskKey[Option[List[PublishedLambda]]](
+    val chuckCurrentlyPublished = taskKey[Option[List[PublishedLambda]]](
       "The currently published versions of this Lambda (if Lambda exists)"
     )
 
@@ -45,10 +45,6 @@ object Keys {
     val chuckCleanUp =
       taskKey[Unit]("Remove all unused Published Lambda Versions and Aliases")
 
-    val chuckReleaseSteps =
-      settingKey[List[_root_.sbt.Def.Initialize[Task[Unit]]]]("")
-    val chuckRelease =
-      taskKey[Unit]("Run the entire Deployment Pipeline")
     val chuckSetLambdaTrigger =
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")
     val chuckRemoveLambdaTrigger =
@@ -58,31 +54,31 @@ object Keys {
   }
   object Base extends Base
 
-  trait Development {
+  trait Create {
 
-    val chuckPublishTo =
+    val chuckCreate =
       inputKey[Unit]("Upload latest code to Lambda and Publish it")
 
-    val chuckDevConfig =
-      settingKey[DevelopmentLambdaConfiguration]("Configuration for publishing")
+    val chuckCreateConfig =
+      settingKey[CreateLambdaConfiguration]("Configuration for publishing")
 
-    def chuckDevConfigBuilder = DevelopmentLambdaConfigurationBuilder()
+    def chuckCreateConfigBuilder = CreateLambdaConfigurationBuilder()
 
   }
 
-  object Development extends Development
+  object Create extends Create
 
-  trait Production {
+  trait Copy {
 
-    val chuckProdConfig =
-      settingKey[ProductionLambdaConfiguration]("Configuration for publishing")
+    val chuckCopyConfig =
+      settingKey[CopyLambdaConfiguration]("Configuration for publishing")
 
-    val chuckCopyDev =
+    val chuckCopyFromDevAccount =
       inputKey[Unit]("Upload latest code to Lambda and Publish it")
 
-    def chuckProdConfigBuilder = ProductionLambdaConfigurationBuilder()
+    def chuckCopyConfigBuilder = CopyLambdaConfigurationBuilder()
   }
 
-  object Production extends Production
+  object Copy extends Copy
 
 }
