@@ -22,6 +22,7 @@ class AWSAssumeRole(sts: AWSSecurityTokenService) extends AWSService[AssumeRoleR
         accessKeyId = AccessKeyId(c.getAccessKeyId),
         secretAccessKey = SecretAccessKey(c.getSecretAccessKey),
         sessionToken = SessionToken(c.getSessionToken)
-      ))
+      )
+    )
   }
 }

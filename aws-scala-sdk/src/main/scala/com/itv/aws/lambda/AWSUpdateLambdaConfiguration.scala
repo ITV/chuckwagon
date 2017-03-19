@@ -1,7 +1,8 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{UpdateFunctionConfigurationRequest, VpcConfig => AWSVpcConfig}
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest
+import com.amazonaws.services.lambda.model.{VpcConfig => AWSVpcConfig}
 import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._

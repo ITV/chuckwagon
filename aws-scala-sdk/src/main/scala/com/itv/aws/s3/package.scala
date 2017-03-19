@@ -1,6 +1,7 @@
 package com.itv.aws
 
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
 
 package object s3 {
 

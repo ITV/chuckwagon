@@ -1,6 +1,7 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.aws.iam.{ARN, Role}
+import com.itv.aws.iam.ARN
+import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.aws.sts.AssumeRoleSessionName
@@ -58,7 +59,9 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
         val httpClient = HttpClients.createDefault()
         val developmentLambdaCodeEntity =
-          httpClient.execute(new HttpGet(downloadableDevelopmentPublishedLambda.downloadableLocation.value)).getEntity
+          httpClient
+            .execute(new HttpGet(downloadableDevelopmentPublishedLambda.downloadableLocation.value))
+            .getEntity
         val developmentLambdaInputStream = developmentLambdaCodeEntity.getContent
 
         val productionLambda =
@@ -68,7 +71,8 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
                 name = chuckName.value,
                 roleARN = chuckRoleTask.value.arn,
                 vpcConfig = maybeVpcConfig
-              ))
+              )
+            )
 
         try {
           val alias =
@@ -100,9 +104,10 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
       }
     )
 
-  def maybeVpcConfigFromProductionLambdaConfiguration(): Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
-    BaseHelpers.maybeVpcConfig(chuckCopyConfig.value.vpcConfigDeclaration)
-  }
+  def maybeVpcConfigFromProductionLambdaConfiguration(): Def.Initialize[Task[Option[VpcConfig]]] =
+    Def.taskDyn {
+      BaseHelpers.maybeVpcConfig(chuckCopyConfig.value.vpcConfigDeclaration)
+    }
 
   private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
     Def.task {

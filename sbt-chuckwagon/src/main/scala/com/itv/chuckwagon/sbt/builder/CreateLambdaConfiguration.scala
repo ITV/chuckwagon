@@ -1,9 +1,14 @@
 package com.itv.chuckwagon.sbt.builder
 
 import com.itv.aws.iam.ARN
-import com.itv.aws.lambda.{LambdaHandler, LambdaRuntimeConfiguration, MemorySize, VpcConfigDeclaration}
-import com.itv.aws.s3.{BucketName, S3KeyPrefix}
-import sbt.{File, TaskKey}
+import com.itv.aws.lambda.LambdaHandler
+import com.itv.aws.lambda.LambdaRuntimeConfiguration
+import com.itv.aws.lambda.MemorySize
+import com.itv.aws.lambda.VpcConfigDeclaration
+import com.itv.aws.s3.BucketName
+import com.itv.aws.s3.S3KeyPrefix
+import sbt.File
+import sbt.TaskKey
 
 import scala.concurrent.duration._
 
@@ -24,8 +29,8 @@ object CreateLambdaConfigurationBuilder {
   abstract class UNDEFINED_codeFile
 
   implicit def getCreateLambdaConfiguration(
-      builder: CreateLambdaConfigurationBuilder[DEFINED, DEFINED, DEFINED, DEFINED, DEFINED])
-    : CreateLambdaConfiguration =
+      builder: CreateLambdaConfigurationBuilder[DEFINED, DEFINED, DEFINED, DEFINED, DEFINED]
+  ): CreateLambdaConfiguration =
     CreateLambdaConfiguration(
       builder.roleARN,
       builder.vpcConfigDeclaration,
@@ -36,14 +41,20 @@ object CreateLambdaConfigurationBuilder {
     )
 
   def apply() =
-    new CreateLambdaConfigurationBuilder[UNDEFINED_handler,
-                                         UNDEFINED_timeout,
-                                         UNDEFINED_memorySize,
-                                         UNDEFINED_stagingBucketName,
-                                         UNDEFINED_codeFile](None, None, None, None, None, None, None, None)
+    new CreateLambdaConfigurationBuilder[
+      UNDEFINED_handler,
+      UNDEFINED_timeout,
+      UNDEFINED_memorySize,
+      UNDEFINED_stagingBucketName,
+      UNDEFINED_codeFile
+    ](None, None, None, None, None, None, None, None)
 }
 
-class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZE, B_STAGING_BUCKET_NAME, B_CODE_FILE](
+class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
+                                       B_TIMEOUT,
+                                       B_MEMORY_SIZE,
+                                       B_STAGING_BUCKET_NAME,
+                                       B_CODE_FILE](
     val roleARN: Option[ARN],
     val vpcConfigDeclaration: Option[VpcConfigDeclaration],
     val handler: Option[LambdaHandler],
@@ -54,35 +65,49 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
     val codeFile: Option[TaskKey[File]]
 ) {
   def withRoleARN(arn: String) =
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
-                                         B_TIMEOUT,
-                                         B_MEMORY_SIZE,
-                                         B_STAGING_BUCKET_NAME,
-                                         B_CODE_FILE](Option(ARN(arn)),
-                                                      vpcConfigDeclaration,
-                                                      handler,
-                                                      timeout,
-                                                      memorySize,
-                                                      stagingBucketName,
-                                                      stagingBucketKeyPrefix,
-                                                      codeFile)
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
+      Option(ARN(arn)),
+      vpcConfigDeclaration,
+      handler,
+      timeout,
+      memorySize,
+      stagingBucketName,
+      stagingBucketKeyPrefix,
+      codeFile
+    )
 
   def withVpc(vpcConfigDeclaration: VpcConfigDeclaration) =
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
-                                         B_TIMEOUT,
-                                         B_MEMORY_SIZE,
-                                         B_STAGING_BUCKET_NAME,
-                                         B_CODE_FILE](roleARN,
-                                                      Option(vpcConfigDeclaration),
-                                                      handler,
-                                                      timeout,
-                                                      memorySize,
-                                                      stagingBucketName,
-                                                      stagingBucketKeyPrefix,
-                                                      codeFile)
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
+      roleARN,
+      Option(vpcConfigDeclaration),
+      handler,
+      timeout,
+      memorySize,
+      stagingBucketName,
+      stagingBucketKeyPrefix,
+      codeFile
+    )
 
   def withHandler(handler: String) =
-    new CreateLambdaConfigurationBuilder[DEFINED, B_TIMEOUT, B_MEMORY_SIZE, B_STAGING_BUCKET_NAME, B_CODE_FILE](
+    new CreateLambdaConfigurationBuilder[
+      DEFINED,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
       roleARN,
       vpcConfigDeclaration,
       Option(LambdaHandler(handler)),
@@ -90,11 +115,18 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
-      codeFile)
+      codeFile
+    )
 
   def withTimeout(timeout: String) = {
     val parsedDuration: FiniteDuration = Duration(timeout).asInstanceOf[FiniteDuration]
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, DEFINED, B_MEMORY_SIZE, B_STAGING_BUCKET_NAME, B_CODE_FILE](
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      DEFINED,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
       roleARN,
       vpcConfigDeclaration,
       handler,
@@ -102,11 +134,18 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
-      codeFile)
+      codeFile
+    )
   }
 
-  def withMemorySizeInMB(memorySize: Int) = {
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, DEFINED, B_STAGING_BUCKET_NAME, B_CODE_FILE](
+  def withMemorySizeInMB(memorySize: Int) =
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      DEFINED,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
       roleARN,
       vpcConfigDeclaration,
       handler,
@@ -114,10 +153,10 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
       Option(MemorySize(memorySize)),
       stagingBucketName,
       stagingBucketKeyPrefix,
-      codeFile)
-  }
+      codeFile
+    )
 
-  def withStagingBucketName(name: String) = {
+  def withStagingBucketName(name: String) =
     new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZE, DEFINED, B_CODE_FILE](
       roleARN,
       vpcConfigDeclaration,
@@ -126,26 +165,35 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
       memorySize,
       Option(BucketName(name)),
       stagingBucketKeyPrefix,
-      codeFile)
-  }
+      codeFile
+    )
 
-  def withStagingBucketKeyPrefix(name: String) = {
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
-                                         B_TIMEOUT,
-                                         B_MEMORY_SIZE,
-                                         B_STAGING_BUCKET_NAME,
-                                         B_CODE_FILE](roleARN,
-                                                      vpcConfigDeclaration,
-                                                      handler,
-                                                      timeout,
-                                                      memorySize,
-                                                      stagingBucketName,
-                                                      Option(S3KeyPrefix(name)),
-                                                      codeFile)
-  }
+  def withStagingBucketKeyPrefix(name: String) =
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
+      roleARN,
+      vpcConfigDeclaration,
+      handler,
+      timeout,
+      memorySize,
+      stagingBucketName,
+      Option(S3KeyPrefix(name)),
+      codeFile
+    )
 
-  def withCodeFile(codeFileTask: TaskKey[File]) = {
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZE, B_STAGING_BUCKET_NAME, DEFINED](
+  def withCodeFile(codeFileTask: TaskKey[File]) =
+    new CreateLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      DEFINED
+    ](
       roleARN,
       vpcConfigDeclaration,
       handler,
@@ -153,6 +201,6 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZ
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
-      Option(codeFileTask))
-  }
+      Option(codeFileTask)
+    )
 }

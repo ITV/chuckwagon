@@ -9,7 +9,8 @@ import scala.concurrent.duration._
 case class GetLambdaVersionRequest(lambdaName: LambdaName, aliasName: AliasName)
 case class GetLambdaVersionResponse(downloadablePublishedLambda: DownloadablePublishedLambda)
 
-class AWSGetLambdaVersion(awsLambda: AWSLambda) extends AWSService[GetLambdaVersionRequest, GetLambdaVersionResponse] {
+class AWSGetLambdaVersion(awsLambda: AWSLambda)
+    extends AWSService[GetLambdaVersionRequest, GetLambdaVersionResponse] {
 
   override def apply(getFunctionVersionRequest: GetLambdaVersionRequest): GetLambdaVersionResponse = {
     import getFunctionVersionRequest._
@@ -40,7 +41,8 @@ class AWSGetLambdaVersion(awsLambda: AWSLambda) extends AWSService[GetLambdaVers
           arn = ARN(fc.getFunctionArn)
         ),
         downloadableLocation = DownloadableLambdaLocation(f.getCode.getLocation)
-      ))
+      )
+    )
   }
 
 }

@@ -44,7 +44,9 @@ object Keys {
     val chuckPromote =
       inputKey[Unit]("Promote a published Lambda by attaching it to an alias")
     val chuckCleanUp =
-      taskKey[Unit]("Remove all unused Published Lambda Versions and Aliases")
+      taskKey[Unit](
+        "Remove all Published Lambda Versions not attached to Aliases and all Aliases not defined in chuckEnvironments"
+      )
 
     val chuckSetLambdaTrigger =
       inputKey[Unit]("Schedule Lambda to be invoked based on a cron expression")

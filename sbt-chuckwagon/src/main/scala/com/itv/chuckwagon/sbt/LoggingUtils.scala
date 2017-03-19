@@ -1,6 +1,7 @@
 package com.itv.chuckwagon.sbt
 
-import fansi.Color.{Cyan, Green}
+import fansi.Color.Cyan
+import fansi.Color.Green
 import fansi.Str
 
 object LoggingUtils {
@@ -17,7 +18,6 @@ object LoggingUtils {
     (Cyan("Chuckwagon") ++ Str(s": $prefix ")).render ++ colouredItems
   }
 
-  def logMessage(message: String): String = {
+  def logMessage(message: String): String =
     (Cyan("Chuckwagon") ++ Str(s": ")).render ++ message
-  }
 }

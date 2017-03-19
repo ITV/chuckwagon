@@ -2,7 +2,10 @@ package com.itv.chuckwagon.sbt
 
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
 import sbt.Keys.streams
-import sbt.{AutoPlugin, Def, File, Task}
+import sbt.AutoPlugin
+import sbt.Def
+import sbt.File
+import sbt.Task
 import LoggingUtils._
 import fansi.Color.Green
 import fansi.Str

@@ -15,7 +15,8 @@ object LambdaRoles {
 
   val ASSUME_ROLE_POLICY_DOCUMENT =
     AssumeRolePolicyDocument(
-      """{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}""")
+      """{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}"""
+    )
 
   def rolePolicyFor(role: Role) =
     RolePolicy(
@@ -26,7 +27,8 @@ object LambdaRoles {
 
   val POLICY_DOCUMENT =
     RolePolicyDocument(
-      """{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"ec2:CreateNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:DescribeNetworkInterfaces","Resource":"*"},{"Effect":"Allow","Action":"ec2:DeleteNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"logs:*","Resource":"*"}]}""")
+      """{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"ec2:CreateNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"ec2:DescribeNetworkInterfaces","Resource":"*"},{"Effect":"Allow","Action":"ec2:DeleteNetworkInterface","Resource":"*"},{"Effect":"Allow","Action":"logs:*","Resource":"*"}]}"""
+    )
 
   // lots of lessons to adopt here, http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-identity-based-access-control-cwl.html
 }

@@ -4,7 +4,8 @@ import com.itv.aws.lambda.AliasName
 import com.itv.chuckwagon.sbt.Keys.Base.chuckEnvironments
 import sbt.Def
 import sbt.complete.DefaultParsers._
-import sbt.complete.{FixedSetExamples, Parser}
+import sbt.complete.FixedSetExamples
+import sbt.complete.Parser
 
 import scala.collection.immutable.Seq
 

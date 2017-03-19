@@ -1,15 +1,18 @@
 package com.itv.chuckwagon.deploy
 
-import java.io.{File, InputStream}
+import java.io.File
+import java.io.InputStream
 
-import cats.{~>, Id}
+import cats.~>
+import cats.Id
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.s3.AmazonS3
 import com.itv.aws.Credentials
 import com.itv.aws.ec2._
 import com.itv.aws.events._
-import com.itv.aws.iam.{AWSPutRolePolicy, _}
+import com.itv.aws.iam.AWSPutRolePolicy
+import com.itv.aws.iam._
 import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.aws.sts._
@@ -58,7 +61,7 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
 
   val assumeRole = new AWSAssumeRole(awsSTS)
 
-  def compiler: DeployLambdaA ~> Id = {
+  def compiler: DeployLambdaA ~> Id =
     new (DeployLambdaA ~> Id) {
       def apply[A](command: DeployLambdaA[A]): Id[A] = command match {
         case FindSecurityGroups(vpc, filters) =>
@@ -137,6 +140,5 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
         }
       }
     }
-  }
 
 }

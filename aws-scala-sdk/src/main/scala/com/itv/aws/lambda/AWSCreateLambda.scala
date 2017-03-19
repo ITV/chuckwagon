@@ -1,7 +1,9 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{CreateFunctionRequest, FunctionCode, VpcConfig => AWSVpcConfig}
+import com.amazonaws.services.lambda.model.CreateFunctionRequest
+import com.amazonaws.services.lambda.model.FunctionCode
+import com.amazonaws.services.lambda.model.{VpcConfig => AWSVpcConfig}
 import com.itv.aws.s3.S3Location
 import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN

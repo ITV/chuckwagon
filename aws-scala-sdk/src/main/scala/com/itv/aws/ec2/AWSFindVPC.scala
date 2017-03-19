@@ -1,7 +1,8 @@
 package com.itv.aws.ec2
 
 import com.amazonaws.services.ec2.AmazonEC2
-import com.amazonaws.services.ec2.model.{DescribeVpcsRequest, Filter => AWSFilter}
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
+import com.amazonaws.services.ec2.model.{Filter => AWSFilter}
 import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
@@ -31,7 +32,9 @@ class AWSFindVPC(ec2: AmazonEC2) extends AWSService[FindVPCRequest, FindVPCRespo
     vpcs.headOption match {
       case Some(vpc) if vpcs.size == 1 => FindVPCResponse(vpc)
       case _ =>
-        throw new Exception(s"AWSFindVPC expected tags to match one VPC but matched ${vpcs.size} with ids ${vpcs}.")
+        throw new Exception(
+          s"AWSFindVPC expected tags to match one VPC but matched ${vpcs.size} with ids ${vpcs}."
+        )
     }
   }
 }

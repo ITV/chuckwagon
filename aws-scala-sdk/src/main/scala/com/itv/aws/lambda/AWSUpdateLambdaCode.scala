@@ -9,7 +9,8 @@ import com.itv.aws.iam.ARN
 case class UpdateLambdaCodeRequest(lambda: Lambda, s3Location: S3Location)
 case class UpdateLambdaCodeResponse(publishedLambda: PublishedLambda)
 
-class AWSUpdateLambdaCode(awsLambda: AWSLambda) extends AWSService[UpdateLambdaCodeRequest, UpdateLambdaCodeResponse] {
+class AWSUpdateLambdaCode(awsLambda: AWSLambda)
+    extends AWSService[UpdateLambdaCodeRequest, UpdateLambdaCodeResponse] {
   override def apply(
       updateLambdaRequest: UpdateLambdaCodeRequest
   ): UpdateLambdaCodeResponse = {

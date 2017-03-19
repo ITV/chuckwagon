@@ -1,6 +1,7 @@
 package com.itv.aws
 
-import com.amazonaws.services.securitytoken.{AWSSecurityTokenService, AWSSecurityTokenServiceClientBuilder}
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 
 package object sts {
 

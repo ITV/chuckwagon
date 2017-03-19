@@ -1,7 +1,8 @@
 package com.itv.aws
 
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.cloudwatchevents.{AmazonCloudWatchEvents, AmazonCloudWatchEventsClientBuilder}
+import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEvents
+import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEventsClientBuilder
 import com.itv.aws.iam.ARN
 
 package object events {

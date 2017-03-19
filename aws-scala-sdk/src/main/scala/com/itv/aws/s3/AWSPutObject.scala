@@ -1,18 +1,18 @@
 package com.itv.aws.s3
 
-import java.io.{File, InputStream}
+import java.io.File
+import java.io.InputStream
 
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{
-  CannedAccessControlList,
-  ObjectMetadata,
-  PutObjectRequest => AWSPutObjectRequest
-}
+import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.{PutObjectRequest => AWSPutObjectRequest}
 import com.itv.aws.AWSService
 
 sealed trait PutObjectType
-case class PutFile(keyPrefix: S3KeyPrefix, file: File)                                     extends PutObjectType
-case class PutInputStream(s3Key: S3Key, inputStream: InputStream, inputStreamLength: Long) extends PutObjectType
+case class PutFile(keyPrefix: S3KeyPrefix, file: File) extends PutObjectType
+case class PutInputStream(s3Key: S3Key, inputStream: InputStream, inputStreamLength: Long)
+    extends PutObjectType
 
 case class PutObjectRequest(bucket: Bucket, putObject: PutObjectType)
 case class PutObjectResponse(key: S3Location)

@@ -1,7 +1,9 @@
 package com.itv.aws.ec2
 
 import com.amazonaws.services.ec2.AmazonEC2
-import com.amazonaws.services.ec2.model.{DescribeSubnetsRequest, Filter => AWSFilter, Subnet => AWSSubnet}
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
+import com.amazonaws.services.ec2.model.{Filter => AWSFilter}
+import com.amazonaws.services.ec2.model.{Subnet => AWSSubnet}
 import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._

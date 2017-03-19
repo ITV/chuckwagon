@@ -2,7 +2,8 @@ package com.itv.aws.events
 
 import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEvents
 import com.itv.aws.AWSService
-import com.amazonaws.services.cloudwatchevents.model.{Target, PutTargetsRequest => AWSPutTargetsRequest}
+import com.amazonaws.services.cloudwatchevents.model.Target
+import com.amazonaws.services.cloudwatchevents.model.{PutTargetsRequest => AWSPutTargetsRequest}
 import com.itv.aws.iam.ARN
 
 case class PutTargetsRequest(eventRule: EventRule, targetARN: ARN)

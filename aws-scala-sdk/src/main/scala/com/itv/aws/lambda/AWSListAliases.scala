@@ -1,7 +1,8 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{ResourceNotFoundException, ListAliasesRequest => AWSListAliasesRequest}
+import com.amazonaws.services.lambda.model.ResourceNotFoundException
+import com.amazonaws.services.lambda.model.{ListAliasesRequest => AWSListAliasesRequest}
 import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN
 

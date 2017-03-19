@@ -1,7 +1,11 @@
 package com.itv.aws
 
-import com.amazonaws.services.lambda.{AWSLambda, AWSLambdaClientBuilder}
-import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, VPC}
+import com.amazonaws.services.lambda.AWSLambda
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder
+import com.itv.aws.ec2.Filter
+import com.itv.aws.ec2.SecurityGroup
+import com.itv.aws.ec2.Subnet
+import com.itv.aws.ec2.VPC
 
 import scala.concurrent.duration._
 
@@ -23,7 +27,9 @@ package lambda {
     val derivedId = s"${lambdaName.value}-${name.value}"
   }
 
-  case class LambdaRuntimeConfiguration(handler: LambdaHandler, timeout: FiniteDuration, memorySize: MemorySize) {
+  case class LambdaRuntimeConfiguration(handler: LambdaHandler,
+                                        timeout: FiniteDuration,
+                                        memorySize: MemorySize) {
 
     require(
       timeout > 0.seconds && timeout <= 300.seconds,

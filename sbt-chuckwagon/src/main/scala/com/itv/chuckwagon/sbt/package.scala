@@ -1,7 +1,9 @@
 package com.itv.chuckwagon.sbt
 
 import com.itv.aws.iam.ARN
-import com.itv.aws.lambda.{AliasName, LambdaName, VpcConfigDeclaration}
+import com.itv.aws.lambda.AliasName
+import com.itv.aws.lambda.LambdaName
+import com.itv.aws.lambda.VpcConfigDeclaration
 
 case class Environment(name: String) {
   val aliasName = AliasName(name)

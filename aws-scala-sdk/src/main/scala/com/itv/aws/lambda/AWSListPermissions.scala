@@ -24,13 +24,15 @@ case class Statement(Sid: String,
 case class LambdaPolicy(Statement: List[Statement])
 
 object LambdaPolicy {
-  import io.circe._, io.circe.generic.semiauto._
+  import io.circe._
+  import io.circe.generic.semiauto._
   import io.circe.generic.auto._
 
   implicit val LambdaPolicyDecoder = deriveDecoder[LambdaPolicy]
 }
 
-class AWSListPermissions(awsLambda: AWSLambda) extends AWSService[ListPermissionsRequest, ListPermissionsResponse] {
+class AWSListPermissions(awsLambda: AWSLambda)
+    extends AWSService[ListPermissionsRequest, ListPermissionsResponse] {
 
   def extractLambdaPermissions(policyString: String): List[LambdaPermission] = {
 

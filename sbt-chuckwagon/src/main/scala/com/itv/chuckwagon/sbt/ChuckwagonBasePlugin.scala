@@ -9,7 +9,8 @@ import LoggingUtils._
 import com.itv.aws.lambda._
 import Parsers._
 import com.itv.aws.events.ScheduleExpression
-import sbt.complete.DefaultParsers.{token, StringBasic}
+import sbt.complete.DefaultParsers.token
+import sbt.complete.DefaultParsers.StringBasic
 
 object ChuckwagonBasePlugin extends AutoPlugin {
 
@@ -61,13 +62,15 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               .info(
                 logMessage(
                   (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
-                    "' with Expression '") ++ Green(scheduleExpressionString) ++ Str("'")).render
+                    "' with Expression '"
+                  ) ++ Green(scheduleExpressionString) ++ Str("'")).render
                 )
               )
           }
           case None =>
             throw new Exception(
-              s"Cannot set Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot set Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet."
+            )
         }
         ()
       },
@@ -88,13 +91,16 @@ object ChuckwagonBasePlugin extends AutoPlugin {
             streams.value.log
               .info(
                 logMessage(
-                  (Str("Just Removed Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str("'")).render
+                  (Str("Just Removed Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
+                    "'"
+                  )).render
                 )
               )
           }
           case None =>
             throw new Exception(
-              s"Cannot remove Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet.")
+              s"Cannot remove Lambda Trigger on '${chuckName.value}' because '${targetAliasName.value}' does not exist yet."
+            )
         }
         ()
       },

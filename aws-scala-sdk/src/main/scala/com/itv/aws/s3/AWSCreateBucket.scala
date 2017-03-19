@@ -10,8 +10,7 @@ case class CreateBucketResponse(bucket: Bucket)
 class AWSCreateBucket(awsS3: AmazonS3) extends AWSService[CreateBucketRequest, CreateBucketResponse] {
   override def apply(
       createBucketRequest: CreateBucketRequest
-  ): CreateBucketResponse = {
-
+  ): CreateBucketResponse =
     try {
       val awsBucketResponse = awsS3.createBucket(createBucketRequest.name.value)
 
@@ -21,5 +20,4 @@ class AWSCreateBucket(awsS3: AmazonS3) extends AWSService[CreateBucketRequest, C
         throw new Exception(s"Unable to create bucket with name '${createBucketRequest.name.value}'", e)
       }
     }
-  }
 }

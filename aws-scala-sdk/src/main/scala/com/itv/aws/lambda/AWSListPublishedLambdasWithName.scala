@@ -1,7 +1,8 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.{ListVersionsByFunctionRequest, ResourceNotFoundException}
+import com.amazonaws.services.lambda.model.ListVersionsByFunctionRequest
+import com.amazonaws.services.lambda.model.ResourceNotFoundException
 import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN
 
