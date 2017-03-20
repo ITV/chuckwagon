@@ -49,6 +49,7 @@ package lambda {
   )
 
   case class Lambda(deployment: LambdaDeploymentConfiguration, runtime: LambdaRuntimeConfiguration)
+  case class LambdaSnapshot(lambda: Lambda, arn: ARN)
   case class PublishedLambda(lambda: Lambda, version: LambdaVersion, arn: ARN)
 
   case class DownloadableLambdaLocation(value: String) extends AnyVal

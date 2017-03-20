@@ -39,21 +39,23 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
   val listRoles     = new AWSListRoles(awsIam)
   val putRolePolicy = new AWSPutRolePolicy(awsIam)
 
-  val addPermission       = new AWSAddPermission(awsLambda)
-  val createAlias         = new AWSCreateAlias(awsLambda)
-  val createLambda        = new AWSCreateLambda(awsLambda)
-  val deleteAlias         = new AWSDeleteAlias(awsLambda)
-  val deleteLambdaVersion = new AWSDeleteLambdaVersion(awsLambda)
-  val listAliases         = new AWSListAliases(awsLambda)
-  val listPermissions     = new AWSListPermissions(awsLambda)
+  val addPermission         = new AWSAddPermission(awsLambda)
+  val createAlias           = new AWSCreateAlias(awsLambda)
+  val createPublishedLambda = new AWSCreatePublishedLambda(awsLambda)
+  val createLambdaSnapshot  = new AWSCreateLambdaSnapshot(awsLambda)
+  val deleteAlias           = new AWSDeleteAlias(awsLambda)
+  val deleteLambdaVersion   = new AWSDeleteLambdaVersion(awsLambda)
+  val listAliases           = new AWSListAliases(awsLambda)
+  val listPermissions       = new AWSListPermissions(awsLambda)
   val listPublishedLambdasWithName = new AWSListPublishedLambdasWithName(
     awsLambda
   )
-  val removePermission          = new AWSRemovePermission(awsLambda)
-  val updateAlias               = new AWSUpdateAlias(awsLambda)
-  val updateLambdaCode          = new AWSUpdateLambdaCode(awsLambda)
-  val updateLambdaConfiguration = new AWSUpdateLambdaConfiguration(awsLambda)
-  val getLambdaVersion          = new AWSGetLambdaVersion(awsLambda)
+  val removePermission            = new AWSRemovePermission(awsLambda)
+  val updateAlias                 = new AWSUpdateAlias(awsLambda)
+  val updateCodeForLambdaSnapshot = new AWSUpdateCodeForLambdaSnapshot(awsLambda)
+  val updateCodeAndPublishLambda  = new AWSUpdateCodeAndPublishLambda(awsLambda)
+  val updateLambdaConfiguration   = new AWSUpdateLambdaConfiguration(awsLambda)
+  val getLambdaVersion            = new AWSGetLambdaVersion(awsLambda)
 
   val createBucket = new AWSCreateBucket(awsS3)
   val listBuckets  = new AWSListBuckets(awsS3)
@@ -94,8 +96,10 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
           createAlias(
             CreateAliasRequest(name, lambdaName, lambdaVersionToAlias)
           ).aliasedLambda
-        case CreateLambda(lambda: Lambda, s3Location: S3Location) =>
-          createLambda(CreateLambdaRequest(lambda, s3Location)).publishedLambda
+        case CreateLambdaSnapshot(lambda: Lambda, s3Location: S3Location) =>
+          createLambdaSnapshot(CreateLambdaRequest(lambda, s3Location)).lambdaSnapshot
+        case CreatePublishedLambda(lambda: Lambda, s3Location: S3Location) =>
+          createPublishedLambda(CreateLambdaRequest(lambda, s3Location)).publishedLambda
         case DeleteAlias(alias: Alias) =>
           deleteAlias(DeleteAliasRequest(alias)).name
         case DeleteLambdaVersion(publishedLambda: PublishedLambda) =>
@@ -116,8 +120,10 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
         }
         case UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) =>
           updateAlias(UpdateAliasRequest(alias, lambdaVersionToAlias)).alias
-        case UpdateLambdaCode(lambda: Lambda, s3Location: S3Location) =>
-          updateLambdaCode(UpdateLambdaCodeRequest(lambda, s3Location)).publishedLambda
+        case UpdateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location) =>
+          updateCodeAndPublishLambda(UpdateLambdaCodeRequest(lambda, s3Location)).publishedLambda
+        case UpdateCodeForLambdaSnapshot(lambda: Lambda, s3Location: S3Location) =>
+          updateCodeForLambdaSnapshot(UpdateLambdaCodeRequest(lambda, s3Location)).lambdaSnapshot
         case UpdateLambdaConfiguration(lambda: Lambda) => {
           updateLambdaConfiguration(UpdateLambdaConfigurationRequest(lambda))
           ()

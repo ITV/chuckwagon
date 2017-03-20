@@ -55,10 +55,16 @@ package deploy {
   case class ListPublishedLambdasWithName(lambdaName: LambdaName)
       extends DeployLambdaA[Option[List[PublishedLambda]]]
   case class RemovePermission(alias: Alias, lambdaPermission: LambdaPermission) extends DeployLambdaA[Unit]
-  case class CreateLambda(lambda: Lambda, s3Location: S3Location)               extends DeployLambdaA[PublishedLambda]
-  case class UpdateLambdaConfiguration(lambda: Lambda)                          extends DeployLambdaA[Unit]
-  case class UpdateLambdaCode(lambda: Lambda, s3Location: S3Location)           extends DeployLambdaA[PublishedLambda]
-  case class DeleteLambdaVersion(publishedLambda: PublishedLambda)              extends DeployLambdaA[LambdaVersion]
+  case class CreateLambdaSnapshot(lambda: Lambda, s3Location: S3Location)       extends DeployLambdaA[LambdaSnapshot]
+  case class CreatePublishedLambda(lambda: Lambda, s3Location: S3Location)
+      extends DeployLambdaA[PublishedLambda]
+
+  case class UpdateLambdaConfiguration(lambda: Lambda) extends DeployLambdaA[Unit]
+  case class UpdateCodeForLambdaSnapshot(lambda: Lambda, s3Location: S3Location)
+      extends DeployLambdaA[LambdaSnapshot]
+  case class UpdateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location)
+      extends DeployLambdaA[PublishedLambda]
+  case class DeleteLambdaVersion(publishedLambda: PublishedLambda) extends DeployLambdaA[LambdaVersion]
   case class GetLambdaVersion(lambdaName: LambdaName, aliasName: AliasName)
       extends DeployLambdaA[DownloadablePublishedLambda]
 
@@ -133,12 +139,21 @@ package object deploy {
     )
   def removePermission(alias: Alias, lambdaPermission: LambdaPermission): DeployLambda[Unit] =
     liftF[DeployLambdaA, Unit](RemovePermission(alias, lambdaPermission))
-  def createLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
-    liftF[DeployLambdaA, PublishedLambda](CreateLambda(lambda, s3Location))
+
+  def createLambdaSnapshot(lambda: Lambda, s3Location: S3Location): DeployLambda[LambdaSnapshot] =
+    liftF[DeployLambdaA, LambdaSnapshot](CreateLambdaSnapshot(lambda, s3Location))
+  def createPublishedLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
+    liftF[DeployLambdaA, PublishedLambda](CreatePublishedLambda(lambda, s3Location))
+
   def updateLambdaConfiguration(lambda: Lambda): DeployLambda[Unit] =
     liftF[DeployLambdaA, Unit](UpdateLambdaConfiguration(lambda))
-  def updateLambdaCode(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
-    liftF[DeployLambdaA, PublishedLambda](UpdateLambdaCode(lambda, s3Location))
+
+  def updateCodeForLambdaSnapshot(lambda: Lambda, s3Location: S3Location): DeployLambda[LambdaSnapshot] =
+    liftF[DeployLambdaA, LambdaSnapshot](UpdateCodeForLambdaSnapshot(lambda, s3Location))
+
+  def updateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
+    liftF[DeployLambdaA, PublishedLambda](UpdateCodeAndPublishLambda(lambda, s3Location))
+
   def deleteLambdaVersion(
       publishedLambda: PublishedLambda
   ): DeployLambda[LambdaVersion] =
@@ -220,10 +235,10 @@ package object deploy {
     for {
       alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.deployment.name)
       publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
-        createLambda(lambda, s3Location)
+        createPublishedLambda(lambda, s3Location)
       } else
         updateLambdaConfiguration(lambda).flatMap(
-          _ => updateLambdaCode(lambda, s3Location)
+          _ => updateCodeAndPublishLambda(lambda, s3Location)
         )
     } yield publishedLambda
 
