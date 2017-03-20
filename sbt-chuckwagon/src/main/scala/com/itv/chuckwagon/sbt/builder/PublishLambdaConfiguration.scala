@@ -12,14 +12,14 @@ import sbt.TaskKey
 
 import scala.concurrent.duration._
 
-case class CreateLambdaConfiguration(roleARN: Option[ARN],
-                                     vpcConfigDeclaration: Option[VpcConfigDeclaration],
-                                     lambdaRuntimeConfiguration: LambdaRuntimeConfiguration,
-                                     jarStagingBucketName: BucketName,
-                                     jarStagingS3KeyPrefix: S3KeyPrefix,
-                                     codeFile: TaskKey[File]) {}
+case class PublishLambdaConfiguration(roleARN: Option[ARN],
+                                      vpcConfigDeclaration: Option[VpcConfigDeclaration],
+                                      lambdaRuntimeConfiguration: LambdaRuntimeConfiguration,
+                                      jarStagingBucketName: BucketName,
+                                      jarStagingS3KeyPrefix: S3KeyPrefix,
+                                      codeFile: TaskKey[File]) {}
 
-object CreateLambdaConfigurationBuilder {
+object PublishLambdaConfigurationBuilder {
   import scala.language.implicitConversions
 
   abstract class UNDEFINED_handler
@@ -28,10 +28,10 @@ object CreateLambdaConfigurationBuilder {
   abstract class UNDEFINED_stagingBucketName
   abstract class UNDEFINED_codeFile
 
-  implicit def getCreateLambdaConfiguration(
-      builder: CreateLambdaConfigurationBuilder[DEFINED, DEFINED, DEFINED, DEFINED, DEFINED]
-  ): CreateLambdaConfiguration =
-    CreateLambdaConfiguration(
+  implicit def getPublishLambdaConfiguration(
+      builder: PublishLambdaConfigurationBuilder[DEFINED, DEFINED, DEFINED, DEFINED, DEFINED]
+  ): PublishLambdaConfiguration =
+    PublishLambdaConfiguration(
       builder.roleARN,
       builder.vpcConfigDeclaration,
       LambdaRuntimeConfiguration(builder.handler.get, builder.timeout.get, builder.memorySize.get),
@@ -41,7 +41,7 @@ object CreateLambdaConfigurationBuilder {
     )
 
   def apply() =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       UNDEFINED_handler,
       UNDEFINED_timeout,
       UNDEFINED_memorySize,
@@ -50,11 +50,11 @@ object CreateLambdaConfigurationBuilder {
     ](None, None, None, None, None, None, None, None)
 }
 
-class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
-                                       B_TIMEOUT,
-                                       B_MEMORY_SIZE,
-                                       B_STAGING_BUCKET_NAME,
-                                       B_CODE_FILE](
+class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
+                                        B_TIMEOUT,
+                                        B_MEMORY_SIZE,
+                                        B_STAGING_BUCKET_NAME,
+                                        B_CODE_FILE](
     val roleARN: Option[ARN],
     val vpcConfigDeclaration: Option[VpcConfigDeclaration],
     val handler: Option[LambdaHandler],
@@ -65,7 +65,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     val codeFile: Option[TaskKey[File]]
 ) {
   def withRoleARN(arn: String) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,
       B_MEMORY_SIZE,
@@ -83,7 +83,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     )
 
   def withVpc(vpcConfigDeclaration: VpcConfigDeclaration) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,
       B_MEMORY_SIZE,
@@ -101,7 +101,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     )
 
   def withHandler(handler: String) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       DEFINED,
       B_TIMEOUT,
       B_MEMORY_SIZE,
@@ -120,7 +120,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
 
   def withTimeout(timeout: String) = {
     val parsedDuration: FiniteDuration = Duration(timeout).asInstanceOf[FiniteDuration]
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       DEFINED,
       B_MEMORY_SIZE,
@@ -139,7 +139,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
   }
 
   def withMemorySizeInMB(memorySize: Int) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,
       DEFINED,
@@ -157,7 +157,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     )
 
   def withStagingBucketName(name: String) =
-    new CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZE, DEFINED, B_CODE_FILE](
+    new PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER, B_TIMEOUT, B_MEMORY_SIZE, DEFINED, B_CODE_FILE](
       roleARN,
       vpcConfigDeclaration,
       handler,
@@ -169,7 +169,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     )
 
   def withStagingBucketKeyPrefix(name: String) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,
       B_MEMORY_SIZE,
@@ -187,7 +187,7 @@ class CreateLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     )
 
   def withCodeFile(codeFileTask: TaskKey[File]) =
-    new CreateLambdaConfigurationBuilder[
+    new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,
       B_MEMORY_SIZE,

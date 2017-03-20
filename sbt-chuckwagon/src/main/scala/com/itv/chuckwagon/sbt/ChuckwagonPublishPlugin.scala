@@ -14,19 +14,17 @@ import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
 import com.itv.aws.s3.PutFile
 
-object ChuckwagonCreatePlugin extends AutoPlugin {
+object ChuckwagonPublishPlugin extends AutoPlugin {
 
   override def requires = sbtassembly.AssemblyPlugin && com.itv.chuckwagon.sbt.ChuckwagonBasePlugin
 
-  object autoImport extends Keys.Create
+  object autoImport extends Keys.Publish
   import autoImport._
 
   override lazy val projectSettings =
     Seq(
-      chuckCreate := {
-        val toAliasName = environmentArgParser.value.parsed
-
-        val developmentLambdaConfiguration = chuckCreateConfig.value
+      chuckPublish := {
+        val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
 
         val maybeVpcConfig = maybeVpcConfigTask.value
@@ -40,15 +38,39 @@ object ChuckwagonCreatePlugin extends AutoPlugin {
           runtime = lambdaRuntimeConfiguration
         )
 
-        val alias =
+        val publishedLambda =
           com.itv.chuckwagon.deploy
-            .uploadAndPublishLambdaToAlias(
+            .uploadAndPublishLambda(
               lambda,
               jarStagingBucketName,
               PutFile(
                 jarStagingS3KeyPrefix,
                 codeGeneratorTask.value
-              ),
+              )
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        streams.value.log.info(
+          logMessage(
+            (Str("Just Published Version '") ++ Green(
+              publishedLambda.version.value.toString
+            ) ++ Str(
+              "' as '"
+            ) ++ Green(publishedLambda.arn.value) ++ Str("'")).render
+          )
+        )
+
+        publishedLambda
+      },
+      chuckPublishTo := {
+        val toAliasName = environmentArgParser.value.parsed
+
+        val publishedLambda = chuckPublish.value
+
+        val alias =
+          com.itv.chuckwagon.deploy
+            .aliasPublishedLambda(
+              publishedLambda,
               toAliasName
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
@@ -68,17 +90,17 @@ object ChuckwagonCreatePlugin extends AutoPlugin {
     )
 
   private def maybeVpcConfigTask: Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
-    BaseHelpers.maybeVpcConfig(chuckCreateConfig.value.vpcConfigDeclaration)
+    BaseHelpers.maybeVpcConfig(chuckPublishConfig.value.vpcConfigDeclaration)
   }
   private def codeGeneratorTask: Def.Initialize[Task[File]] = Def.taskDyn {
-    chuckCreateConfig.value.codeFile
+    chuckPublishConfig.value.codeFile
   }
 
   private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
     Def.task {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
-          chuckCreateConfig.value.roleARN,
+          chuckPublishConfig.value.roleARN,
           chuckName.value
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)

@@ -57,27 +57,32 @@ object Keys {
   }
   object Base extends Base
 
-  trait Create {
+  trait Publish {
 
-    val chuckCreate =
-      inputKey[Unit]("Upload latest code to Lambda and Publish it")
+    val chuckPublish =
+      taskKey[PublishedLambda]("Upload latest code to Lambda and Publish it")
 
-    val chuckCreateConfig =
-      settingKey[CreateLambdaConfiguration]("Configuration for publishing")
+    val chuckPublishTo =
+      inputKey[Unit]("Upload latest code to Lambda and Publish it to an Environment")
 
-    def chuckCreateConfigBuilder = CreateLambdaConfigurationBuilder()
+    val chuckPublishConfig =
+      settingKey[PublishLambdaConfiguration]("Configuration for publishing")
+
+    def chuckPublishConfigBuilder = PublishLambdaConfigurationBuilder()
 
   }
 
-  object Create extends Create
+  object Publish extends Publish
 
   trait Copy {
 
     val chuckCopyConfig =
       settingKey[CopyLambdaConfiguration]("Configuration for publishing")
 
-    val chuckCopyFromDevAccount =
-      inputKey[Unit]("Upload latest code to Lambda and Publish it")
+    val chuckCopyFromPublishAccountTo =
+      inputKey[Unit](
+        "Copy Lambda from an environment on an Account where it was Published to an environment in this Account"
+      )
 
     def chuckCopyConfigBuilder = CopyLambdaConfigurationBuilder()
   }

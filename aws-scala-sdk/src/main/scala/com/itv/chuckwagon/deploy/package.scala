@@ -227,10 +227,9 @@ package object deploy {
         )
     } yield publishedLambda
 
-  def uploadAndPublishLambdaToAlias(lambda: Lambda,
-                                    bucketName: BucketName,
-                                    putObjectType: PutObjectType,
-                                    aliasName: AliasName): DeployLambda[Alias] =
+  def uploadAndPublishLambda(lambda: Lambda,
+                             bucketName: BucketName,
+                             putObjectType: PutObjectType): DeployLambda[PublishedLambda] =
     for {
       buckets <- listBuckets()
       uploadBucketOrEmpty = buckets.find(
@@ -242,12 +241,7 @@ package object deploy {
       }
       s3Location      <- putObject(uploadBucket, putObjectType)
       publishedLambda <- publishLambda(lambda, s3Location)
-      alias <- aliasLambdaVersion(
-        publishedLambda.lambda.deployment.name,
-        publishedLambda.version,
-        aliasName
-      )
-    } yield alias
+    } yield publishedLambda
 
   def aliasPublishedLambda(publishedLambda: PublishedLambda, aliasName: AliasName): DeployLambda[Alias] =
     for {

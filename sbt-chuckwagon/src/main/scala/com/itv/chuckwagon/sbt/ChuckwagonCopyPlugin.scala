@@ -27,7 +27,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckCopyFromDevAccount := {
+      chuckCopyFromPublishAccountTo := {
         val (fromAliasNameString, toAliasName) =
           (token(' ') ~> token(NotQuoted) ~ environmentArgParser.value).parsed
 
@@ -75,16 +75,23 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
             )
 
         try {
-          val alias =
+          val publishedLambda =
             com.itv.chuckwagon.deploy
-              .uploadAndPublishLambdaToAlias(
+              .uploadAndPublishLambda(
                 productionLambda,
                 jarStagingBucketName,
                 PutInputStream(
                   S3Key(s"${jarStagingS3KeyPrefix.value}${chuckName.value}-copy.jar"),
                   developmentLambdaInputStream,
                   developmentLambdaCodeEntity.getContentLength
-                ),
+                )
+              )
+              .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+          val alias =
+            com.itv.chuckwagon.deploy
+              .aliasPublishedLambda(
+                publishedLambda,
                 toAliasName
               )
               .foldMap(chuckSDKFreeCompiler.value.compiler)
