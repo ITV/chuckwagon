@@ -59,6 +59,9 @@ object Keys {
 
   trait Publish {
 
+    val chuckPublishSnapshot =
+      taskKey[LambdaSnapshot]("Upload latest code to Lambda")
+
     val chuckPublish =
       taskKey[PublishedLambda]("Upload latest code to Lambda and Publish it")
 

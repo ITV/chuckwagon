@@ -45,7 +45,7 @@ chuckPublishConfig := chuckPublishConfigBuilder
 
 You are now ready to start sbt (the rest of this introduction assumes you are already running the sbt shell) and run the following Task. It will create your first AWS Lambda with Chuckwagon,
 
-`chuckPublish` - Create/Update Lambda and publish it with a unique version number 
+`chuckPublishSnapshot` - Create/Update Lambda 
 
 The first time you run this task it will do the following,
 - Create a fat JAR out of your code and all of its dependencies using the [sbt-assembly] plugin.
@@ -55,32 +55,34 @@ The first time you run this task it will do the following,
     - the runtime configuration that you provided in `chuckPublishConfig`
     - a copy of the Assembly JAR in the S3 Bucket
     - the IAM Role with appropriate permissions for running the Lambda
-- Publish the Lambda (this creates a readonly copy of your Lambda and  stamps it with version number '**1**').
 
 
-The second time you run `chuckPublish` it will do the following,
+The second time you run `chuckPublishSnapshot` it will do the following,
 - Create a new Assembly JAR and over-write the previous JAR in S3 with it.
 - Check that the IAM Role still exists and still has the appropriate permissions. Recreate it or modify it if necessary.
 - Update the existing Lambda to use
     - the runtime configuration that you provided in `chuckPublishConfig`
     - a copy of the updated Assembly JAR in S3
     - the appropriate IAM Role
-- Publish the Lambda to create a new readonly copy with version number '**2**'.
  
-You can safely run `chuckPublish` as many times as you want. You can also always rely on it to make sure that 
-* the created or updated Lambda always matches the contents of `chuckPublishConfig` 
-* the new highest version will have those changes applied. 
+You can safely run `chuckPublishSnapshot` as many times as you want because it is idempotent (rather like a REST `PUT`). It will always make sure that the created or updated Lambda exactly matches the contents of `chuckPublishConfig`.
 
-`chuckPublish` is nearly equivalent to an idempotent REST `PUT`. The only non-idempotent operation is the creation of a new version number each time.
+The explanation of `chuckPublishSnapshot` concludes this Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. 
+
+
+## Needs moving to a separate Guide...
 
 If you want to keep track of how many versions of your Lambda you have published run,
 
 `chuckCurrentlyPublished` - The currently published versions of this Lambda (if Lambda exists)
 
-This introduction barely scratched the surface of what you can do in AWS Lambda with Chuckwagon. 
 
+`chuckPublishSnapshot` - Create/Update Lambda and publish it with a unique version number 
 
-## Needs moving to a separate Guide...
+ The only non-idempotent operation is the creation of a new version number each time.
+
+- Publish the Lambda (this creates a readonly copy of your Lambda and  stamps it with version number '**1**').
+- Publish the Lambda to create a new readonly copy with version number '**2**'.
 
 
 You don't want to leave too many copies of your Lambda lying around so why not run,

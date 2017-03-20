@@ -242,6 +242,17 @@ package object deploy {
         )
     } yield publishedLambda
 
+  def publishLambdaSnapshot(lambda: Lambda, s3Location: S3Location): DeployLambda[LambdaSnapshot] =
+    for {
+      alreadyPublishedLambdas <- listPublishedLambdasWithName(lambda.deployment.name)
+      publishedLambda <- if (alreadyPublishedLambdas.isEmpty) {
+        createLambdaSnapshot(lambda, s3Location)
+      } else
+        updateLambdaConfiguration(lambda).flatMap(
+          _ => updateCodeForLambdaSnapshot(lambda, s3Location)
+        )
+    } yield publishedLambda
+
   def uploadAndPublishLambda(lambda: Lambda,
                              bucketName: BucketName,
                              putObjectType: PutObjectType): DeployLambda[PublishedLambda] =
@@ -257,6 +268,22 @@ package object deploy {
       s3Location      <- putObject(uploadBucket, putObjectType)
       publishedLambda <- publishLambda(lambda, s3Location)
     } yield publishedLambda
+
+  def uploadAndPublishLambdaSnapshot(lambda: Lambda,
+                                     bucketName: BucketName,
+                                     putObjectType: PutObjectType): DeployLambda[LambdaSnapshot] =
+    for {
+      buckets <- listBuckets()
+      uploadBucketOrEmpty = buckets.find(
+        b => b.name.value == bucketName.value
+      )
+      uploadBucket <- uploadBucketOrEmpty match {
+        case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
+        case None         => createBucket(bucketName)
+      }
+      s3Location     <- putObject(uploadBucket, putObjectType)
+      lambdaSnapshot <- publishLambdaSnapshot(lambda, s3Location)
+    } yield lambdaSnapshot
 
   def aliasPublishedLambda(publishedLambda: PublishedLambda, aliasName: AliasName): DeployLambda[Alias] =
     for {

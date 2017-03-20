@@ -23,20 +23,39 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckPublish := {
+      chuckPublishSnapshot := {
         val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
+        val lambda = resolvedLambdaForPublishing.value
 
         val maybeVpcConfig = maybeVpcConfigTask.value
 
-        val lambda = Lambda(
-          deployment = LambdaDeploymentConfiguration(
-            name = chuckName.value,
-            roleARN = chuckRoleTask.value.arn,
-            vpcConfig = maybeVpcConfig
-          ),
-          runtime = lambdaRuntimeConfiguration
+        val lambdaSnapshot =
+          com.itv.chuckwagon.deploy
+            .uploadAndPublishLambdaSnapshot(
+              lambda,
+              jarStagingBucketName,
+              PutFile(
+                jarStagingS3KeyPrefix,
+                codeGeneratorTask.value
+              )
+            )
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        streams.value.log.info(
+          logMessage(
+            (Str("Just Published Snapshot as '") ++ Green(
+              lambdaSnapshot.arn.value.toString
+            ) ++ Str("'")).render
+          )
         )
+
+        lambdaSnapshot
+      },
+      chuckPublish := {
+        val developmentLambdaConfiguration = chuckPublishConfig.value
+        import developmentLambdaConfiguration._
+        val lambda = resolvedLambdaForPublishing.value
 
         val publishedLambda =
           com.itv.chuckwagon.deploy
@@ -88,6 +107,24 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         ()
       }
     )
+
+  private def resolvedLambdaForPublishing: Def.Initialize[Task[Lambda]] = Def.taskDyn {
+    val developmentLambdaConfiguration = chuckPublishConfig.value
+    import developmentLambdaConfiguration._
+
+    val maybeVpcConfig = maybeVpcConfigTask.value
+
+    Def.task {
+      Lambda(
+        deployment = LambdaDeploymentConfiguration(
+          name = chuckName.value,
+          roleARN = chuckRoleTask.value.arn,
+          vpcConfig = maybeVpcConfig
+        ),
+        runtime = lambdaRuntimeConfiguration
+      )
+    }
+  }
 
   private def maybeVpcConfigTask: Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
     BaseHelpers.maybeVpcConfig(chuckPublishConfig.value.vpcConfigDeclaration)
