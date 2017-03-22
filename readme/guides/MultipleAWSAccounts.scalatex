@@ -1,0 +1,168 @@
+@import Main._
+
+Many organisations using AWS take the very sensible precaution of putting non-production environments in an entirely different AWS Account. This protects the Production Account from fat fingered development but has the side-effect of making a single deployment pipeline very difficult. The usual compromise is to have two deployment pipelines, one in the development environment and one in the production environment. The hand-off between the two environments may or may not be automated.
+
+@p
+    Chuckwagon supports the two deployment pipeline approach by providing a second plugin tailored to use in the Production Account. It is configured very similarly to the @code{ChuckwagonCreatePlugin} introduced in @sect.ref{Getting Started} and that you should continue to use in your Development Account. The new plugin is called @code{ChuckwagonCopyPlugin} and supports copying a Lambda from a different account and re-publishing it to an environment in the current account.
+
+@p
+    To use it something like the following complete configuration is required in your @code{build.sbt},
+
+@hl.scala{
+    enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+    chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
+    chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
+    chuckCopyConfig := chuckCopyConfigBuilder
+      .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
+      .withAssumableDevAccountRoleARN(
+        "arn:aws:iam::<DEV_ACCOUNT_ID>:role/<ASSUMABLE_DEV_ACCOUNT_ROLE_ID>")
+    }
+
+@p
+    Notice that @code{chuckRegion}, @code{chuckName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonCreatePlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
+
+@sect{IAM Roles}
+
+    @p
+        Making the IAM Role @code{AssumableDevAccountRoleARN} in the Development Account available to the Production Account requires granting specially configured Cross AWS Account privileges. It also requires giving a Role in the Production Account access permissions.
+
+    @p
+        The next two sub-sections will explain the two steps in detail, but for background I thoroughly recommend reading the AWS tutorial on @lnk("Delegating Access Across AWS Accounts using IAM Roles", "http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html").
+
+    @sect{Development Changes}
+
+        In your Development Account you need to create a Role (@code{<ASSUMABLE_DEV_ACCOUNT_ROLE_ID>} - the same ID used in the @code{ChuckwagonCopyPlugin} config earlier) with the following permissions policy,
+
+        @hl.js
+            {
+              "Version": "2012-10-17",
+              "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                  "lambda:GetFunction"
+                ],
+                "Resource": "arn:aws:lambda:*:*:*"
+              }]
+            }
+
+        @p
+            and the following trust relationship
+
+        @hl.js
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "AWS": "arn:aws:iam::<PRODUCTION_ACCOUNT_ID>:root"
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            }
+
+        This will make it possible to configure any Role in your Production Account to be able to temporarily become this Role in your Development Account.
+
+    @sect{Production Changes}
+
+        In your Production Account you need to make sure that whatever Role you use to run Chuckwagon is assigned the following additional policy,
+
+        @hl.js
+            {
+              "Version": "2012-10-17",
+              "Statement": {
+                "Effect": "Allow",
+                "Action": "sts:AssumeRole",
+                "Resource": "arn:aws:iam::<DEVELOPMENT_ACCOUNT_ID>:role/<ASSUMABLE_DEV_ACCOUNT_ROLE_ID>"
+              }
+            }
+
+@sect{Copying}
+
+    In order to make use of the new configuration you have used in this Guide you need to use a new Input Task in @code{ChuckwagonCopyPlugin} that is very similar to the @code{chuckPromote} Input Task introduced in @sect.ref{Deployment Pipelines},
+
+    @blockquote
+        @code{chuckCopyFromOtherAccountTo <FROM_ACCOUNT_ENVIRONMENT> <TO_ENVIRONMENT>} - Copy Lambda from the environment of another account into the @code{<TO_ENVIRONMENT>} of this Account.
+
+    @p
+        If you have correctly configured @sect.ref{IAM Roles} then this Task should download the Lambda (and all its configuration) from your Development Account and Publish it as a new Lambda (with the same configuration) in your Production Account. This is as close as we can get to promoting the same Lambda between two accounts. The only (unavoidable) difference is that the Lambda will have a different Version in Production.
+
+@sect{Multi Module Releases}
+
+    For Development @sect.ref{Deployment Pipelines} we encouraged you to use the sbt-release plugin. However, since this plugin can only define one release process per normal project a little more work needs to be done if you want to have a release process in your Production Account as well. In order to support two release processes we will move to having a multi-module build. This has other advantages too, as you will see.
+
+    @p
+        Consider the following skeleton outline of a multi-module sbt project
+
+    @hl.scala{
+        lazy val commonSettings = Seq(
+          chuckRegion := "<LAMBDA_REGION>",
+          chuckName := "<LAMBDA_NAME>"
+        )
+        lazy val `<LAMBDA_NAME>-service` = project
+        lazy val `<LAMBDA_NAME>-qa-tests` = project
+        lazy val `<LAMBDA_NAME>-prd-tests` = project
+        lazy val `<LAMBDA_NAME>-dev-pipeline` = project
+          .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
+            .settings(
+              commonSettings ++
+                Seq(
+                  chuckEnvironments := Set[String]("qa"),
+                  chuckPublishConfig := chuckPublishConfigBuilder
+                    .withHandler("<HANDLER_CLASS>::<HANDLER_METHOD>")
+                    .withMemorySizeInMB(192)
+                    .withTimeout("5 seconds")
+                    .withStagingBucketName("<DEV_S3_BUCKET>")
+                    .withCodeFile(assembly in `<LAMBDA_NAME>-service`),
+                  releaseProcess := Seq[ReleaseStep](
+                    releaseStepTask(clean in `<LAMBDA_NAME>-service`),
+                    releaseStepTask(test in Test in `<LAMBDA_NAME>-service`),
+                    releaseStepInputTask(chuckPublishTo, " qa"),
+                    releaseStepTask(test in `<LAMBDA_NAME>-qa-tests`),
+                    releaseStepTask(chuckCleanUp)
+                  )
+                )
+            )
+        lazy val `<LAMBDA_NAME>-prd-pipeline` = project
+          .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+            .settings(
+              commonSettings ++
+                Seq(
+                  chuckEnvironments := Set[String]("prd"),
+                  chuckPublishConfig := chuckPublishConfigBuilder
+                    .withStagingBucketName("<PRD_S3_BUCKET>")
+                    .withAssumableDevAccountRoleARN(
+                      "<ASSUMABLE_DEV_ACCOUNT_ROLE_ARN>"),
+                  releaseProcess := Seq[ReleaseStep](
+                    releaseStepInputTask(chuckCopyFromOtherAccountTo, " qa prd"),
+                    releaseStepTask(test in `<LAMBDA_NAME>-prd-tests`),
+                    releaseStepTask(chuckCleanUp)
+                  )
+                )
+            )
+    }
+
+    @p
+        Managing a pipeline in this fashion has the following interesting properties,
+
+    @ul
+        @li
+            Even though the release steps run in their own module it is very easy for them to reference tasks from another module (sbt-release really is an awesome plugin).
+        @li
+            The @code{chuckRegion} and @code{chuckName} sbt settings can be shared between both pipelines which makes means they are only managed in one place even though they are used in two completely different AWS Accounts.
+        @li
+            As a by product of requiring modules for our pipelines we can move our Lambda tests into their own module as well. This allows us to guarantee that they are isolated from the Lambda that they are testing (making them proper @lnk("black box tests", "http://softwaretestingfundamentals.com/black-box-testing/")).
+
+    @p
+        Running release steps in a sub-module is still a one liner from the command-line, but the format is slightly counter-intuitive and bears elucidating here,
+
+    @blockquote
+        @code{sbt "project <LAMBDA_NAME>-dev-pipeline" release} - Execute the dev pipeline
+
+    @blockquote
+        @code{sbt "project <LAMBDA_NAME>-prd-pipeline" release} - Execute the prd pipeline
+
+    @p
+        Sadly no such one-liner exists for the sbt shell (no build tool is perfect) but it would rarely make sense to do this in any case since pipeline can only be run on a machine that has had its @code{~/.aws/credentials} file correctly configured for the respective account.

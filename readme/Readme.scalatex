@@ -9,4 +9,27 @@
     @p
         The @sect.ref{Getting Started} Guide barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides Section for complete examples of where you can take Chuckwagon. Each Guide introduces new features and by the end you should understand everything you need to introduce AWS Lambda to an organisation.
 
-    @scalatex.guides.DevelopmentPipelines()
+    @sect{Deployment Pipelines}
+        @scalatex.guides.DeploymentPipelines()
+
+    @sect{Multiple AWS Accounts}
+        @scalatex.guides.MultipleAWSAccounts()
+
+    @sect{Managed Infrastructure}
+        @scalatex.guides.ManagedInfrastructure()
+
+@sect{Reference}
+    @p
+        The @sect.ref{Guides} introduce the minimum subset of Chuckwagon features required to build a Lambda pipeline, but there are many more optional features. You should find every feature fully documented in this section.
+
+    @sect{Plugins}
+        @scalatex.reference.Plugins()
+
+    @sect{IAM Roles}
+        @scalatex.reference.IAMRoles()
+
+@sect{Release Notes}
+    @scalatex.ReleaseNotes()
+
+@sect{FAQ}
+    @scalatex.FAQ()

@@ -27,7 +27,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
-      chuckCopyFromPublishAccountTo := {
+      chuckCopyFromOtherAccountTo := {
         val (fromAliasNameString, toAliasName) =
           (token(' ') ~> token(NotQuoted) ~ environmentArgParser.value).parsed
 

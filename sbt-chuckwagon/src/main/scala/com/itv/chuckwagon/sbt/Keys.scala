@@ -82,7 +82,7 @@ object Keys {
     val chuckCopyConfig =
       settingKey[CopyLambdaConfiguration]("Configuration for publishing")
 
-    val chuckCopyFromPublishAccountTo =
+    val chuckCopyFromOtherAccountTo =
       inputKey[Unit](
         "Copy Lambda from an environment on an Account where it was Published to an environment in this Account"
       )

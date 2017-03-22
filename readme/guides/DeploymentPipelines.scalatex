@@ -1,0 +1,104 @@
+@import Main._
+
+Chuckwagon provides the building blocks for incorporating your entire AWS Lambda deployment pipeline into the same Scala project that builds it. This guide will introduce those building blocks and show you how to assemble them into a very basic pipeline. It picks up straight after the @sect.ref{Getting Started} guide.
+
+@sect{Versioning}
+
+    The @code{chuckPublishSnapshot} Task is a great technology demonstrator but has no place in the deployment pipeline or production environment for a reliable system. Introducing a requirement for it is equivalent to writing a program that depends on the @code{HEAD} reference of another git repository or the @code{SNAPSHOT} version of a Java/Scala Library, ie a system that it is impossible to reliably recreate. If the rest of your system refers to a Lambda via the ARN returned by @code{chuckPublishSnapshot} you can never be certain what code will be executed.
+
+    @p
+        In order to have a fixed reference to code and configuration on a Lambda that can be guaranteed never to change we need to publish a version of that Lambda. That can be achieved with the Task,
+
+    @blockquote
+        @code{chuckPublish} - Create/Update Lambda and create an immutable uniquely versioned copy
+
+    @p
+        This Task will do everything that @code{chuckPublishSnapshot} did, but will also carry out the non-idempotent operation of making a readonly versioned copy of the Lambda which can be uniquely referred to via its own ARN. This means two ARNs get created/updated as a result of running @code{chuckPublish},
+
+    @ul
+        @li
+            @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>} - will always be the latest snapshot of your Lambda
+        @li
+            @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<VERSION>} - the @code{<VERSION>} of your Lambda that was just created as an immutable copy of the latest changes.
+
+    @p
+        The @code{VERSION} created will be @code{1} the first time @code{chuckPublish} is called, then @code{2} etc. At any time you can see the list of currently published AWS Lambdas from within the sbt shell by running,
+
+    @blockquote
+        @code{chuckCurrentlyPublished} - The currently published versions of this Lambda (if Lambda exists)
+
+
+    @p
+        The downside to relying solely on the Versioned Lambda is having to update every place that refers to it every time there is a new version. Updating lots of things is fine when it only changes every few months, but is un-manageable when it could change many times in a single day. In order to build a pipeline that treats every publish we do as a candidate for Production we need the ability to associate a specific Lambda version with an @code{Environment}.
+
+@sect{Environments}
+
+    The @code{chuckPublishTo} Input Task takes the @code{chuckPublish} Task and adds a tiny amount more functionality on the end. In addition to creating a versioned copy of your updated Lambda it makes sure that the new version is promoted to an environment (eg @code{qa}).
+
+    @p
+        However, before you can publish to an environment you need to define one. Here is an example of how to define your Chuckwagon environments in sbt
+
+    @blockquote
+        @code{chuckEnvironments := Set[String]("qa", "prd")} - Define qa and prd as valid Chuckwagon environments (referred to as @i{aliases} in the AWS Console).
+
+    @p
+        Please note that defining the @code{chuckEnvironments} sbt Setting does not automatically lead to them being created as aliases in AWS. Chuckwagon will wait until environments are used before creating them.
+    @p
+        With valid Chuckwagon environments defined in sbt it now becomes possible to use the @code{chuckPublishTo} Input Task
+
+    @blockquote
+        @code{chuckPublishTo <ENVIRONMENT>} - Create/Update Lambda, then create an immutable uniquely versioned copy of it and promote that to @code{<ENVIRONMENT>}
+
+    @p
+        @code{chuckPublishTo} is the most useful variant of the Publish tasks as it returns an ARN that can safely be referred to from other parts of your infrastructure, but which is associated with a specific version of Lambda configuration and code. In total that makes three ARNs which get created/updated as a result of running @code{chuckPublishTo},
+    @ul
+        @li
+            @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>} - will always be the latest snapshot of your Lambda
+        @li
+            @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<VERSION>} - the @code{<VERSION>} of your Lambda that was just created as an immutable copy of the latest changes
+        @li
+            @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<ENVIRONMENT>} - The version of your Lambda currently in @code{ENVIRONMENT}.
+
+@sect{Promotion}
+
+    It would be possible to use @code{chuckPublishTo} to publish to each environment in turn, but this would mean a different version of the lambda gets deployed to QA than gets deployed to production. This is undesirable. What we want is an Input Task that can promote an existing version from one environment to another
+
+    @blockquote
+        @code{chuckPromote <FROM_ENVIRONMENT> <TO_ENVIRONMENT>} - Promote the Lambda Version currently in @code{<FROM_ENVIRONMENT>} to also be referenced by @code{<TO_ENVIRONMENT>}
+
+    @p
+        It is important to note that although we talk about 'promoting' the Lambda all we are physically doing in AWS is editing the destination alias to point at the same Lambda version as the source alias. After the promotion, the code/configuration that gets run in the two environments is exactly the same. The only difference is the ARN used to call the Lambda. This means that if you want your Lambda to know which environment it is being executed in you need to inspect the ARN that is passed to it during execution.
+
+@sect{sbt-release}
+
+    Chuckwagon doesn't need to provide a mechanism for building your actual pipeline, because sbt already has a brilliant plugin called @lnk("sbt-release", "https://github.com/sbt/sbt-release"). This plugin allows you to define a release process in sbt out of any existing sbt Tasks, Input Tasks or Commands. Consider the following custom release process,
+
+    @hl.scala{
+    import ReleaseTransformations._
+
+    releaseProcess := Seq[ReleaseStep](
+        releaseStepTask(clean),
+        releaseStepTask(test in Test),
+        releaseStepInputTask(chuckPublishTo, " qa"),
+        releaseStepTask(test in IntegrationTest),
+        releaseStepInputTask(chuckPromote, " prd").
+        releaseStepTask(chuckCleanUp)
+    )
+    }
+
+    @p
+        This release process uses the Tasks we introduced earlier in this guide to build a deployment pipeline that,
+        @ol
+            @li
+                Runs the normal unit tests for your project (your Continuous Integration)
+            @li
+                Builds a fat JAR and deploys it to qa
+            @li
+                runs the Integration Tests (which in this very simple pipeline are expected to execute tests against the Lambda version in the qa environment via the associated ARN)
+            @li
+                If the integration tests pass then promote the version in qa to prd
+            @li
+                @code{chuckCleanUp} is a Task we haven't previously introduced which deletes any versions no longer referenced by an environment (ie the version that was previously in prd).
+
+    @p
+        This very simple pipeline demonstrates how you can very easily use Chuckwagon to run your entire deployment pipeline for an AWS Lambda project. In the next guide we will consider one way in which your organisation will probably complicate your life.
