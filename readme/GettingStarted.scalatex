@@ -1,0 +1,85 @@
+@import Main._
+
+
+@sect{Getting Started}
+
+    @p
+        It is beyond the scope of this section to explain how to write the Scala code for a Lambda, but here are some great blog posts on the subject if you need a primer,
+
+    @ul
+        @li
+            @lnk("Writing Aws Lambdas In Scala - @yeghishe", "http://yeghishe.github.io/2016/10/16/writing-aws-lambdas-in-scala.html")
+        @li
+            @lnk("Scala and AWS Lambda Blueprints - @d6y", "http://underscore.io/blog/posts/2016/02/01/aws-lambda.html")
+
+    Chuckwagon will currently only use your local default AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda. You will need to setup your @code{~/.aws/credentials} file as below, with the appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
+
+    @hl.sh{
+    [default]
+    region = <YOUR_REGION>
+    aws_access_key_id=<YOUR_ACCESS_KEY>
+    aws_secret_access_key=<YOUR_SECRET_KEY>
+    }
+
+    Chuckwagon is an sbt plugin. To install it add the following line to the @code{project/plugins.sbt} file in your Lambda project.
+
+    @hl.scala{
+    addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.0.14")
+    }
+
+    Next add the following configuration to your Lambda project's @code{build.sbt} file with appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
+
+    @hl.scala{
+    enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCreatePlugin)
+    chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
+    chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
+    chuckPublishConfig := chuckPublishConfigBuilder
+      .withHandler("<FULLY_QUALIFIED_LAMBDA_HANDLER_CLASS>::<HANDLER_METHOD>")
+      .withMemorySizeInMB(192)
+      .withTimeout("5 seconds")
+      .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
+      .withCodeFile(assembly)
+    }
+
+    You are now ready to start sbt (the rest of this introduction assumes you are already running the sbt shell) and run the following Task. It will create your first AWS Lambda with Chuckwagon,
+
+    @blockquote
+        @code{chuckPublishSnapshot} - Create/Update Lambda
+
+    @p
+        The first time you run this task it will do the following,
+    @ol
+        @li
+            Create a fat JAR out of your code and all of its dependencies using the @lnk("sbt-assembly", "https://github.com/sbt/sbt-assembly") plugin.
+        @li
+            Upload your Assembly JAR to the S3 Bucket that you specified in the @code{chuckPublishConfig}.
+        @li
+            Create an IAM Role with the appropriate permissions for running the Lambda.
+        @li
+            Create a Lambda configured to use
+            @ul
+                @li
+                    the runtime configuration that you provided in @code{chuckPublishConfig}
+                @li
+                    a copy of the Assembly JAR in the S3 Bucket
+                @li
+                    the IAM Role with appropriate permissions for running the Lambda
+
+
+    The second time you run @code{chuckPublishSnapshot} it will do the following,
+    @ol
+        @li
+            Create a new Assembly JAR and over-write the previous JAR in S3 with it.
+        @li
+            Check that the IAM Role still exists and still has the appropriate permissions. Recreate it or modify it if necessary.
+        @li
+            Update the existing Lambda to use
+            @ul
+                @li
+                    the runtime configuration that you provided in @code{chuckPublishConfig}
+                @li
+                    a copy of the updated Assembly JAR in S3
+                @li
+                    the appropriate IAM Role
+
+    You can safely run @code{chuckPublishSnapshot} as many times as you want because it is idempotent (rather like a REST @code{PUT}). It will always make sure that the created or updated Lambda exactly matches the contents of @code{chuckPublishConfig}.

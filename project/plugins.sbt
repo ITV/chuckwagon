@@ -4,4 +4,4 @@ addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.4")
 
 addSbtPlugin("org.caoilte" % "plugin-defaults" % "0.1.1")
 
-addSbtPlugin("com.fortysevendeg" % "sbt-microsites" % "0.4.0")
+addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.7")

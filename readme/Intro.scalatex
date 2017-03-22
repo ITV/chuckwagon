@@ -1,0 +1,15 @@
+@import Main._
+
+
+@p
+    Chuckwagon is an @lnk("AWS Lambda", "https://aws.amazon.com/lambda/") Deployment Toolkit for Scala/sbt.
+
+@p
+    Its initial goals are to
+@ul
+    @li
+        provide an opinionated sandbox for learning about best practice deployment of AWS Lambdas.
+    @li
+        make sbt powered AWS Lambda @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines fun and easy to develop.
+    @li
+        complement existing AWS managed infrastructures in an organisation (eg Terraform or Cloudformation).

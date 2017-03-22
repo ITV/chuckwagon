@@ -25,7 +25,7 @@ lazy val root = (project in file("."))
   .aggregate(
     `aws-scala-sdk`,
     `sbt-chuckwagon`,
-    docs
+    readme
   )
 
 lazy val `aws-scala-sdk` = project
@@ -83,42 +83,18 @@ releaseProcess := Seq[ReleaseStep](
   pushChanges
 )
 
-lazy val docSettings = Seq(
-  scalaVersion := "2.12.1",
-  micrositeName := "Chuckwagon",
-  micrositeDescription := "an AWS Lambda Deployment Toolkit for Scala/sbt",
-  micrositeHighlightTheme := "atom-one-light",
-  micrositeHomepage := "io.itv.com/chuckwagon",
-  micrositeBaseUrl := "chuckwagon",
-  micrositeGithubOwner := "itv",
-  micrositeGithubRepo := "chuckwagon",
-  micrositePalette := Map(
-    "brand-primary"   -> "#4F1113",
-    "brand-secondary" -> "#4A101B",
-    "brand-tertiary"  -> "#501A11",
-    "gray-dark"       -> "#49494B",
-    "gray"            -> "#7B7B7E",
-    "gray-light"      -> "#E5E5E6",
-    "gray-lighter"    -> "#F4F3F4",
-    "white-color"     -> "#FFFFFF"
-  ),
-//  autoAPIMappings := true,
-//  ghpagesNoJekyll := false,
-  fork in tut := true,
-  git.remoteRepo := "git@github.com:itv/chuckwagon.git"
-//  includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
-)
-
-lazy val docs = project
-  .enablePlugins(MicrositesPlugin)
-  .settings(moduleName := "chuckwagon-docs")
-  .settings(commonSettings)
-  .settings(noPublishSettings)
-  .settings(ghpages.settings)
-  .settings(docSettings)
-//  .settings(tutSettings)
-  .settings(
-    tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code", "-Ywarn-extra-implicit")))
+lazy val readme = scalatex
+  .ScalatexReadme(
+    projectId = "readme",
+    wd = file(""),
+    url = "https://github.com/itv/chuckwagon/tree/master",
+    source = "Readme"
   )
-
-val foo = settingKey("hoo")
+  .settings(commonSettings)
+  .settings(
+    scalaVersion := "2.11.8",
+    noPublishSettings,
+    test := {
+      run.in(Compile).toTask(" --validate-links").value
+    }
+  )

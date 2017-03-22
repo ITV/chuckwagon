@@ -1,0 +1,69 @@
+@import Main._
+
+@sect{Deployment Pipelines}
+
+    Chuckwagon provides the building blocks for incorporating your entire AWS Lambda deployment pipeline into the same Scala project that builds it. This guide will introduce those building blocks and show you how to assemble them into a very basic pipeline. It picks up straight after the @sect.ref{Getting Started} guide.
+
+    @sect{Versioning}
+
+        The @code{chuckPublishSnapshot} Task is a great technology demonstrator but has no place in the deployment pipeline or production environment for a reliable system. Introducing a requirement for it is equivalent to writing a program that depends on the @code{HEAD} reference of another git repository or the @code{SNAPSHOT} version of a Java/Scala Library, ie a system that it is impossible to reliably recreate. If the rest of your system refers to a Lambda via the ARN returned by @code{chuckPublishSnapshot} you can never be certain what code will be executed.
+
+        @p
+            In order to have a fixed reference to code and configuration on a Lambda that can be guaranteed never to change we need to publish a version of that Lambda. That can be achieved with the Task,
+
+        @blockquote
+            @code{chuckPublish} - Create/Update Lambda and create an immutable uniquely versioned copy
+
+        @p
+            This Task will do everything that @code{chuckPublishSnapshot} did, but will also carry out the non-idempotent operation of making a readonly versioned copy of the Lambda which can be uniquely referred to via its own ARN. This means two ARNs get created/updated as a result of running @code{chuckPublish},
+
+        @ul
+            @li
+                @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>} - will always be the latest version of your Lambda
+            @li
+                @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<VERSION>} - the @code{<VERSION>} of your Lambda that was just created as an immutable copy of the latest changes.
+
+        @p
+            The @code{VERSION} created will be @code{1} the first time @code{chuckPublish} is called, then @code{2} etc. The downside to relying solely on the Versioned Lambda is having to update every place that refers to it every time there is a new version. Updating lots of things is fine when it only changes every few months, but is un-manageable when it could change many times in a single day. In order to build a pipeline that treats every publish we do as a candidate for Production we need the ability to associate a specific Lambda version with an @code{Environment}.
+
+    @sect{Environments}
+
+        The @code{chuckPublishTo} Input Task takes the @code{chuckPublish} Task and adds a tiny amount more functionality on the end. In addition to creating a versioned copy of your updated Lambda it makes sure that the new version is promoted to an environment (eg @code{qa}).
+
+        @p
+            However, before you can publish to an environment you need to define one. Here is an example of how to define your Chuckwagon environments in sbt
+
+        @blockquote
+            @code{chuckEnvironments := Set[String]("qa", "prd")} - Define qa and prd as valid Chuckwagon environments (referred to as @i{aliases} in the AWS Console).
+
+        @p
+            Please note that defining the @code{chuckEnvironments} sbt Setting does not automatically lead to them being created as aliases in AWS. Chuckwagon will wait until environments are used before creating them.
+        @p
+            With valid Chuckwagon environments defined in sbt it now becomes possible to use the @code{chuckPublishTo} Input Task
+
+        @blockquote
+            @code{chuckPublishTo <ENVIRONMENT>} - Create/Update Lambda, then create an immutable uniquely versioned copy of it and promote that to @code{<ENVIRONMENT>}
+
+        @p
+            @code{chuckPublishTo} is the most useful variant of the Publish tasks as it returns an ARN that can safely be referred to from other parts of your infrastructure, but which is associated with a specific version of Lambda configuration and code. In total that makes three ARNs which get created/updated as a result of running @code{chuckPublishTo},
+        @ul
+            @li
+                @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>} - will always be the latest version of your Lambda
+            @li
+                @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<VERSION>} - the @code{<VERSION>} of your Lambda that was just created as an immutable copy of the latest changes
+            @li
+                @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<ENVIRONMENT>} - The @code{ENVIRONMENT} which should always refer to the immutable version of your Lambda that was promoted there.
+
+    @sect{Promotion}
+        text
+
+
+`chuckCurrentlyPublished` - The currently published versions of this Lambda (if Lambda exists)
+
+
+`chuckPublishSnapshot` - Create/Update Lambda and publish it with a unique version number
+
+You don't want to leave too many copies of your Lambda lying around so why not run,
+
+`chuckCleanUp` - Remove all Published Lambda Versions not attached to Aliases and all Aliases not defined in chuckEnvironments
+

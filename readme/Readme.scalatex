@@ -1,0 +1,12 @@
+@import Main._
+
+@sect{Chuckwagon}
+
+    @scalatex.Intro()
+    @scalatex.GettingStarted()
+
+@sect{Guides}
+    @p
+        The @sect.ref{Getting Started} Guide barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides Section for complete examples of where you can take Chuckwagon. Each Guide introduces new features and by the end you should understand everything you need to introduce AWS Lambda to an organisation.
+
+    @scalatex.guides.DevelopmentPipelines()
