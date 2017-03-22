@@ -55,10 +55,41 @@
                 @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<ENVIRONMENT>} - The @code{ENVIRONMENT} which should always refer to the immutable version of your Lambda that was promoted there.
 
     @sect{Promotion}
-        text
+
+        It would be possible to use @code{chuckPublishTo} to publish to each environment in turn, but this would mean a different version of the lambda gets deployed to QA than gets deployed to production. This is undesirable. What we want is an Input Task that can promote an existing version from one environment to another
+
+        @blockquote
+            @code{chuckPromote <FROM_ENVIRONMENT> <TO_ENVIRONMENT>} - Promote the Lambda Version currently in @code{<FROM_ENVIRONMENT>} to also be referenced by @code{<TO_ENVIRONMENT>}
+
+        @p
+            It is important to note that although we talk about 'promoting' the Lambda all we are physically doing in AWS is editing the destination alias to point at the same Lambda version as the source alias. After the promotion, the code/configuration that gets run in the two environments is exactly the same. The only difference is the ARN used to call the Lambda. This means that if you want your Lambda to know which environment it is being executed in you need to inspect the ARN that is passed to it during execution.
+
+    @sect{sbt-release}
+
+        Chuckwagon doesn't need to provide a mechanism for building your actual pipeline, because sbt already has a brilliant plugin called @lnk("sbt-release", "https://github.com/sbt/sbt-release"). This plugin allows you to define a release process in sbt out of any existing sbt Tasks, Input Tasks or Commands. Consider the following custom release process,
+
+        @hl.scala{
+        import ReleaseTransformations._
+
+        releaseProcess := Seq[ReleaseStep](
+            releaseStepTask(clean),
+            releaseStepTask(test in Test in `bullfrog-service`),
+            releaseStepInputTask(chuckPublishTo, " qa"),
+            releaseStepTask(test in IntegrationTest in `bullfrog-service`),
+            releaseStepInputTask(chuckPromote, " prd").
+            releaseStepTask(chuckCleanUp)
+        )
+        }
+
+        @p
+            This release process uses the Tasks we introduced earlier in this guide to build a deployment pipeline that,
+            @ol
+                @li
 
 
-`chuckCurrentlyPublished` - The currently published versions of this Lambda (if Lambda exists)
+
+
+            @code{chuckCurrentlyPublished} - The currently published versions of this Lambda (if Lambda exists)
 
 
 `chuckPublishSnapshot` - Create/Update Lambda and publish it with a unique version number
