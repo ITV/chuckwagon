@@ -104,7 +104,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         }
         ()
       },
-      chuckCurrentAliases := {
+      chuckCurrentEnvironments := {
         val maybeAliases = com.itv.chuckwagon.deploy
           .listAliases(chuckName.value)
           .foldMap(chuckSDKFreeCompiler.value.compiler)

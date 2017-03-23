@@ -1,3 +1,39 @@
 @import Main._
 
-VPCs and pre-built Roles
+For all but the most trivial of use-cases you will want to deploy your Lambdas into an AWS Account that contains other infrastructure (eg databases, EC2 instances). It is beyond the scope of Chuckwagon to help you manage this infrastructure and there are already very good tools for helping you do so (eg Terraform and CloudFormation). Chuckwagon still needs to help you interface with that infrastructure however. This guide will walk you through some of the ways in which Chuckwagon can help you.
+
+@sect{Managed IAM Roles}
+
+    Every AWS Lambda requires an IAM Role be set that it can use to execute as. By default Chuckwagon will create and manage a basic IAM Role for your Lambda that grants the basic permissions required, however there are downsides to this approach.
+
+    @ul
+        @li
+            The permissions granted are currently one size fits all. Chuckwagon doesn't currently grant DynamoDB options and if it is ever extended to make this possible it ought to be done in a flexible fashion.
+        @li
+            By granting Chuckwagon permission to create an IAM Role for Lambda execution you are also granting it permission to create any other IAM Role it wants to. This is equivalent to giving it Super User Access to your AWS Account. Since AWS has no way to selectively restrict the permission to create other roles your organisation may not want to grant it to automated tools like Chuckwagon at all.
+
+    @p
+        If these limitations are blockers for your organisation you can choose to create your IAM Role elsewhere and simply set the ARN on your publish or copy config builders as so,
+
+    @hl.scala
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withRoleARN("<ROLE_WITH_LAMBDA_EXECUTE_ARN>")
+
+    @hl.scala
+        chuckCopyConfig := chuckCopyConfigBuilder
+          .withRoleARN("<ROLE_WITH_LAMBDA_EXECUTE_ARN>")
+
+@sect{VPCs}
+
+    It is optionally possible to deploy an AWS Lambda into a VPC. In order to reduce the coupling between your Lambda and that VPC you do not need to reference the exact ID of the associated resources, Chuckwagon will quite happily find them via tags. Consider this example (the same thing also works on @code{chuckPublishConfigBuilder}),
+
+    @hl.scala
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withVpc(
+            chuckVpcBuilder
+              .withVPCLookupFilters("tag:Name" -> "prd-vpc")
+              .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
+              .withSecurityGroupsLookupFilters("group-name" -> "default")
+
+    @p
+        Each filter is a tuple matching the AWS Filter Format. The VPC filter must return exactly one VPC, but the Subnets and SecurityGroups filters can return zero or more.

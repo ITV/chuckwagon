@@ -1,4 +1,126 @@
 @import Main._
 
+@sect{ChuckwagonBasePlugin}
 
-`chuckCleanUp` - Remove all Published Lambda Versions not attached to Aliases and all Aliases not defined in chuckEnvironments
+    @p
+        This plugin is a dependency of both @sect.ref{ChuckwagonPublishPlugin} and @sect.ref{ChuckwagonCopyPlugin}. It contains Settings and Tasks that are useful whether you are publishing an AWS Lambda from source or copying one from another Account.
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Setting"), td("Example"), td("Description"))),
+        tbody(
+          tr(td("chuckName"), td("myFirstLambda"), td("The name to be used creating/updating the AWS Lambda")),
+          tr(td("chuckRegion"), td("eu-west-1"), td("The AWS Region within which to create/update the AWS Lambda")),
+          tr(td("chuckEnvironments"), td("""Set[String]("blue-qa", "qa")"""), td("(Optional) The Environments into which the the AWS Lambda should be published, copied and/or promoted (known as Aliases in the AWS Console)")),
+          tr(td("chuckSDKFreeCompiler"), td("WIP"), td("(Optional) For testing pipelines against mock versions of the AWS SDK"))
+        ))
+
+    @br
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Task"), td("Description"))),
+        tbody(
+          tr(td("chuckCurrentEnvironments"), td("The Environments (AWS Aliases) currently configured (if it exists)")),
+          tr(td("chuckCurrentlyPublished"), td("The currently published versions of this AWS Lambda (if it exists)")),
+          tr(td("chuckPromote"), td("""Promote the AWS Lambda Version in the first Environment (AWS Alias) to the second. Environments must exist in chuckEnvironments Setting, but associated Aliases will be created in AWS if they are missing. eg "chuckPromote blue-qa qa"""")),
+          tr(td("chuckCleanUp"), td("Remove all AWS Lambda Versions not deployed to an Environment (AWS Alias) and all Environments not defined in chuckEnvironments Setting")),
+          tr(td("chuckSetLambdaTrigger"), td("""Schedule AWS Lambda to be invoked based on a cron expression eg 'chuckSetLambdaTrigger qa "rate(1 minute)"'""")),
+          tr(td("chuckRemoveLambdaTrigger"), td("Remove Scheduled execution associated with AWS Lambda"))
+        ))
+
+
+@sect{ChuckwagonPublishPlugin}
+
+    @p
+        This plugin allows you to build, configure and publish AWS Lambdas. It has only one setting, @code{chuckPublishConfig} which you configure using a fluent builder started by @code{chuckPublishConfigBuilder}. Here is an example that sets every required and optional parameter.
+
+    @hl.scala
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withHandler("com.itv.MyHandler::handler")
+          .withMemorySizeInMB(256)
+          .withTimeout("5 seconds")
+          .withStagingBucketName("dev-staging")
+          .withStagingBucketKeyPrefix("forChuckwagon")
+          .withRoleARN(
+            "arn:aws:iam::123456789012:role/dev_lambda_execute")
+          .withVpc(chuckVpcBuilder
+            .withVPCLookupFilters("tag:Name" -> "qa-vpc")
+            .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
+            .withSecurityGroupsLookupFilters("group-name" -> "default"))
+          .withCodeFile(assembly)
+
+    @p
+        Here are some notes on all of the parameters available to @code{chuckPublishConfigBuilder}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Parameter"), td("Notes"))),
+        tbody(
+          tr(td("Handler"), td("The fully qualified class and method of the Handler")),
+          tr(td("MemorySizeInMB"), td("Must be between 128 and 1536 MBs")),
+          tr(td("Timeout"), td("Must be between 1 and 300 seconds")),
+          tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
+          tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
+          tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),
+          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using 'chuckVpcBuilder'")),
+          tr(td("CodeFile"), td("A Task[File] that produces a fat JAR suitable for creating an AWS Lambda with."))
+        ))
+
+    @p
+        Here are some notes on all of the parameters available to @code{chuckVpcBuilder}
+
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Parameter"), td("Notes"))),
+        tbody(
+          tr(td("VPCLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
+          tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
+          tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
+        ))
+
+@sect{ChuckwagonCopyPlugin}
+
+    @p
+        This plugin allows you to copy AWS Lambdas from another Account. It has only one setting, @code{chuckCopyConfig} which you configure using a fluent builder started by @code{chuckCopyConfigBuilder}. Here is an example that sets every required and optional parameter.
+
+    @hl.scala
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withStagingBucketName("prd-staging")
+          .withStagingBucketKeyPrefix("forChuckwagon")
+          .withRoleARN(
+            "arn:aws:iam::0987654321098:role/prd_lambda_execute")
+          .withVpc(chuckVpcBuilder
+            .withVPCLookupFilters("tag:Name" -> "prd-vpc")
+            .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
+            .withSecurityGroupsLookupFilters("group-name" -> "default"))
+          .withAssumableDevAccountRoleARN(
+            "arn:aws:iam::123456789012:role/dev_lambda_get_granted_to_prd")
+
+    @p
+        Here are some notes on all of the parameters available to @code{chuckCopyConfigBuilder}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Parameter"), td("Notes"))),
+        tbody(
+          tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
+          tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
+          tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),
+          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using 'chuckVpcBuilder'")),
+          tr(td("AssumableDevAccountRoleARN"), td("The ARN of a Role in the Development Account that can be used to download the Lambda"))
+        ))
+
+    @p
+        Here are some notes on all of the parameters available to @code{chuckVpcBuilder}
+
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Parameter"), td("Notes"))),
+        tbody(
+          tr(td("VPCLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
+          tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
+          tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
+        ))
