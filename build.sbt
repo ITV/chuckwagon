@@ -92,7 +92,6 @@ lazy val readme = scalatex
   )
   .settings(commonSettings)
   .settings(
-    scalaVersion := "2.11.8",
     noPublishSettings,
     test := {
       run.in(Compile).toTask(" --validate-links").value

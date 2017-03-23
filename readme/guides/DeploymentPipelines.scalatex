@@ -1,6 +1,6 @@
 @import Main._
 
-Chuckwagon provides the building blocks for incorporating your entire AWS Lambda deployment pipeline into the same Scala project that builds it. This guide will introduce those building blocks and show you how to assemble them into a very basic pipeline. It picks up straight after the @sect.ref{Getting Started} guide.
+Chuckwagon provides the building blocks for incorporating your entire AWS Lambda deployment pipeline into the same Scala project that builds it. This guide will introduce those building blocks and show you how to assemble them into a very basic release/deployment pipeline. It picks up straight after the @sect.ref{Getting Started} guide.
 
 @sect{Versioning}
 

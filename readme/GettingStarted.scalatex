@@ -85,4 +85,4 @@
     You can safely run @code{chuckPublishSnapshot} as many times as you want because it is idempotent (rather like a REST @code{PUT}). It will always make sure that the created or updated Lambda exactly matches the contents of @code{chuckPublishConfig}.
 
     @p
-        This  explanation of @code{chuckPublishSnapshot} concludes this Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides for where you can take Chuckwagon next
+        This  explanation of @code{chuckPublishSnapshot} concludes the Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides to discover where you can take Chuckwagon next.

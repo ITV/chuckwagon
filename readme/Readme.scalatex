@@ -7,7 +7,7 @@
 
 @sect{Guides}
     @p
-        The @sect.ref{Getting Started} Guide barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides Section for complete examples of where you can take Chuckwagon. Each Guide introduces new features and by the end you should understand everything you need to introduce AWS Lambda to an organisation.
+        The @sect.ref{Getting Started} Guide introduced enough of Chuckwagon to create/update your first AWS Lambda. The following Guides cover more complete examples of how you might manage the more sophisticated setups required in larger organisations. Concepts introduced include managed release processes, gated tests and multiple accounts.
 
     @sect{Deployment Pipelines}
         @scalatex.guides.DeploymentPipelines()
