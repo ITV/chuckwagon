@@ -1,5 +1,7 @@
 package com.itv.chuckwagon.sbt
 
+import java.nio.charset.Charset
+
 import com.itv.chuckwagon.deploy.AWSCompiler
 import fansi.Color.Green
 import fansi.Str
@@ -8,9 +10,9 @@ import sbt.Keys._
 import LoggingUtils._
 import com.itv.aws.lambda._
 import Parsers._
+import cats.Id
 import com.itv.aws.events.ScheduleExpression
-import sbt.complete.DefaultParsers.token
-import sbt.complete.DefaultParsers.StringBasic
+import sbt.complete.DefaultParsers._
 
 object ChuckwagonBasePlugin extends AutoPlugin {
 
@@ -19,6 +21,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckEnvironments := Set[String](),
       chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value),
       chuckPromote := {
         val (fromAliasName, toAliasName) =
@@ -178,6 +181,39 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           )
         )
         ()
+      },
+      chuckInvoke := {
+        val env: Option[Either[AliasName, LambdaVersion]] =
+          (environmentArgParser.value || versionArgParser.value).?.parsed
+
+        val qualifier: Option[InvokeQualifier] = env.map {
+          case Left(environment) => EnvironmentQualifier(environment)
+          case Right(version)    => VersionQualifier(version)
+        }
+
+        streams.value.log.info(
+          logItemsMessage(
+            "About to invoke Lambda",
+            qualifier.toList.map(_.toString): _*
+          )
+        )
+
+        val output: LambdaResponse =
+          com.itv.chuckwagon.deploy
+            .invokeLambda(chuckName.value, qualifier)
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+        streams.value.log.info(
+          logItemsMessage(
+            "Result of running Lambda",
+            output.toString
+          )
+        )
+
+        output match {
+          case res: LambdaResponsePayload => res.toString()
+          case other                      => sys.error(other.toString())
+        }
       }
     )
 }

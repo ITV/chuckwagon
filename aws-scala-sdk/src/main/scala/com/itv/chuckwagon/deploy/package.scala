@@ -2,6 +2,7 @@ package com.itv.chuckwagon
 
 import java.io.File
 import java.io.InputStream
+import java.nio.ByteBuffer
 
 import com.itv.aws.iam.ARN
 import com.itv.aws.iam.Role
@@ -67,6 +68,8 @@ package deploy {
   case class DeleteLambdaVersion(publishedLambda: PublishedLambda) extends DeployLambdaA[LambdaVersion]
   case class GetLambdaVersion(lambdaName: LambdaName, aliasName: AliasName)
       extends DeployLambdaA[DownloadablePublishedLambda]
+  case class InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier])
+      extends DeployLambdaA[LambdaResponse]
 
   case class CreateRole(roleDeclaration: RoleDeclaration) extends DeployLambdaA[Role]
   case class PutRolePolicy(rolePolicy: RolePolicy)        extends DeployLambdaA[Role]
@@ -153,6 +156,9 @@ package object deploy {
 
   def updateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](UpdateCodeAndPublishLambda(lambda, s3Location))
+
+  def invokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]): DeployLambda[LambdaResponse] =
+    liftF[DeployLambdaA, LambdaResponse](InvokeLambda(lambdaName, qualifier))
 
   def deleteLambdaVersion(
       publishedLambda: PublishedLambda

@@ -1,6 +1,7 @@
 package com.itv.chuckwagon.sbt
 
 import com.itv.aws.lambda.AliasName
+import com.itv.aws.lambda.LambdaVersion
 import com.itv.chuckwagon.sbt.Keys.Base.chuckEnvironments
 import sbt.Def
 import sbt.complete.DefaultParsers._
@@ -16,6 +17,10 @@ object Parsers {
     val environmentParser: Parser[AliasName] =
       token(NotQuoted.examples(FixedSetExamples(environments))).map(AliasName)
     token(' ') ~> environmentParser
+  }
+
+  val versionArgParser: Def.Initialize[Parser[LambdaVersion]] = Def.setting {
+    token(' ') ~> token(NatBasic).map(LambdaVersion)
   }
 
 }

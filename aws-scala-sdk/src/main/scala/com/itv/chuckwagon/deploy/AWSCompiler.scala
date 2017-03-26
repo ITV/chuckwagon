@@ -56,6 +56,7 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
   val updateCodeAndPublishLambda  = new AWSUpdateCodeAndPublishLambda(awsLambda)
   val updateLambdaConfiguration   = new AWSUpdateLambdaConfiguration(awsLambda)
   val getLambdaVersion            = new AWSGetLambdaVersion(awsLambda)
+  val invokeLambda                = new AWSInvokeLambda(awsLambda)
 
   val createBucket = new AWSCreateBucket(awsS3)
   val listBuckets  = new AWSListBuckets(awsS3)
@@ -128,6 +129,8 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
           updateLambdaConfiguration(UpdateLambdaConfigurationRequest(lambda))
           ()
         }
+        case InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]) =>
+          invokeLambda(InvokeLambdaRequest(lambdaName, qualifier)).response
         case ListBuckets() =>
           listBuckets(ListBucketsRequest()).buckets
         case CreateBucket(name: BucketName) =>

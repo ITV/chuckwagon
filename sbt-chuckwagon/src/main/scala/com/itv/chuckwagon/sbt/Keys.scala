@@ -58,6 +58,11 @@ object Keys {
       inputKey[Unit]("Remove Scheduled execution associated with AWS Lambda")
 
     def chuckVpcBuilder = VpcConfigDeclarationBuilder()
+
+    val chuckInvoke =
+      inputKey[String](
+        "Invoke the Lambda. Using the snapshot if no argument passed. Otherwise the environment or version"
+      )
   }
   object Base extends Base
 

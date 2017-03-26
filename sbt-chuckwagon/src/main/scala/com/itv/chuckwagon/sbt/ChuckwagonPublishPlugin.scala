@@ -56,6 +56,15 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
         val lambda = resolvedLambdaForPublishing.value
+        val code   = codeGeneratorTask.value
+
+        streams.value.log.info(
+          logMessage(
+            (Str("About to upload '") ++ Green(
+              code.toURI.toString
+            ) ++ Str("' as AWS Lambda")).render
+          )
+        )
 
         val publishedLambda =
           com.itv.chuckwagon.deploy
@@ -64,7 +73,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
               jarStagingBucketName,
               PutFile(
                 jarStagingS3KeyPrefix,
-                codeGeneratorTask.value
+                code
               )
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)

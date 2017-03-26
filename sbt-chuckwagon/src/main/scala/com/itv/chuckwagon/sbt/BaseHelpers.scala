@@ -17,14 +17,7 @@ object BaseHelpers {
       maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]
   ): Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
     maybeVpcConfigDeclaration match {
-      case None => {
-        streams.value.log.info(
-          logMessage(
-            "No vpcConfigDeclaration defined so cannot lookup vpcConfig"
-          )
-        )
-        Def.task(None)
-      }
+      case None                       => Def.task(None)
       case Some(vpcConfigDeclaration) => vpcConfig(vpcConfigDeclaration)
     }
   }

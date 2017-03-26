@@ -16,6 +16,7 @@ lazy val noPublishSettings = Seq(
 
 val awsSdkVersion = "1.11.93"
 val circeVersion  = "0.7.0"
+val slf4jVersion  = "1.7.22"
 
 lazy val root = (project in file("."))
   .settings(
@@ -24,6 +25,7 @@ lazy val root = (project in file("."))
   .settings(noPublishSettings)
   .aggregate(
     `aws-scala-sdk`,
+    `lib-chuckwagon`,
     `sbt-chuckwagon`,
     readme
   )
@@ -49,6 +51,24 @@ lazy val `aws-scala-sdk` = project
           "org.scala-lang" % "scala-reflect"       % scalaVersion.value // for macro paradise, for circe generic parsing
         ),
         addCompilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.full))
+      )
+  )
+
+lazy val `lib-chuckwagon` = project
+  .settings(
+    commonSettings ++
+      Seq(
+        scalaVersion := "2.12.1",
+        libraryDependencies ++= Seq(
+          "com.amazonaws" % "aws-lambda-java-core"   % "1.1.0" % Provided,
+          "com.amazonaws" % "aws-lambda-java-events" % "1.3.0" % Provided,
+          "com.amazonaws" % "aws-lambda-java-log4j"  % "1.0.0",
+          "io.circe"      %% "circe-core"            % circeVersion,
+          "io.circe"      %% "circe-generic"         % circeVersion,
+          "io.circe"      %% "circe-parser"          % circeVersion,
+          "org.slf4j"     % "slf4j-api"              % slf4jVersion,
+          "org.slf4j"     % "slf4j-log4j12"          % slf4jVersion
+        )
       )
   )
 
