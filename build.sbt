@@ -19,6 +19,7 @@ val circeVersion  = "0.7.0"
 val slf4jVersion  = "1.7.22"
 
 lazy val root = (project in file("."))
+  .enablePlugins(CrossPerProjectPlugin)
   .settings(
     name := "chuckwagon"
   )
