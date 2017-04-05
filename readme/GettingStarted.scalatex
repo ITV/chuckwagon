@@ -1,18 +1,12 @@
 @import Main._
 
+@p
+    This guide will walk you through the steps required to create a Helloworld AWS Lambda using the Chuckwagon Library and then upload it to AWS using the Chuckwagon sbt plugin. We will begin by configuring your build.
 
-@sect{Getting Started}
+@sect{Configuring the Build}
 
     @p
-        It is beyond the scope of this section to explain how to write the Scala code for a Lambda, but here are some great blog posts on the subject if you need a primer,
-
-    @ul
-        @li
-            @lnk("Writing Aws Lambdas In Scala - @yeghishe", "http://yeghishe.github.io/2016/10/16/writing-aws-lambdas-in-scala.html")
-        @li
-            @lnk("Scala and AWS Lambda Blueprints - @d6y", "http://underscore.io/blog/posts/2016/02/01/aws-lambda.html")
-
-    Chuckwagon will currently only use your local default AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda. You will need to setup your @code{~/.aws/credentials} file as below, with the appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
+        In order to create your AWS Lambda you will need to have AWS credentials. Chuckwagon will currently only use your local default AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda. You will need to setup your @code{~/.aws/credentials} file as below, with the appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
 
     @hl.sh{
     [default]
@@ -21,27 +15,59 @@
     aws_secret_access_key=<YOUR_SECRET_KEY>
     }
 
-    Chuckwagon is an sbt plugin. To install it add the following line to the @code{project/plugins.sbt} file in your Lambda project.
+    To install the Chuckwagon sbt plugin add the following line to the @code{project/plugins.sbt} file in your Lambda project.
 
-    @hl.scala{
-    addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.0.14")
-    }
+    @hl.scala
+        addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.0.18")
 
     Next add the following configuration to your Lambda project's @code{build.sbt} file with appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
 
-    @hl.scala{
-    enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCreatePlugin)
-    chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
-    chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
-    chuckPublishConfig := chuckPublishConfigBuilder
-      .withHandler("<FULLY_QUALIFIED_LAMBDA_HANDLER_CLASS>::<HANDLER_METHOD>")
-      .withMemorySizeInMB(192)
-      .withTimeout("5 seconds")
-      .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
-      .withCodeFile(assembly)
-    }
+    @hl.scala
+        scalaVersion := "2.12.1"
+        libraryDependencies ++= "com.itv" %% "lib-chuckwagon" % "0.0.18"
+        enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCreatePlugin)
+        chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
+        chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withHandler("Helloworld::handleRequest")
+          .withMemorySizeInMB(192)
+          .withTimeout("5 seconds")
+          .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
+          .withCodeFile(assembly)
 
-    You are now ready to start sbt (the rest of this introduction assumes you are already running the sbt shell) and run the following Task. It will create your first AWS Lambda with Chuckwagon,
+
+    You now have the minimum build configuration required for the rest of this Getting Started Guide. You can start sbt and open the project in your favourite IDE.
+
+@sect{Helloworld Function}
+
+    Create @code{/src/main/scala/Helloworld.scala} and paste the following code into it,
+
+    @hl.scala
+        import com.amazonaws.services.lambda.runtime.Context
+        import com.itv.chuckwagon.lambda._
+        import io.circe.generic.auto._
+
+        case class Response(response: String)
+
+        class Helloworld extends Handler[Unit, Response] {
+          def handler(query: Unit, context: Context): Response = {
+            Response(s"Hello World!")
+          }
+        }
+
+    @p
+        This is the simplest possible code for creating an AWS Lambda using Chuckwagon. It extends a Generic Handler that is basically the same as the @lnk("Underscore Scala and AWS Lambda Blueprints", "http://underscore.io/blog/posts/2016/02/01/aws-lambda.html"). It takes no arguments but does return a Case Class that Chuckwagon turns into the following JSON Response payload
+
+    @hl.js
+        {
+          "response" : "Hello World!"
+        }
+
+    Note how the configuration @code{.withHandler("Helloworld::handleRequest")} in the @code{build.sbt} references an AWS Lambda Class and method name that is nearly the same as the Helloworld Class we created. The only difference is that the method configured to be invoked by the @code{build.sbt} is the underlying Library method @code{handleRequest} which will turn the raw request into the Case Class (or in this case @code{Unit} object) that we expect.
+
+@sect{Creating a Lambda}
+
+    We are finally ready to try out out our Helloworld AWS Lambda with the following Task,
 
     @blockquote
         @code{chuckPublishSnapshot} - Create/Update Lambda
@@ -50,7 +76,9 @@
         The first time you run this task it will do the following,
     @ol
         @li
-            Create a fat JAR out of your code and all of its dependencies using the @lnk("sbt-assembly", "https://github.com/sbt/sbt-assembly") plugin.
+            Compile the @code{Helloworld.scala} file.
+        @li
+            Create a fat JAR out of it and all of its dependencies using the @lnk("sbt-assembly", "https://github.com/sbt/sbt-assembly") plugin.
         @li
             Upload your Assembly JAR to the S3 Bucket that you specified in the @code{chuckPublishConfig}.
         @li
@@ -64,10 +92,36 @@
                     a copy of the Assembly JAR in the S3 Bucket
                 @li
                     the IAM Role with appropriate permissions for running the Lambda
+        @li
+            Print the ARN (@lnk("Amazon Resource Name", "http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns")) that will be the uniquely addressable location of the newly created AWS Lambda.
 
+    Run the task. It should print something like,
 
-    The second time you run @code{chuckPublishSnapshot} it will do the following,
+    @blockquote
+        @hl.sh
+            [info] Chuckwagon: Just Published Snapshot as 'arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>'
+
+    You can test your Helloworld AWS Lambda by running the following sbt Task,
+
+    @blockquote
+        @code{chuckInvokeLambda} - Execute latest Snapshot Code/Configuration and print response
+
+    It will use the ARN for the newly created AWS Lambda and should print something like,
+
+    @blockquote
+        @hl.sh
+            [info] Chuckwagon: About to invoke Lambda
+            [info] Chuckwagon: Result of running Lambda '{"response":"Hello World!"}'
+
+    @p
+        There's nothing too surprising about this output and even if you update your Lambda to do something more useful, running it from sbt isn't very practical for every day use. This task is, however, a great way of demonstrating the Library and Plugin that we shall continue to use in later Guides.
+
+@sect{Updating a Lambda}
+
+    Update your @code{Helloworld.scala} file to say something else and then run @code{chuckPublishSnapshot}. This time the task will do the following,
     @ol
+        @li
+            Recompile the @code{Helloworld.scala} file with your new string.
         @li
             Create a new Assembly JAR and over-write the previous JAR in S3 with it.
         @li
@@ -82,7 +136,7 @@
                 @li
                     the appropriate IAM Role
 
-    You can safely run @code{chuckPublishSnapshot} as many times as you want because it is idempotent (rather like a REST @code{PUT}). It will always make sure that the created or updated Lambda exactly matches the contents of @code{chuckPublishConfig}.
+    Running @code{chuckInvokeLambda} now will print the new string that you updated @code{Helloworld.scala} with. You can safely run @code{chuckPublishSnapshot} as many times as you want because it is idempotent (rather like a REST @code{PUT}). It will also always make sure that the created or updated Lambda exactly matches the contents of @code{chuckPublishConfig}.
 
     @p
-        This  explanation of @code{chuckPublishSnapshot} concludes the Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides to discover where you can take Chuckwagon next.
+        This explanation of @code{chuckPublishSnapshot} concludes the Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides to discover where you can take Chuckwagon next.

@@ -27,8 +27,15 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
         val lambda = resolvedLambdaForPublishing.value
+        val code   = codeGeneratorTask.value
 
-        val maybeVpcConfig = maybeVpcConfigTask.value
+        streams.value.log.info(
+          logMessage(
+            (Str("About to upload '") ++ Green(
+              code.toURI.toString
+            ) ++ Str("' as AWS Lambda")).render
+          )
+        )
 
         val lambdaSnapshot =
           com.itv.chuckwagon.deploy

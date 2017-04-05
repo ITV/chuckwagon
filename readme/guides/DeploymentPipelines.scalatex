@@ -27,6 +27,8 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
     @blockquote
         @code{chuckCurrentlyPublished} - The currently published versions of this Lambda (if Lambda exists)
 
+    @p
+        You can easily satisfy yourself that Versioned Lambdas are different to each other by making a few changes to your Helloworld Function from the @sect.ref{Getting Started} Guide and publishing it. The @code{chuckInvokeLambda} task takes a number as an optional argument which it will use to run a specific version of your Published AWS Lambda.
 
     @p
         The downside to relying solely on the Versioned Lambda is having to update every place that refers to it every time there is a new version. Updating lots of things is fine when it only changes every few months, but is un-manageable when it could change many times in a single day. In order to build a pipeline that treats every publish we do as a candidate for Production we need the ability to associate a specific Lambda version with an @code{Environment}.
@@ -36,7 +38,7 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
     The @code{chuckPublishTo} Input Task takes the @code{chuckPublish} Task and adds a tiny amount more functionality on the end. In addition to creating a versioned copy of your updated Lambda it makes sure that the new version is promoted to an environment (eg @code{qa}).
 
     @p
-        However, before you can publish to an environment you need to define one. Here is an example of how to define your Chuckwagon environments in sbt
+        However, before you can publish to an environment you need to define one. Here is an example of how to define your Chuckwagon environments in sbt. (Remember to reload sbt after adding this sbt Setting.)
 
     @blockquote
         @code{chuckEnvironments := Set[String]("qa", "prd")} - Define qa and prd as valid Chuckwagon environments (referred to as @i{aliases} in the AWS Console).
@@ -59,6 +61,9 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
         @li
             @code{arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:<LAMBDA_NAME>:<ENVIRONMENT>} - The version of your Lambda currently in @code{ENVIRONMENT}.
 
+    @p
+        Just as with specific versions, you can try out Lambdas in a specific environment using the @code{chuckInvoke} task, which in addition to taking version numbers as input arguments also takes environments.
+
 @sect{Promotion}
 
     It would be possible to use @code{chuckPublishTo} to publish to each environment in turn, but this would mean a different version of the lambda gets deployed to QA than gets deployed to production. This is undesirable. What we want is an Input Task that can promote an existing version from one environment to another
@@ -73,18 +78,15 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
 
     Chuckwagon doesn't need to provide a mechanism for building your actual pipeline, because sbt already has a brilliant plugin called @lnk("sbt-release", "https://github.com/sbt/sbt-release"). This plugin allows you to define a release process in sbt out of any existing sbt Tasks, Input Tasks or Commands. Consider the following custom release process,
 
-    @hl.scala{
-    import ReleaseTransformations._
-
-    releaseProcess := Seq[ReleaseStep](
-        releaseStepTask(clean),
-        releaseStepTask(test in Test),
-        releaseStepInputTask(chuckPublishTo, " qa"),
-        releaseStepTask(test in IntegrationTest),
-        releaseStepInputTask(chuckPromote, " prd").
-        releaseStepTask(chuckCleanUp)
-    )
-    }
+    @hl.scala
+        releaseProcess := Seq[ReleaseStep](
+            releaseStepTask(clean),
+            releaseStepTask(test in Test),
+            releaseStepInputTask(chuckPublishTo, " qa"),
+            releaseStepTask(test in IntegrationTest),
+            releaseStepInputTask(chuckPromote, " prd").
+            releaseStepTask(chuckCleanUp)
+        )
 
     @p
         This release process uses the Tasks we introduced earlier in this guide to build a deployment pipeline that,
@@ -101,4 +103,4 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
                 @code{chuckCleanUp} is a Task we haven't previously introduced which deletes any versions no longer referenced by an environment (ie the version that was previously in prd).
 
     @p
-        This very simple pipeline demonstrates how you can very easily use Chuckwagon to run your entire deployment pipeline for an AWS Lambda project. In the next guide we will consider one way in which your organisation will probably complicate your life.
+        This very simple pipeline demonstrates how you can very easily use Chuckwagon to run your entire deployment pipeline for an AWS Lambda project. In the @sect.ref{Multiple AWS Accounts} guide we consider a more realistic scenario where your organisation insists on doing Production Deployments using a different AWS Account.

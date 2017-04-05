@@ -1,0 +1,56 @@
+@import Main._
+
+Several times in the @sect.ref{Deployment Pipelines} Guide we mentioned that even though you can deploy a Lambda to more than one environment it still only exists in one place because what you are actually doing is pointing two or more AWS Aliases at the same Lambda. This is an efficient feature because it means that Amazon doesn't have to create multiple copies of the JAR file and Lambda Configuration metadata that isn't allowed to change in any case. It does, however, highlight a challenge in AWS. How do you apply environment specific configuration to an AWS Lambda?
+
+@sect{Challenges}
+
+    @p
+        Traditionally when configuring a Service you often deploy an environmental configuration file along side it on the box it is deployed to. This configuration will usually contain things like the location of that service's database in the associated environment. There is no built in way to associate a environmental configuration file with an AWS Lambda.
+
+    @p
+        AWS Lambda provides a feature called 'Environment variables' that do at first glance look suitable for this purpose. However, AWS Lambda environment variables cannot be configured per environment. Once you version a Lambda its environment variables cannot be changed. They are intended to be used to save time changing configuration that would otherwise require a code deployment. However, since code deployments are very fast and accessing environment variables is necessarily cumbersome they are not really ideal for any use. It is possible that they would be useful for encrypted fields. Chuckwagon does not yet support such functionality.
+
+@sect{Detection}
+
+    @p
+        The only way to store Environment specific variables in AWS Lambda is to take advantage of the fact that when your Lambda is executed it knows which ARN was used to invoke it. The environment is the final section of the ARN. For example,
+
+    @blockquote
+        @code{arn:aws:lambda:eu-west-1:123456789012:function:demo:qa} - QA
+        @code{arn:aws:lambda:eu-west-1:123456789012:function:demo:prd} - PRODUCTION
+
+    The ARN is passed to the Lambda Handler in the Context and so needs to be detected each time that the Lambda executes.
+
+@sect{Deriving Configuration}
+
+    You could use the knowledge of which environment you are in to lookup configuration on an external system (for example Consul). This might well make sense for sensitive configuration that needs to be configured (especially if your infrastructure team already has such a setup). However, for most configuration the ideal place to store it is inside the your own code base. This is by far the simplest way to store configuration and given that it should be possible to push a Lambda from checkin to Production in a couple of minutes, the cost is negligable.
+
+    @p
+        The Chuckwagon Library makes loading configuration stored inside the Lambda Code based on the Environment in the Context simple to setup. Consider changing the @code{Helloworld.scala} Handler from the @sect.ref{Getting Started} guide,
+
+    @hl.scala
+        import com.amazonaws.services.lambda.runtime.Context
+        import com.itv.chuckwagon.lambda._
+        import io.circe.generic.auto._
+
+        case class Response(response: String)
+
+        case class HelloConfig(env: String, someServiceLocation: String) extends LambdaConfigForEnv
+
+        object Helloworld {
+          val configs = LambdaConfig(
+            HelloConfig(env = "qa", someServiceLocation = "testLocation"),
+            HelloConfig(env = "prd", someServiceLocation = "prdLocation")
+          )
+        }
+
+        class Helloworld extends Handler[Unit, Response] {
+          def handler(query: Unit, context: Context): Response = {
+
+            val config = Helloworld.configs.configFor(context)
+
+            Response(s"Hello World from ${config.env}!")
+          }
+        }
+
+    This code now does a number of interesting things in addition to printing "Hello World"

@@ -8,7 +8,7 @@
     Its initial goals are to
 @ul
     @li
-        provide an opinionated sandbox for learning about best practice deployment of AWS Lambdas.
+        provide an opinionated sandbox for learning about best practice configuration and deployment of AWS Lambdas.
     @li
         make sbt powered AWS Lambda @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines fun and easy to develop.
     @li
