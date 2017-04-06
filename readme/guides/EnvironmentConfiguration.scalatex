@@ -1,19 +1,22 @@
 @import Main._
 
-Several times in the @sect.ref{Deployment Pipelines} Guide we mentioned that even though you can deploy a Lambda to more than one environment it still only exists in one place because what you are actually doing is pointing two or more AWS Aliases at the same Lambda. This is an efficient feature because it means that Amazon doesn't have to create multiple copies of the JAR file and Lambda Configuration metadata that isn't allowed to change in any case. It does, however, highlight a challenge in AWS. How do you apply environment specific configuration to an AWS Lambda?
+Several times in the @sect.ref{Deployment Pipelines} Guide we mentioned that even though you can deploy a Lambda to more than one environment it still only exists in one place. This is because what you are actually doing is pointing two or more AWS Aliases at the same Lambda. This is an efficient feature because it means that Amazon doesn't have to create multiple copies of the JAR file / Lambda Configuration metadata that isn't allowed to change in any case. It does, however, highlight a challenge in AWS. How do you apply environment specific configuration to an AWS Lambda?
 
-@sect{Challenges}
-
-    @p
-        Traditionally when configuring a Service you often deploy an environmental configuration file along side it on the box it is deployed to. This configuration will usually contain things like the location of that service's database in the associated environment. There is no built in way to associate a environmental configuration file with an AWS Lambda.
+@sect{Dead Ends}
 
     @p
-        AWS Lambda provides a feature called 'Environment variables' that do at first glance look suitable for this purpose. However, AWS Lambda environment variables cannot be configured per environment. Once you version a Lambda its environment variables cannot be changed. They are intended to be used to save time changing configuration that would otherwise require a code deployment. However, since code deployments are very fast and accessing environment variables is necessarily cumbersome they are not really ideal for any use. It is possible that they would be useful for encrypted fields. Chuckwagon does not yet support such functionality.
-
-@sect{Detection}
+        Traditionally when configuring a Service you deploy an environmental configuration file along side it on the box it is deployed to. This configuration file contains things like the location of that service's database in the associated environment. There is no built in way to associate an environmental configuration file with an AWS Lambda.
 
     @p
-        The only way to store Environment specific variables in AWS Lambda is to take advantage of the fact that when your Lambda is executed it knows which ARN was used to invoke it. The environment is the final section of the ARN. For example,
+        AWS Lambda provides a feature called 'Environment variables' that do at first glance look suitable for this purpose. However, AWS Lambda environment variables cannot be configured per environment. They appropriate the term environment from shell scripting, where variables can be passed to scripts by setting them as global constants on the shell. AWS Lambda doesn't run in such a shell/environment. Once you version a Lambda its environment variables cannot be changed. They are intended to be used to save time changing configuration that would otherwise require a code deployment, but this is a very different thing to the flexibility of environment variables in a shell scripting environment.
+
+    @p
+        Consequently, since code deployments are very fast and accessing AWS Lambda environment variables is necessarily cumbersome they are not obviously ideal for any use. It is possible that they would be useful for encrypted fields. Chuckwagon does not yet support such functionality.
+
+@sect{Environment Detection}
+
+    @p
+        The only way to manage Environment specific variables in AWS Lambda is to take advantage of the fact that when your Lambda is executed it knows which ARN was used to invoke it. The environment is the final section of the ARN. For example,
 
     @blockquote
         @code{arn:aws:lambda:eu-west-1:123456789012:function:demo:qa} - QA
@@ -23,10 +26,10 @@ Several times in the @sect.ref{Deployment Pipelines} Guide we mentioned that eve
 
 @sect{Deriving Configuration}
 
-    You could use the knowledge of which environment you are in to lookup configuration on an external system (for example Consul). This might well make sense for sensitive configuration that needs to be configured (especially if your infrastructure team already has such a setup). However, for most configuration the ideal place to store it is inside the your own code base. This is by far the simplest way to store configuration and given that it should be possible to push a Lambda from checkin to Production in a couple of minutes, the cost is negligable.
+    You could use the knowledge of which environment you are in to lookup configuration on an external system (for example @lnk("Consul", "https://www.consul.io/")). This might well make sense for configuration produced very frequently by automation or sensitive configuration that needs to be encrypted (especially if your infrastructure team already has such a setup). However, for most configuration the ideal way to store it is as typed classes inside your own code base. Given that it should be possible to push a Lambda from check-in to Production in a couple of minutes, even the time to change configuration is negligible.
 
     @p
-        The Chuckwagon Library makes loading configuration stored inside the Lambda Code based on the Environment in the Context simple to setup. Consider changing the @code{Helloworld.scala} Handler from the @sect.ref{Getting Started} guide,
+        The Chuckwagon Library makes configuration stored inside the Lambda codebase simple to lookup on a per environment basis. Consider the following changes to the @code{Helloworld.scala} Handler introduced in the @sect.ref{Getting Started} guide,
 
     @hl.scala
         import com.amazonaws.services.lambda.runtime.Context
@@ -53,4 +56,34 @@ Several times in the @sect.ref{Deployment Pipelines} Guide we mentioned that eve
           }
         }
 
-    This code now does a number of interesting things in addition to printing "Hello World"
+    This code now does a number of interesting things in addition to printing 'Hello World',
+
+    @ul
+        @li
+            It defines a Case Class @code{HelloConfig} that can be used to describe the configuration for the function. This class extends the Chuckwagon library trait @code{LambdaConfigForEnv},
+
+             @hl.scala
+                 trait LambdaConfigForEnv {
+                   val env: String
+                 }
+
+             @code{LambdaConfigForEnv} forces your configuration case class to have the field @code{env: String}. This is used to determine what environment it applies to.
+
+        @li
+            It declares all of the configurations for all of its environments using the Chuckwagon library class @code{LambdaConfig}. This class has a type signature of,
+
+            @hl.scala
+                case class LambdaConfig[T <: LambdaConfigForEnv](configs: T*)
+
+            This means you can declare as many configurations as you want as long as they are a sub-type of @code{LambdaConfigForEnv} (as @code{HelloConfig} is).
+
+        @li
+            With configurations defined and declared the @code{Helloworld} Handler function is then able to derive the appropriate Configuration for the environment it was called in from the @code{Context} using a helper method on @code{LambdaConfig},
+
+            @hl.scala
+                val config = Helloworld.configs.configFor(context)
+
+        @li
+            Finally, the @code{Helloworld} function makes trivial usage of this configuration to modify its response and add the environment it ran in. It is easy to see how environmental configuration could be utilised more easily in real life.
+
+    This example code is really all you need in order to add per environment configuration to Lambdas deployed into an Environment. It is extremely simple, but also extremely powerful.
