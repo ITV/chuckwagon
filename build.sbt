@@ -118,5 +118,6 @@ lazy val readme = scalatex
     noPublishSettings,
     test := {
       run.in(Compile).toTask(" --validate-links").value
-    }
+    },
+    scalacOptions := scalacOptions.value.filter(_ != "-P:acyclic:force").filter(_ != "-Xlint")
   )
