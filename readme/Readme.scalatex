@@ -38,5 +38,5 @@
 @sect{Release Notes}
     @scalatex.ReleaseNotes()
 
-@sect{FAQ}
-    @scalatex.FAQ()
+@sect{Roadmap}
+    @scalatex.Roadmap()

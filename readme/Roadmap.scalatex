@@ -1,0 +1,28 @@
+@import Main._
+
+@sect{0.2.0 Plans}
+    @ul
+        @li
+            Add Test Coverage
+        @li
+            Travis CI for
+            @ul
+                @li
+                    tests
+                @li
+                    website
+                @li
+                    nightly builds
+                @li
+                    releases
+
+@sect{Later 0.x Releases}
+    @ul
+        @li
+            Proguard enabled non-S3 Publishing
+        @li
+            Cloudwatch Logging Helpers
+        @li
+            Cloudwatch Metrics Helpers
+        @li
+            Experimental Scala.js support

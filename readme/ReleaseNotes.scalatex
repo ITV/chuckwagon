@@ -1,3 +1,6 @@
 @import Main._
 
-Stuff about versions
+@sect{0.1.0 Release}
+    @ul
+        @li
+            Initial Release
