@@ -21,7 +21,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
 @p
     Notice that @code{chuckRegion}, @code{chuckName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonCreatePlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
 
-@sect{IAM Roles}
+@sect{Permissions}
 
     @p
         Making the IAM Role @code{AssumableDevAccountRoleARN} in the Development Account available to the Production Account requires granting specially configured Cross AWS Account privileges. It also requires giving a Role in the Production Account access permissions.

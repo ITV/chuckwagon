@@ -1,3 +1,78 @@
 @import Main._
 
-roles
+This section won't tell you how to configure IAM Roles for Chuckwagon but it does describe when and why specific permissions are required so that you can justify the creation of the required roles within your organisation.
+
+@sect{Basic Actions}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Actions"), td("Notes"))),
+        tbody(
+          tr(td("s3:ListBuckets"), td("")),
+          tr(td("s3:PutObject"), td("")),
+          tr(td("s3:PutObjectAcl"), td("")),
+          tr(td("lambda:ListVersionsByFunction"), td("")),
+          tr(td("lambda:CreateFunction"), td("")),
+          tr(td("lambda:GetFunction"), td("")),
+          tr(td("lambda:GetFunctionConfiguration"), td("")),
+          tr(td("lambda:UpdateFunctionCode"), td("")),
+          tr(td("lambda:UpdateFunctionConfiguration"), td("*All Required* for any operation of the sbt Plugin")),
+          tr(td("lambda:PublishVersion"), td("*All Recommended* Required to Publish Versions (ie chuckPublish)")),
+          tr(td("lambda:CreateAlias"), td("")),
+          tr(td("lambda:GetAlias"), td("")),
+          tr(td("lambda:ListAliases"), td("")),
+          tr(td("lambda:UpdateAlias"), td("*All Recommended* Required to Create/Manage Environments (ie chuckPublishTo)")),
+          tr(td("lambda:DeleteFunction"), td("")),
+          tr(td("lambda:DeleteAlias"), td("*All Recommended* Required to run chuckCleanup Task")),
+          tr(td("ec2:DescribeSecurityGroups"), td("")),
+          tr(td("events:DescribeSubnets"), td("")),
+          tr(td("events:DescribeVpcs"), td("*All Optional* Required if Lambda VPC Configured with Tag Lookups")),
+          tr(td("events:PutRule"), td("")),
+          tr(td("events:PutTargets"), td("")),
+          tr(td("lambda:AddPermission"), td("")),
+          tr(td("lambda:GetPolicy"), td("")),
+          tr(td("lambda:UpdateEventSourceMapping"), td("*All Optional* Required for chuckSetLambdaTrigger")),
+          tr(td("events:DeleteRule"), td("")),
+          tr(td("events:RemoveTargets"), td("")),
+          tr(td("lambda:RemovePermission"), td("*All Optional* Required for chuckRemoveLambdaTrigger")),
+          tr(td("lambda:InvokeFunction"), td("*Optional* Required for chuckInvoke")),
+          tr(td("iam:*"), td("*Not Recommended* But required if you rely on Chuckwagon to manage the Role for your AWS Lambdas"))
+        ))
+
+@sect{Executing Actions}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Actions"), td("Notes"))),
+        tbody(
+          tr(td("logs:CreateLogGroup"), td("")),
+          tr(td("logs:CreateLogStream"), td("")),
+          tr(td("logs:PutDestination"), td("")),
+          tr(td("logs:PutLogEvents"), td("*All Recommended* Required if using Cloudwatch Logging")),
+          tr(td("cloudwatch:PutMetricData"), td("*Recommended* Required if using Cloudwatch Metrics")),
+          tr(td("ec2:CreateNetworkInterface"), td("")),
+          tr(td("ec2:DescribeNetworkInterfaces"), td("")),
+          tr(td("ec2:DeleteNetworkInterface"), td("*All Optional* Required if running within a VPC"))
+        ))
+
+@sect{Copying Actions}
+
+    @p
+        The following Actions are required to be configured in your Source Account
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Actions"), td("Notes"))),
+        tbody(
+          tr(td("lambda:GetFunction"), td("*Required* Must also grant access to Destination Account"))
+        ))
+
+    @p
+        The following Actions are required to be configured in your Destination Account
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Actions"), td("Notes"))),
+        tbody(
+          tr(td("sts:AssumeRole"), td("*Required* Must specify the Resource in your Source Account"))
+        ))
