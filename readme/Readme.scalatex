@@ -29,6 +29,9 @@
     @sect{Plugins}
         @scalatex.reference.Plugins()
 
+    @sect{Library}
+        @scalatex.reference.Library()
+
     @sect{IAM Roles}
         @scalatex.reference.IAMRoles()
 

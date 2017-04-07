@@ -26,7 +26,8 @@
           tr(td("chuckPromote"), td("""Promote the AWS Lambda Version in the first Environment (AWS Alias) to the second. Environments must exist in chuckEnvironments Setting, but associated Aliases will be created in AWS if they are missing. eg "chuckPromote blue-qa qa"""")),
           tr(td("chuckCleanUp"), td("Remove all AWS Lambda Versions not deployed to an Environment (AWS Alias) and all Environments not defined in chuckEnvironments Setting")),
           tr(td("chuckSetLambdaTrigger"), td("""Schedule AWS Lambda to be invoked based on a cron expression eg 'chuckSetLambdaTrigger qa "rate(1 minute)"'""")),
-          tr(td("chuckRemoveLambdaTrigger"), td("Remove Scheduled execution associated with AWS Lambda"))
+          tr(td("chuckRemoveLambdaTrigger"), td("Remove Scheduled execution associated with AWS Lambda")),
+          tr(td("chuckInvoke", td("Invoke the AWS Lambda (if it exists). SNAPSHOT if no arguments passed. Otherwise either the version or the environment passed as a parameter. Sends no arguments but does print output.")))
         ))
 
 
@@ -80,6 +81,18 @@
           tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
         ))
 
+    @p
+        Here are the Tasks available to the @code{ChuckwagonPublishPlugin}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Task"), td("Description"))),
+        tbody(
+          tr(td("chuckPublishSnapshot"), td("Compile/Create/Update $LATEST AWS Lambda according to chuckPublishConfig Setting (Not recommended for real world usage)")),
+          tr(td("chuckPublish"), td("As chuckPublishSnapshot except additionally create a (Numbered) Lambda Version immutable copy of $LATEST (Not recommended for real world usage)")),
+          tr(td("chuckPublishTo"), td("As chuckPublish except additionally assign the Lambda Version to the environment passed as an input parameter (must be one of environments defined in chuckEnvironments)"))
+        ))
+
 @sect{ChuckwagonCopyPlugin}
 
     @p
@@ -123,4 +136,14 @@
           tr(td("VPCLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
           tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
           tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
+        ))
+
+    @p
+        Here are the Tasks available to the @code{ChuckwagonCopyPlugin}
+
+    @table(
+        `class` := "pure-table pure-table-bordered pure-table-striped",
+        thead(tr(td("Task"), td("Description"))),
+        tbody(
+          tr(td("chuckCopyFromOtherAccountTo"), td("Copy an AWS Lambda from another account and publish it to the Environment expressed as an input parameter in this Account (using chuckPublishConfig Setting)"))
         ))
