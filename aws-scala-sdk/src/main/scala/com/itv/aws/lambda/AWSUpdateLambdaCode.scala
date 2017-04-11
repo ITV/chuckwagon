@@ -4,49 +4,42 @@ import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult
 import com.itv.aws.s3.S3Location
-import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN
 
-case class UpdateLambdaCodeRequest(lambda: Lambda, s3Location: S3Location)
-case class UpdatePublishedLambdaCodeResponse(publishedLambda: PublishedLambda)
-case class UpdateLambdaSnapshotCodeResponse(lambdaSnapshot: LambdaSnapshot)
-
-class AWSUpdateCodeForLambdaSnapshot(awsLambda: AWSLambda)
-    extends AWSService[UpdateLambdaCodeRequest, UpdateLambdaSnapshotCodeResponse] {
-  override def apply(updateLambdaRequest: UpdateLambdaCodeRequest): UpdateLambdaSnapshotCodeResponse = {
-    val awsUpdateFunctionResponse = AWSUpdateLambdaCode.updateLambda(awsLambda, updateLambdaRequest, false)
+class AWSUpdateCodeForLambdaSnapshot(awsLambda: AWSLambda) {
+  def apply(lambda: Lambda, s3Location: S3Location): LambdaSnapshot = {
+    val awsUpdateFunctionResponse = AWSUpdateLambdaCode.updateLambda(awsLambda, lambda, s3Location, false)
 
     val lambdaSnapshot = LambdaSnapshot(
-      lambda = updateLambdaRequest.lambda,
+      lambda = lambda,
       arn = ARN(awsUpdateFunctionResponse.getFunctionArn)
     )
 
-    UpdateLambdaSnapshotCodeResponse(lambdaSnapshot)
+    lambdaSnapshot
   }
 }
 
-class AWSUpdateCodeAndPublishLambda(awsLambda: AWSLambda)
-    extends AWSService[UpdateLambdaCodeRequest, UpdatePublishedLambdaCodeResponse] {
-  override def apply(updateLambdaRequest: UpdateLambdaCodeRequest): UpdatePublishedLambdaCodeResponse = {
-    val awsUpdateFunctionResponse = AWSUpdateLambdaCode.updateLambda(awsLambda, updateLambdaRequest, true)
+class AWSUpdateCodeAndPublishLambda(awsLambda: AWSLambda) {
+  def apply(lambda: Lambda, s3Location: S3Location): PublishedLambda = {
+    val awsUpdateFunctionResponse = AWSUpdateLambdaCode.updateLambda(awsLambda, lambda, s3Location, true)
 
     val publishedLambda = PublishedLambda(
-      lambda = updateLambdaRequest.lambda,
+      lambda = lambda,
       version = LambdaVersion(awsUpdateFunctionResponse.getVersion.toInt),
       arn = ARN(awsUpdateFunctionResponse.getFunctionArn)
     )
 
-    UpdatePublishedLambdaCodeResponse(publishedLambda)
+    publishedLambda
   }
 }
 
 object AWSUpdateLambdaCode {
   private[lambda] def updateLambda(
       awsLambda: AWSLambda,
-      updateLambdaRequest: UpdateLambdaCodeRequest,
+      lambda: Lambda,
+      s3Location: S3Location,
       publish: Boolean
   ): UpdateFunctionCodeResult = {
-    import updateLambdaRequest._
 
     val awsUpdateFunctionRequest = new UpdateFunctionCodeRequest()
       .withFunctionName(lambda.deployment.name.value)

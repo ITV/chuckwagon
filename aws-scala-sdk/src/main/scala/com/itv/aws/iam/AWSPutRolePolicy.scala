@@ -2,17 +2,12 @@ package com.itv.aws.iam
 
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement
 import com.amazonaws.services.identitymanagement.model.{PutRolePolicyRequest => AWSPutRolePolicyRequest}
-import com.itv.aws.AWSService
 
-case class PutRolePolicyRequest(rolePolicy: RolePolicy)
-case class PutRolePolicyResponse(role: Role)
+class AWSPutRolePolicy(iam: AmazonIdentityManagement) {
 
-class AWSPutRolePolicy(iam: AmazonIdentityManagement)
-    extends AWSService[PutRolePolicyRequest, PutRolePolicyResponse] {
+  def apply(rolePolicy: RolePolicy): Role = {
 
-  override def apply(putRolePolicyRequest: PutRolePolicyRequest): PutRolePolicyResponse = {
-
-    import putRolePolicyRequest.rolePolicy._
+    import rolePolicy._
 
     val awsPutRolePolicyRequest =
       new AWSPutRolePolicyRequest()
@@ -22,6 +17,6 @@ class AWSPutRolePolicy(iam: AmazonIdentityManagement)
 
     iam.putRolePolicy(awsPutRolePolicyRequest)
 
-    PutRolePolicyResponse(role)
+    role
   }
 }

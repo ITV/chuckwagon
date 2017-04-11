@@ -2,17 +2,11 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.{AddPermissionRequest => AWSAddPermissionRequest}
-import com.itv.aws.AWSService
 
-case class AddPermissionRequest(alias: Alias, lambdaPermission: LambdaPermission)
+class AWSAddPermission(awsLambda: AWSLambda) {
 
-case class AddPermissionResponse()
-
-class AWSAddPermission(awsLambda: AWSLambda) extends AWSService[AddPermissionRequest, AddPermissionResponse] {
-
-  override def apply(addPermissionRequest: AddPermissionRequest): AddPermissionResponse = {
-    import addPermissionRequest._
-    import addPermissionRequest.lambdaPermission._
+  def apply(alias: Alias, lambdaPermission: LambdaPermission): Unit = {
+    import lambdaPermission._
 
     val awsAddPermissionRequest = new AWSAddPermissionRequest()
       .withFunctionName(alias.lambdaName.value)
@@ -23,7 +17,5 @@ class AWSAddPermission(awsLambda: AWSLambda) extends AWSService[AddPermissionReq
       .withSourceArn(sourceARN.value)
 
     val _ = awsLambda.addPermission(awsAddPermissionRequest)
-
-    AddPermissionResponse()
   }
 }

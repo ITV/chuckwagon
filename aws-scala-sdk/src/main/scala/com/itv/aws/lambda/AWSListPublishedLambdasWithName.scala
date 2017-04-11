@@ -3,31 +3,21 @@ package com.itv.aws.lambda
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.ListVersionsByFunctionRequest
 import com.amazonaws.services.lambda.model.ResourceNotFoundException
-import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
 
-case class ListPublishedLambdasWithNameRequest(lambdaName: LambdaName)
-case class ListPublishedLambdasWithNameResponse(
-    publishedLambdas: Option[List[PublishedLambda]]
-)
+class AWSListPublishedLambdasWithName(awsLambda: AWSLambda) {
 
-class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
-    extends AWSService[
-      ListPublishedLambdasWithNameRequest,
-      ListPublishedLambdasWithNameResponse
-    ] {
-
-  override def apply(
-      listFunctionsWithNameRequest: ListPublishedLambdasWithNameRequest
-  ): ListPublishedLambdasWithNameResponse = {
+  def apply(
+      lambdaName: LambdaName
+  ): Option[List[PublishedLambda]] = {
 
     val listVersionsByFunctionRequest =
       new ListVersionsByFunctionRequest()
-        .withFunctionName(listFunctionsWithNameRequest.lambdaName.value)
+        .withFunctionName(lambdaName.value)
 
     try {
       val listFunctionsResult =
@@ -53,10 +43,10 @@ class AWSListPublishedLambdasWithName(awsLambda: AWSLambda)
           version = LambdaVersion(fc.getVersion.toInt)
         )
       }.toList
-      ListPublishedLambdasWithNameResponse(Option(fcs))
+      Option(fcs)
     } catch {
       case _: ResourceNotFoundException =>
-        ListPublishedLambdasWithNameResponse(None)
+        None
     }
   }
 }

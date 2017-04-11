@@ -1,36 +1,31 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
-import com.itv.aws.AWSService
 import com.amazonaws.services.lambda.model.{UpdateAliasRequest => AWSUpdateAliasRequest}
 import com.itv.aws.iam.ARN
 
-case class UpdateAliasRequest(alias: Alias, lambdaVersionToAlias: LambdaVersion)
-case class UpdateAliasResponse(alias: Alias)
+class AWSUpdateAlias(awsLambda: AWSLambda) {
+  def apply(
+      alias: Alias,
+      lambdaVersionToAlias: LambdaVersion
+  ): Alias = {
 
-class AWSUpdateAlias(awsLambda: AWSLambda) extends AWSService[UpdateAliasRequest, UpdateAliasResponse] {
-  override def apply(
-      updateAliasRequest: UpdateAliasRequest
-  ): UpdateAliasResponse = {
-
-    val lambdaNameString = updateAliasRequest.alias.lambdaName.value
+    val lambdaNameString = alias.lambdaName.value
 
     val awsUpdateAliasRequest = new AWSUpdateAliasRequest()
       .withFunctionName(lambdaNameString)
-      .withName(updateAliasRequest.alias.name.value)
+      .withName(alias.name.value)
       .withFunctionVersion(
-        updateAliasRequest.lambdaVersionToAlias.value.toString
+        lambdaVersionToAlias.value.toString
       )
 
     val awsUpdateAliasResponse = awsLambda.updateAlias(awsUpdateAliasRequest)
 
-    UpdateAliasResponse(
-      Alias(
-        name = AliasName(awsUpdateAliasRequest.getName),
-        lambdaName = LambdaName(lambdaNameString),
-        lambdaVersion = LambdaVersion(awsUpdateAliasResponse.getFunctionVersion.toInt),
-        arn = ARN(awsUpdateAliasResponse.getAliasArn)
-      )
+    Alias(
+      name = AliasName(awsUpdateAliasRequest.getName),
+      lambdaName = LambdaName(lambdaNameString),
+      lambdaVersion = LambdaVersion(awsUpdateAliasResponse.getFunctionVersion.toInt),
+      arn = ARN(awsUpdateAliasResponse.getAliasArn)
     )
   }
 }

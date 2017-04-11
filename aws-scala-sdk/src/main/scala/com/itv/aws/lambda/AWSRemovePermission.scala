@@ -2,16 +2,10 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.{RemovePermissionRequest => AWSRemovePermissionRequest}
-import com.itv.aws.AWSService
 
-case class RemovePermissionRequest(alias: Alias, lambdaPermission: LambdaPermission)
-case class RemovePermissionResponse()
+class AWSRemovePermission(awsLambda: AWSLambda) {
 
-class AWSRemovePermission(awsLambda: AWSLambda)
-    extends AWSService[RemovePermissionRequest, RemovePermissionResponse] {
-
-  override def apply(removePermissionRequest: RemovePermissionRequest): RemovePermissionResponse = {
-    import removePermissionRequest._
+  def apply(alias: Alias, lambdaPermission: LambdaPermission): Unit = {
 
     val awsRemovePermissionRequest = new AWSRemovePermissionRequest()
       .withFunctionName(alias.lambdaName.value)
@@ -19,7 +13,5 @@ class AWSRemovePermission(awsLambda: AWSLambda)
       .withQualifier(alias.name.value)
 
     val _ = awsLambda.removePermission(awsRemovePermissionRequest)
-
-    RemovePermissionResponse()
   }
 }

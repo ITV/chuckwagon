@@ -77,80 +77,70 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
           findSubnets.usingIds(vpc, ids)
         case FindVpcUsingFilters(filters) => findVpc.usingFilters(filters)
         case FindVpcUsingId(vpcId)        => findVpc.usingId(vpcId)
-        case PutRule(eventRule)           => putRule(PutRuleRequest(eventRule)).createdEventRule
+        case PutRule(eventRule)           => putRule(eventRule)
         case PutTargets(eventRule: EventRule, targetARN: ARN) => {
-          putTargets(PutTargetsRequest(eventRule, targetARN))
-          ()
+          putTargets(eventRule, targetARN)
         }
         case DeleteRule(ruleName) => {
-          deleteRule(DeleteRuleRequest(ruleName))
-          ()
+          deleteRule(ruleName)
         }
         case RemoveTargets(ruleName) => {
-          removeTargets(RemoveTargetsRequest(ruleName))
-          ()
+          removeTargets(ruleName)
         }
         case AddPermission(alias, lambdaPermission) => {
-          addPermission(AddPermissionRequest(alias, lambdaPermission))
-          ()
+          addPermission(alias, lambdaPermission)
         }
         case CreateAlias(
             name: AliasName,
             lambdaName: LambdaName,
             lambdaVersionToAlias: LambdaVersion
             ) =>
-          createAlias(
-            CreateAliasRequest(name, lambdaName, lambdaVersionToAlias)
-          ).aliasedLambda
+          createAlias(name, lambdaName, lambdaVersionToAlias)
         case CreateLambdaSnapshot(lambda: Lambda, s3Location: S3Location) =>
-          createLambdaSnapshot(CreateLambdaRequest(lambda, s3Location)).lambdaSnapshot
+          createLambdaSnapshot(lambda, s3Location)
         case CreatePublishedLambda(lambda: Lambda, s3Location: S3Location) =>
-          createPublishedLambda(CreateLambdaRequest(lambda, s3Location)).publishedLambda
+          createPublishedLambda(lambda, s3Location)
         case DeleteAlias(alias: Alias) =>
-          deleteAlias(DeleteAliasRequest(alias)).name
+          deleteAlias(alias)
         case DeleteLambdaVersion(publishedLambda: PublishedLambda) =>
-          deleteLambdaVersion(DeleteLambdaVersionRequest(publishedLambda)).deletedVersion
+          deleteLambdaVersion(publishedLambda)
         case GetLambdaVersion(lambdaName, aliasName) =>
-          getLambdaVersion(GetLambdaVersionRequest(lambdaName, aliasName)).downloadablePublishedLambda
+          getLambdaVersion(lambdaName, aliasName)
         case ListAliases(lambdaName: LambdaName) =>
-          listAliases(ListAliasesRequest(lambdaName)).aliases
+          listAliases(lambdaName)
         case ListPermissions(alias) =>
-          listPermissions(ListPermissionsRequest(alias)).permissions
+          listPermissions(alias)
         case ListPublishedLambdasWithName(lambdaName: LambdaName) =>
-          listPublishedLambdasWithName(
-            ListPublishedLambdasWithNameRequest(lambdaName)
-          ).publishedLambdas
+          listPublishedLambdasWithName(lambdaName)
         case RemovePermission(alias, lambdaPermission) => {
-          removePermission(RemovePermissionRequest(alias, lambdaPermission))
-          ()
+          removePermission(alias, lambdaPermission)
         }
         case UpdateAlias(alias: Alias, lambdaVersionToAlias: LambdaVersion) =>
-          updateAlias(UpdateAliasRequest(alias, lambdaVersionToAlias)).alias
+          updateAlias(alias, lambdaVersionToAlias)
         case UpdateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location) =>
-          updateCodeAndPublishLambda(UpdateLambdaCodeRequest(lambda, s3Location)).publishedLambda
+          updateCodeAndPublishLambda(lambda, s3Location)
         case UpdateCodeForLambdaSnapshot(lambda: Lambda, s3Location: S3Location) =>
-          updateCodeForLambdaSnapshot(UpdateLambdaCodeRequest(lambda, s3Location)).lambdaSnapshot
+          updateCodeForLambdaSnapshot(lambda, s3Location)
         case UpdateLambdaConfiguration(lambda: Lambda) => {
-          updateLambdaConfiguration(UpdateLambdaConfigurationRequest(lambda))
-          ()
+          updateLambdaConfiguration(lambda)
         }
         case InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]) =>
-          invokeLambda(InvokeLambdaRequest(lambdaName, qualifier)).response
+          invokeLambda(lambdaName, qualifier)
         case ListBuckets() =>
-          listBuckets(ListBucketsRequest()).buckets
+          listBuckets()
         case CreateBucket(name: BucketName) =>
-          createBucket(CreateBucketRequest(name)).bucket
+          createBucket(name)
         case PutObject(bucket: Bucket, putObjectType: PutObjectType) =>
-          putObject(PutObjectRequest(bucket, putObjectType)).key
+          putObject(bucket, putObjectType)
         case CreateRole(roleDeclaration) =>
-          createRole(CreateRoleRequest(roleDeclaration)).role
+          createRole(roleDeclaration)
         case PutRolePolicy(rolePolicy) => {
-          putRolePolicy(PutRolePolicyRequest(rolePolicy)).role
+          putRolePolicy(rolePolicy)
         }
         case ListRoles() =>
-          listRoles(ListRolesRequest()).roles
+          listRoles()
         case AssumeRole(roleARN, sessionName) => {
-          assumeRole(AssumeRoleRequest(roleARN, sessionName)).credentials
+          assumeRole(roleARN, sessionName)
         }
       }
     }

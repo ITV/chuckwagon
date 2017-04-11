@@ -20,7 +20,6 @@ import com.itv.aws.ec2.SecurityGroup
 import com.itv.aws.ec2.Subnet
 import com.itv.aws.ec2.Vpc
 import com.itv.aws.events._
-import com.itv.aws.iam.PutRolePolicyRequest
 import com.itv.aws.iam.RoleDeclaration
 import com.itv.aws.iam.RolePolicy
 import com.itv.aws.sts.AssumeRoleSessionName

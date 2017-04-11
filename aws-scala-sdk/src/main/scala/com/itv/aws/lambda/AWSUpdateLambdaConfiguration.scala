@@ -3,22 +3,12 @@ package com.itv.aws.lambda
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest
 import com.amazonaws.services.lambda.model.{VpcConfig => AWSVpcConfig}
-import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
 
-case class UpdateLambdaConfigurationRequest(lambda: Lambda)
-case class UpdateLambdaConfigurationResponse()
-
-class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
-    extends AWSService[
-      UpdateLambdaConfigurationRequest,
-      UpdateLambdaConfigurationResponse
-    ] {
-  override def apply(
-      updateLambdaConfigurationRequest: UpdateLambdaConfigurationRequest
-  ): UpdateLambdaConfigurationResponse = {
-    import updateLambdaConfigurationRequest.lambda._
+class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda) {
+  def apply(lambda: Lambda): Unit = {
+    import lambda._
     import runtime._
     import deployment._
 
@@ -41,7 +31,5 @@ class AWSUpdateLambdaConfiguration(awsLambda: AWSLambda)
     val _ = awsLambda.updateFunctionConfiguration(
       awsUpdateFunctionConfigurationRequest
     )
-
-    UpdateLambdaConfigurationResponse()
   }
 }

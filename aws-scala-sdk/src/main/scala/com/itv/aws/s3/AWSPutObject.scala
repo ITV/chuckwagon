@@ -7,19 +7,14 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.{PutObjectRequest => AWSPutObjectRequest}
-import com.itv.aws.AWSService
 
 sealed trait PutObjectType
 case class PutFile(keyPrefix: S3KeyPrefix, file: File) extends PutObjectType
 case class PutInputStream(s3Key: S3Key, inputStream: InputStream, inputStreamLength: Long)
     extends PutObjectType
 
-case class PutObjectRequest(bucket: Bucket, putObject: PutObjectType)
-case class PutObjectResponse(key: S3Location)
-
-class AWSPutObject(awsS3: AmazonS3) extends AWSService[PutObjectRequest, PutObjectResponse] {
-  override def apply(putFileRequest: PutObjectRequest): PutObjectResponse = {
-    import putFileRequest._
+class AWSPutObject(awsS3: AmazonS3) {
+  def apply(bucket: Bucket, putObject: PutObjectType): S3Location = {
 
     val (s3Key, awsPutObjectRequest) = putObject match {
       case PutFile(keyPrefix, file) => {
@@ -37,7 +32,6 @@ class AWSPutObject(awsS3: AmazonS3) extends AWSService[PutObjectRequest, PutObje
     awsPutObjectRequest.setCannedAcl(CannedAccessControlList.AuthenticatedRead)
 
     val _ = awsS3.putObject(awsPutObjectRequest)
-
-    PutObjectResponse(S3Location(bucket, s3Key))
+    S3Location(bucket, s3Key)
   }
 }

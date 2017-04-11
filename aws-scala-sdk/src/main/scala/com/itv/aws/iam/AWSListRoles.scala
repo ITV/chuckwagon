@@ -1,17 +1,12 @@
 package com.itv.aws.iam
 
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement
-import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
 
-case class ListRolesRequest()
+class AWSListRoles(iam: AmazonIdentityManagement) {
 
-case class ListRolesResponse(roles: List[Role])
-
-class AWSListRoles(iam: AmazonIdentityManagement) extends AWSService[ListRolesRequest, ListRolesResponse] {
-
-  override def apply(listRolesRequest: ListRolesRequest): ListRolesResponse = {
+  def apply(): List[Role] = {
     val roles = iam
       .listRoles()
       .getRoles
@@ -27,6 +22,6 @@ class AWSListRoles(iam: AmazonIdentityManagement) extends AWSService[ListRolesRe
       }
       .toList
 
-    ListRolesResponse(roles)
+    roles
   }
 }

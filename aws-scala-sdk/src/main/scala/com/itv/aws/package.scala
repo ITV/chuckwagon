@@ -38,8 +38,6 @@ package aws {
   import com.amazonaws.auth.AWSCredentials
   import com.amazonaws.auth.BasicSessionCredentials
 
-  trait AWSService[Req, Res] extends (Req => Res)
-
   case class AccessKeyId(value: String)     extends AnyVal
   case class SecretAccessKey(value: String) extends AnyVal
   case class SessionToken(value: String)    extends AnyVal

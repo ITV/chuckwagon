@@ -2,14 +2,10 @@ package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.GetPolicyRequest
-import com.itv.aws.AWSService
 import com.itv.aws.iam.ARN
 import io.circe.parser._
 
 import scala.util.Try
-
-case class ListPermissionsRequest(alias: Alias)
-case class ListPermissionsResponse(permissions: Option[List[LambdaPermission]])
 
 case class StatementPrincipal(Service: String)
 case class StatementCondition(ArnLike: StatementArnLike)
@@ -31,8 +27,7 @@ object LambdaPolicy {
   implicit val LambdaPolicyDecoder = deriveDecoder[LambdaPolicy]
 }
 
-class AWSListPermissions(awsLambda: AWSLambda)
-    extends AWSService[ListPermissionsRequest, ListPermissionsResponse] {
+class AWSListPermissions(awsLambda: AWSLambda) {
 
   def extractLambdaPermissions(policyString: String): List[LambdaPermission] = {
 
@@ -51,15 +46,12 @@ class AWSListPermissions(awsLambda: AWSLambda)
     permissions
   }
 
-  override def apply(listPermissionsRequest: ListPermissionsRequest): ListPermissionsResponse = {
-    import listPermissionsRequest._
+  def apply(alias: Alias): Option[List[LambdaPermission]] = {
 
     val getPolicyRequest = new GetPolicyRequest()
       .withFunctionName(alias.lambdaName.value)
       .withQualifier(alias.name.value)
 
-    ListPermissionsResponse(
-      Try(awsLambda.getPolicy(getPolicyRequest).getPolicy).toOption.map(extractLambdaPermissions)
-    )
+    Try(awsLambda.getPolicy(getPolicyRequest).getPolicy).toOption.map(extractLambdaPermissions)
   }
 }

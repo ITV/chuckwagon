@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.InvokeRequest
-import com.itv.aws.AWSService
 
 sealed trait InvokeQualifier
 case class VersionQualifier(version: LambdaVersion) extends InvokeQualifier {
@@ -28,12 +27,8 @@ case class LambdaResponsePayload(value: ByteBuffer) extends LambdaResponse {
     new String(value.array(), "utf-8")
 }
 
-case class InvokeLambdaRequest(lambdaName: LambdaName, qualifier: Option[InvokeQualifier])
-case class InvokeLambdaResponse(response: LambdaResponse)
-
-class AWSInvokeLambda(awsLambda: AWSLambda) extends AWSService[InvokeLambdaRequest, InvokeLambdaResponse] {
-  override def apply(invokeLambdaRequest: InvokeLambdaRequest): InvokeLambdaResponse = {
-    import invokeLambdaRequest._
+class AWSInvokeLambda(awsLambda: AWSLambda) {
+  def apply(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]): LambdaResponse = {
 
     val awsInvokeRequest = new InvokeRequest()
       .withFunctionName(lambdaName.value)
@@ -42,12 +37,10 @@ class AWSInvokeLambda(awsLambda: AWSLambda) extends AWSService[InvokeLambdaReque
 
     val awsInvokeResponse = awsLambda.invoke(awsInvokeRequest)
 
-    val response: LambdaResponse = awsInvokeResponse.getFunctionError match {
+    awsInvokeResponse.getFunctionError match {
       case "Handled"   => HandledLambdaError
       case "Unhandled" => UnhandledLambdaError(awsInvokeResponse.getPayload)
       case _           => LambdaResponsePayload(awsInvokeResponse.getPayload)
     }
-
-    InvokeLambdaResponse(response)
   }
 }
