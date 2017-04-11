@@ -47,7 +47,7 @@ For all but the most trivial of use-cases you will want to deploy your Lambdas i
             chuckPublishConfig := chuckPublishConfigBuilder
               .withVpc(
                 chuckVpcUsingFiltersBuilder
-                  .withVPCLookupFilters("tag:Name" -> "prd-vpc")
+                  .withVpcLookupFilters("tag:Name" -> "prd-vpc")
                   .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
                   .withSecurityGroupsLookupFilters("group-name" -> "default")
 

@@ -34,7 +34,7 @@ class VpcConfigUsingFiltersLookupBuilder[B_VPC_LOOKUP_FILTERS,
     val subnetsLookupFilters: Option[List[Filter]],
     val securityGroupsLookupFilters: Option[List[Filter]]
 ) {
-  def withVPCLookupFilters(vpcLookupFilters: (String, String)*) =
+  def withVpcLookupFilters(vpcLookupFilters: (String, String)*) =
     new VpcConfigUsingFiltersLookupBuilder[DEFINED, B_SUBNETS_LOOKUP_FILTERS, B_SECURITYGROUPS_LOOKUP_FILTERS](
       toFilters(vpcLookupFilters),
       subnetsLookupFilters,

@@ -102,7 +102,7 @@
           .withRoleARN(
             "arn:aws:iam::123456789012:role/dev_lambda_execute")
           .withVpc(chuckVpcUsingFiltersBuilder
-            .withVPCLookupFilters("tag:Name" -> "qa-vpc")
+            .withVpcLookupFilters("tag:Name" -> "qa-vpc")
             .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
             .withSecurityGroupsLookupFilters("group-name" -> "default"))
           .withCodeFile(assembly)
@@ -148,7 +148,7 @@
           .withRoleARN(
             "arn:aws:iam::0987654321098:role/prd_lambda_execute")
           .withVpc(chuckVpcUsingFiltersBuilder
-            .withVPCLookupFilters("tag:Name" -> "prd-vpc")
+            .withVpcLookupFilters("tag:Name" -> "prd-vpc")
             .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
             .withSecurityGroupsLookupFilters("group-name" -> "default"))
           .withAssumableDevAccountRoleARN(
