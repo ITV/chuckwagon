@@ -28,7 +28,7 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
 
   val findSecurityGroups = new AWSFindSecurityGroups(awsEc2)
   val findSubnets        = new AWSFindSubnets(awsEc2)
-  val findVPC            = new AWSFindVPC(awsEc2)
+  val findVpc            = new AWSFindVpc(awsEc2)
 
   val putRule       = new AWSPutRule(awsEvents)
   val putTargets    = new AWSPutTargets(awsEvents)
@@ -67,12 +67,17 @@ class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
   def compiler: DeployLambdaA ~> Id =
     new (DeployLambdaA ~> Id) {
       def apply[A](command: DeployLambdaA[A]): Id[A] = command match {
-        case FindSecurityGroups(vpc, filters) =>
-          findSecurityGroups(FindSecurityGroupsRequest(vpc, filters)).securityGroups
-        case FindSubnets(vpc, filters) =>
-          findSubnets(FindSubnetsRequest(vpc, filters)).subnets
-        case FindVPC(filters)   => findVPC(FindVPCRequest(filters)).vpc
-        case PutRule(eventRule) => putRule(PutRuleRequest(eventRule)).createdEventRule
+        case FindSecurityGroupsUsingFilters(vpc, filters) =>
+          findSecurityGroups.usingFilters(vpc, filters)
+        case FindSecurityGroupsUsingIds(vpc, ids) =>
+          findSecurityGroups.usingIds(vpc, ids)
+        case FindSubnetsUsingFilters(vpc, filters) =>
+          findSubnets.usingFilters(vpc, filters)
+        case FindSubnetsUsingIds(vpc, ids) =>
+          findSubnets.usingIds(vpc, ids)
+        case FindVpcUsingFilters(filters) => findVpc.usingFilters(filters)
+        case FindVpcUsingId(vpcId)        => findVpc.usingId(vpcId)
+        case PutRule(eventRule)           => putRule(PutRuleRequest(eventRule)).createdEventRule
         case PutTargets(eventRule: EventRule, targetARN: ARN) => {
           putTargets(PutTargetsRequest(eventRule, targetARN))
           ()

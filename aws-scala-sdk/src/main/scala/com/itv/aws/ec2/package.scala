@@ -8,10 +8,13 @@ package object ec2 {
 }
 
 package ec2 {
-  case class VPC(id: String) extends AnyVal
+  case class VpcId(value: String) extends AnyVal
+  case class Vpc(id: String)      extends AnyVal
   case class Filter(key: String, value: String)
 
-  case class SecurityGroup(id: String) extends AnyVal
+  case class SecurityGroupId(id: String) extends AnyVal
+  case class SecurityGroup(id: String)   extends AnyVal
 
-  case class Subnet(id: String) extends AnyVal
+  case class SubnetId(id: String) extends AnyVal
+  case class Subnet(id: String)   extends AnyVal
 }

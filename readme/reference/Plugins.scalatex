@@ -3,7 +3,10 @@
 @sect{ChuckwagonBasePlugin}
 
     @p
-        This plugin is a dependency of both @sect.ref{ChuckwagonPublishPlugin} and @sect.ref{ChuckwagonCopyPlugin}. It contains Settings and Tasks that are useful whether you are publishing an AWS Lambda from source or copying one from another Account.
+        This plugin is a dependency of both @sect.ref{ChuckwagonPublishPlugin} and @sect.ref{ChuckwagonCopyPlugin}. It contains Settings, Tasks and helper functions that are useful whether you are publishing an AWS Lambda from source or copying one from another Account.
+
+    @p
+        Here are the base Settings available to both the @code{ChuckwagonPublishPlugin} and the @code{ChuckwagonCopyPlugin} (in addition to their own).
 
     @table(
         `class` := "pure-table pure-table-bordered pure-table-striped",
@@ -15,7 +18,8 @@
           tr(td("chuckSDKFreeCompiler"), td("WIP"), td("(Optional) For testing pipelines against mock versions of the AWS SDK"))
         ))
 
-    @br
+    @p
+        Here are the base Tasks available to both the @code{ChuckwagonPublishPlugin} and the @code{ChuckwagonCopyPlugin} (in addition to their own).
 
     @table(
         `class` := "pure-table pure-table-bordered pure-table-striped",
@@ -30,6 +34,58 @@
           tr(td("chuckInvoke", td("Invoke the AWS Lambda (if it exists). SNAPSHOT if no arguments passed. Otherwise either the version or the environment passed as a parameter. Sends no arguments but does print output.")))
         ))
 
+    @p
+        Here are the base helper functions available to both the @code{ChuckwagonPublishPlugin} and the @code{ChuckwagonCopyPlugin} (in addition to their own).
+
+    @sect{chuckVpcUsingIdsBuilder}
+
+        Starts a fluent builder for a @code{VpcConfigUsingIdsLookup} (which extends the @code{VpcConfigLookup} required by both @code{chuckPublishConfigBuilder} and @code{chuckCopyConfigBuilder} for their @code{withVpc} builder methods.
+
+        @p
+            Here is an example (which is useless alone but which could be dropped into either plugin).
+
+        @hl.scala
+            chuckVpcUsingIdsBuilder
+              .withVpcId("vpc-12345678")
+              .withSubnetIds("subnet-a2345678", "subnet-b2345678")
+              .withSecurityGroupIds("sg-12345678")
+
+        @p
+            Here are some notes on all of the parameters available to @code{chuckVpcUsingIdsBuilder}
+
+        @table(
+            `class` := "pure-table pure-table-bordered pure-table-striped",
+            thead(tr(td("Parameter"), td("Notes"))),
+            tbody(
+              tr(td("VpcId"), td("The string for a VPC Id")),
+              tr(td("SubnetIds"), td("One or more Subnet Ids")),
+              tr(td("SecurityGroupIds"), td("One or more Security Group Ids"))
+            ))
+
+    @sect{chuckVpcUsingFiltersBuilder}
+
+        Starts a fluent builder for a @code{VpcConfigUsingFiltersLookup} (which extends the @code{VpcConfigLookup} required by both @code{chuckPublishConfigBuilder} and @code{chuckCopyConfigBuilder} for their @code{withVpc} builder methods.
+
+        @p
+            Here is an example (which is useless alone but which could be dropped into either plugin).
+
+        @hl.scala
+            chuckVpcUsingFiltersBuilder
+              .withVpcLookupFilters("tag:Name" -> "prd-vpc")
+              .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
+              .withSecurityGroupsLookupFilters("group-name" -> "default")
+
+        @p
+            Here are some notes on all of the parameters available to @code{chuckVpcUsingFiltersBuilder}
+
+        @table(
+            `class` := "pure-table pure-table-bordered pure-table-striped",
+            thead(tr(td("Parameter"), td("Notes"))),
+            tbody(
+              tr(td("VpcLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
+              tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
+              tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
+            ))
 
 @sect{ChuckwagonPublishPlugin}
 
@@ -45,7 +101,7 @@
           .withStagingBucketKeyPrefix("forChuckwagon")
           .withRoleARN(
             "arn:aws:iam::123456789012:role/dev_lambda_execute")
-          .withVpc(chuckVpcBuilder
+          .withVpc(chuckVpcUsingFiltersBuilder
             .withVPCLookupFilters("tag:Name" -> "qa-vpc")
             .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
             .withSecurityGroupsLookupFilters("group-name" -> "default"))
@@ -64,21 +120,8 @@
           tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
           tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
           tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),
-          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using 'chuckVpcBuilder'")),
+          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using either 'chuckVpcUsingIdsBuilder' or 'chuckVpcUsingFiltersBuilder'")),
           tr(td("CodeFile"), td("A Task[File] that produces a fat JAR suitable for creating an AWS Lambda with."))
-        ))
-
-    @p
-        Here are some notes on all of the parameters available to @code{chuckVpcBuilder}
-
-
-    @table(
-        `class` := "pure-table pure-table-bordered pure-table-striped",
-        thead(tr(td("Parameter"), td("Notes"))),
-        tbody(
-          tr(td("VPCLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
-          tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
-          tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
         ))
 
     @p
@@ -104,7 +147,7 @@
           .withStagingBucketKeyPrefix("forChuckwagon")
           .withRoleARN(
             "arn:aws:iam::0987654321098:role/prd_lambda_execute")
-          .withVpc(chuckVpcBuilder
+          .withVpc(chuckVpcUsingFiltersBuilder
             .withVPCLookupFilters("tag:Name" -> "prd-vpc")
             .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
             .withSecurityGroupsLookupFilters("group-name" -> "default"))
@@ -121,21 +164,8 @@
           tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
           tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
           tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),
-          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using 'chuckVpcBuilder'")),
+          tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using either 'chuckVpcUsingIdsBuilder' or 'chuckVpcUsingFiltersBuilder'")),
           tr(td("AssumableDevAccountRoleARN"), td("The ARN of a Role in the Development Account that can be used to download the Lambda"))
-        ))
-
-    @p
-        Here are some notes on all of the parameters available to @code{chuckVpcBuilder}
-
-
-    @table(
-        `class` := "pure-table pure-table-bordered pure-table-striped",
-        thead(tr(td("Parameter"), td("Notes"))),
-        tbody(
-          tr(td("VPCLookupFilters"), td("One or more tuples representing AWS Filters that can select a single AWS VPC")),
-          tr(td("SubnetsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more AWS Subnets")),
-          tr(td("SecurityGroupsLookupFilters"), td("One or more tuples representing AWS Filters that can select zero or more Security Groups"))
         ))
 
     @p

@@ -5,10 +5,11 @@ import com.amazonaws.regions.Regions
 import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 import com.itv.chuckwagon.deploy.AWSCompiler
+import com.itv.chuckwagon.deploy.VpcConfigLookup
 import com.itv.chuckwagon.sbt.builder._
 import sbt._
 
-case class Publish(roleARN: ARN, vpcConfigDeclaration: VpcConfigDeclaration)
+case class Publish(roleARN: ARN, vpcConfigDeclaration: VpcConfigLookup)
 
 object Keys {
 
@@ -57,7 +58,8 @@ object Keys {
     val chuckRemoveLambdaTrigger =
       inputKey[Unit]("Remove Scheduled execution associated with AWS Lambda")
 
-    def chuckVpcBuilder = VpcConfigDeclarationBuilder()
+    def chuckVpcUsingFiltersBuilder = VpcConfigUsingFiltersLookupBuilder()
+    def chuckVpcUsingIdsBuilder     = VpcConfigUsingIdsLookupBuilder()
 
     val chuckInvoke =
       inputKey[String](

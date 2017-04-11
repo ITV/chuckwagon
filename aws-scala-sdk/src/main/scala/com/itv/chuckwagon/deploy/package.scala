@@ -18,7 +18,7 @@ import com.itv.aws.Credentials
 import com.itv.aws.ec2.Filter
 import com.itv.aws.ec2.SecurityGroup
 import com.itv.aws.ec2.Subnet
-import com.itv.aws.ec2.VPC
+import com.itv.aws.ec2.Vpc
 import com.itv.aws.events._
 import com.itv.aws.iam.PutRolePolicyRequest
 import com.itv.aws.iam.RoleDeclaration
@@ -32,13 +32,21 @@ package deploy {
   import java.io.InputStream
 
   import com.itv.aws.Credentials
+  import com.itv.aws.ec2.SecurityGroupId
+  import com.itv.aws.ec2.SubnetId
+  import com.itv.aws.ec2.VpcId
   import com.itv.aws.sts.AssumeRoleSessionName
 
   sealed trait DeployLambdaA[A]
 
-  case class FindSecurityGroups(vpc: VPC, filters: List[Filter]) extends DeployLambdaA[List[SecurityGroup]]
-  case class FindSubnets(vpc: VPC, filters: List[Filter])        extends DeployLambdaA[List[Subnet]]
-  case class FindVPC(filters: List[Filter])                      extends DeployLambdaA[VPC]
+  case class FindSecurityGroupsUsingFilters(vpc: Vpc, filters: List[Filter])
+      extends DeployLambdaA[List[SecurityGroup]]
+  case class FindSecurityGroupsUsingIds(vpc: Vpc, ids: List[SecurityGroupId])
+      extends DeployLambdaA[List[SecurityGroup]]
+  case class FindSubnetsUsingIds(vpc: Vpc, ids: List[SubnetId])       extends DeployLambdaA[List[Subnet]]
+  case class FindSubnetsUsingFilters(vpc: Vpc, filters: List[Filter]) extends DeployLambdaA[List[Subnet]]
+  case class FindVpcUsingId(id: VpcId)                                extends DeployLambdaA[Vpc]
+  case class FindVpcUsingFilters(filters: List[Filter])               extends DeployLambdaA[Vpc]
 
   case class PutRule(eventRule: EventRule)                    extends DeployLambdaA[CreatedEventRule]
   case class PutTargets(eventRule: EventRule, targetARN: ARN) extends DeployLambdaA[Unit]
@@ -86,19 +94,6 @@ package deploy {
 package object deploy {
 
   type DeployLambda[A] = Free[DeployLambdaA, A]
-
-  def findSecurityGroups(vpc: VPC, filters: List[Filter]): DeployLambda[List[SecurityGroup]] =
-    liftF[DeployLambdaA, List[SecurityGroup]](
-      FindSecurityGroups(vpc, filters)
-    )
-  def findSubnets(vpc: VPC, filters: List[Filter]): DeployLambda[List[Subnet]] =
-    liftF[DeployLambdaA, List[Subnet]](
-      FindSubnets(vpc, filters)
-    )
-  def findVPC(filters: List[Filter]): DeployLambda[VPC] =
-    liftF[DeployLambdaA, VPC](
-      FindVPC(filters)
-    )
 
   def putRule(eventRule: EventRule): DeployLambda[CreatedEventRule] =
     liftF[DeployLambdaA, CreatedEventRule](
@@ -224,18 +219,6 @@ package object deploy {
         case None      => getOrCreateChuckwagonRole(lambdaName)
       }
     } yield role
-
-  def getVpcConfig(vpcConfigDeclaration: VpcConfigDeclaration): DeployLambda[Option[VpcConfig]] =
-    for {
-      vpc     <- findVPC(vpcConfigDeclaration.vpcLookupFilters)
-      subnets <- findSubnets(vpc, vpcConfigDeclaration.subnetsLookupFilters)
-      securityGroups <- findSecurityGroups(
-        vpc,
-        vpcConfigDeclaration.securityGroupsLookupFilters
-      )
-    } yield {
-      Some(VpcConfig(vpc, subnets, securityGroups))
-    }
 
   def publishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     for {

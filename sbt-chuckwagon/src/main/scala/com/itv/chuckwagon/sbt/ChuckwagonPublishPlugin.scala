@@ -143,7 +143,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
   }
 
   private def maybeVpcConfigTask: Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
-    BaseHelpers.maybeVpcConfig(chuckPublishConfig.value.vpcConfigDeclaration)
+    BaseHelpers.maybeVpcConfig(chuckPublishConfig.value.vpcConfigLookup)
   }
   private def codeGeneratorTask: Def.Initialize[Task[File]] = Def.taskDyn {
     chuckPublishConfig.value.codeFile

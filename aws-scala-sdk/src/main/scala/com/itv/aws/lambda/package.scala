@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import com.itv.aws.ec2.Filter
 import com.itv.aws.ec2.SecurityGroup
 import com.itv.aws.ec2.Subnet
-import com.itv.aws.ec2.VPC
+import com.itv.aws.ec2.Vpc
 
 import scala.concurrent.duration._
 
@@ -56,13 +56,7 @@ package lambda {
   case class DownloadablePublishedLambda(publishedLambda: PublishedLambda,
                                          downloadableLocation: DownloadableLambdaLocation)
 
-  case class VpcConfigDeclaration(
-      vpcLookupFilters: List[Filter],
-      subnetsLookupFilters: List[Filter],
-      securityGroupsLookupFilters: List[Filter]
-  )
-
-  case class VpcConfig(vpc: VPC, subnets: List[Subnet], securityGroups: List[SecurityGroup])
+  case class VpcConfig(vpc: Vpc, subnets: List[Subnet], securityGroups: List[SecurityGroup])
 
   case class PermissionAction(value: String)            extends AnyVal
   case class PermissionPrincipialService(value: String) extends AnyVal

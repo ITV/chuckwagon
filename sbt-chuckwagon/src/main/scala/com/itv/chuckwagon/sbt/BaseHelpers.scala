@@ -1,8 +1,7 @@
 package com.itv.chuckwagon.sbt
 
-import cats.Id
 import com.itv.aws.lambda.VpcConfig
-import com.itv.aws.lambda.VpcConfigDeclaration
+import com.itv.chuckwagon.deploy.VpcConfigLookup
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport.chuckSDKFreeCompiler
 import com.itv.chuckwagon.sbt.LoggingUtils.logMessage
 import fansi.Color.Green
@@ -14,7 +13,7 @@ import sbt.Keys.streams
 object BaseHelpers {
 
   def maybeVpcConfig(
-      maybeVpcConfigDeclaration: Option[VpcConfigDeclaration]
+      maybeVpcConfigDeclaration: Option[VpcConfigLookup]
   ): Def.Initialize[Task[Option[VpcConfig]]] = Def.taskDyn {
     maybeVpcConfigDeclaration match {
       case None                       => Def.task(None)
@@ -22,10 +21,10 @@ object BaseHelpers {
     }
   }
 
-  def vpcConfig(vpcConfigDeclaration: VpcConfigDeclaration): Def.Initialize[Task[Option[VpcConfig]]] =
+  def vpcConfig(vpcConfigDeclaration: VpcConfigLookup): Def.Initialize[Task[Option[VpcConfig]]] =
     Def.taskDyn {
       val maybeVpcConfig: Option[VpcConfig] =
-        com.itv.chuckwagon.deploy
+        com.itv.chuckwagon.deploy.VpcCommands
           .getVpcConfig(
             vpcConfigDeclaration
           )

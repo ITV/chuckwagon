@@ -4,16 +4,16 @@ import com.itv.aws.iam.ARN
 import com.itv.aws.lambda.LambdaHandler
 import com.itv.aws.lambda.LambdaRuntimeConfiguration
 import com.itv.aws.lambda.MemorySize
-import com.itv.aws.lambda.VpcConfigDeclaration
 import com.itv.aws.s3.BucketName
 import com.itv.aws.s3.S3KeyPrefix
+import com.itv.chuckwagon.deploy.VpcConfigLookup
 import sbt.File
 import sbt.TaskKey
 
 import scala.concurrent.duration._
 
 case class PublishLambdaConfiguration(roleARN: Option[ARN],
-                                      vpcConfigDeclaration: Option[VpcConfigDeclaration],
+                                      vpcConfigLookup: Option[VpcConfigLookup],
                                       lambdaRuntimeConfiguration: LambdaRuntimeConfiguration,
                                       jarStagingBucketName: BucketName,
                                       jarStagingS3KeyPrefix: S3KeyPrefix,
@@ -56,7 +56,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
                                         B_STAGING_BUCKET_NAME,
                                         B_CODE_FILE](
     val roleARN: Option[ARN],
-    val vpcConfigDeclaration: Option[VpcConfigDeclaration],
+    val vpcConfigDeclaration: Option[VpcConfigLookup],
     val handler: Option[LambdaHandler],
     val timeout: Option[FiniteDuration],
     val memorySize: Option[MemorySize],
@@ -82,7 +82,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       codeFile
     )
 
-  def withVpc(vpcConfigDeclaration: VpcConfigDeclaration) =
+  def withVpc(vpcConfigDeclaration: VpcConfigLookup) =
     new PublishLambdaConfigurationBuilder[
       B_LAMBDA_HANDLER,
       B_TIMEOUT,

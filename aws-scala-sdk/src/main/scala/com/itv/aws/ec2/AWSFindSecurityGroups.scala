@@ -4,34 +4,41 @@ import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest
 import com.amazonaws.services.ec2.model.{Filter => AWSFilter}
 import com.amazonaws.services.ec2.model.{SecurityGroup => AWSSecurityGroup}
-import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
 
-case class FindSecurityGroupsRequest(vpc: VPC, filters: List[Filter])
+class AWSFindSecurityGroups(ec2: AmazonEC2) {
 
-case class FindSecurityGroupsResponse(securityGroups: List[SecurityGroup])
+  def usingFilters(vpc: Vpc, filters: List[Filter]): List[SecurityGroup] = {
+    val describeSecurityGroupsRequest =
+      new DescribeSecurityGroupsRequest()
 
-class AWSFindSecurityGroups(ec2: AmazonEC2)
-    extends AWSService[FindSecurityGroupsRequest, FindSecurityGroupsResponse] {
-  override def apply(findSecurityGroupsRequest: FindSecurityGroupsRequest): FindSecurityGroupsResponse = {
+    val vpcFilter =
+      new AWSFilter().withName(s"vpc-id").withValues(vpc.id)
 
-    val userFilters: List[AWSFilter] = findSecurityGroupsRequest.filters.map { tag =>
+    val userFilters: List[AWSFilter] = filters.map { tag =>
       new AWSFilter().withName(s"${tag.key}").withValues(tag.value)
     }
 
-    val vpcFilter =
-      new AWSFilter().withName(s"vpc-id").withValues(findSecurityGroupsRequest.vpc.id)
+    describeSecurityGroupsRequest.withFilters((vpcFilter :: userFilters).asJava)
 
+    usingRequest(describeSecurityGroupsRequest)
+  }
+
+  def usingIds(vpc: Vpc, ids: List[SecurityGroupId]): List[SecurityGroup] = {
     val describeSecurityGroupsRequest =
       new DescribeSecurityGroupsRequest()
-        .withFilters((vpcFilter :: userFilters).asJava)
+
+    describeSecurityGroupsRequest.withGroupIds(ids.map(_.id).asJava)
+
+    usingRequest(describeSecurityGroupsRequest)
+  }
+
+  private def usingRequest(describeSecurityGroupsRequest: DescribeSecurityGroupsRequest): List[SecurityGroup] = {
 
     val awsSecurityGroups: List[AWSSecurityGroup] =
       ec2.describeSecurityGroups(describeSecurityGroupsRequest).getSecurityGroups.asScala.toList
 
-    val securityGroups = awsSecurityGroups.map(sg => SecurityGroup(sg.getGroupId))
-
-    FindSecurityGroupsResponse(securityGroups)
+    awsSecurityGroups.map(sg => SecurityGroup(sg.getGroupId))
   }
 }

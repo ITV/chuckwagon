@@ -25,15 +25,31 @@ For all but the most trivial of use-cases you will want to deploy your Lambdas i
 
 @sect{VPCs}
 
-    It is optionally possible to deploy an AWS Lambda into a VPC. In order to reduce the coupling between your Lambda and that VPC you do not need to reference the exact ID of the associated resources, Chuckwagon will quite happily find them via tags. Consider this example (the same thing also works on @code{chuckPublishConfigBuilder}),
+    It is optionally possible to deploy an AWS Lambda into a VPC using both the @code{ChuckwagonPublishPlugin} and the @code{ChuckwagonCopyPlugin}. Chuckwagon supports two ways of doing this.
 
-    @hl.scala
-        chuckPublishConfig := chuckPublishConfigBuilder
-          .withVpc(
-            chuckVpcBuilder
-              .withVPCLookupFilters("tag:Name" -> "prd-vpc")
-              .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
-              .withSecurityGroupsLookupFilters("group-name" -> "default")
+    @sect{Using Ids}
 
-    @p
-        Each filter is a tuple matching the AWS Filter Format. The VPC filter must return exactly one VPC, but the Subnets and SecurityGroups filters can return zero or more.
+        The simplest way is to specify all of the Ids for the associated VPC resources. For example,
+
+        @hl.scala
+            chuckPublishConfig := chuckPublishConfigBuilder
+              .withVpc(
+                chuckVpcUsingIdsBuilder
+                  .withVpcId("vpc-12345678")
+                  .withSubnetIds("subnet-a2345678", "subnet-b2345678")
+                  .withSecurityGroupIds("sg-12345678")
+
+    @sect{Using Filters}
+
+        Alternatively, in order to reduce the coupling between your Lambda and your infrastructure you can reference the VPC resources via tags instead of Ids. Consider this example,
+
+        @hl.scala
+            chuckPublishConfig := chuckPublishConfigBuilder
+              .withVpc(
+                chuckVpcUsingFiltersBuilder
+                  .withVPCLookupFilters("tag:Name" -> "prd-vpc")
+                  .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
+                  .withSecurityGroupsLookupFilters("group-name" -> "default")
+
+        @p
+            Each filter (multiple filters are allowed) is a tuple matching the AWS Filter Format. The VPC filter must return exactly one VPC, but the Subnets and SecurityGroups filters can return zero or more.

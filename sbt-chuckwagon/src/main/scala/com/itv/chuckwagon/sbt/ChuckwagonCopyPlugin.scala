@@ -113,7 +113,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
   def maybeVpcConfigFromProductionLambdaConfiguration(): Def.Initialize[Task[Option[VpcConfig]]] =
     Def.taskDyn {
-      BaseHelpers.maybeVpcConfig(chuckCopyConfig.value.vpcConfigDeclaration)
+      BaseHelpers.maybeVpcConfig(chuckCopyConfig.value.vpcConfigLookup)
     }
 
   private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {

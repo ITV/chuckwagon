@@ -4,32 +4,36 @@ import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.ec2.model.{Filter => AWSFilter}
 import com.amazonaws.services.ec2.model.{Subnet => AWSSubnet}
-import com.itv.aws.AWSService
 
 import scala.collection.JavaConverters._
 
-case class FindSubnetsRequest(vpc: VPC, filters: List[Filter])
+class AWSFindSubnets(ec2: AmazonEC2) {
 
-case class FindSubnetsResponse(subnets: List[Subnet])
+  def usingFilters(vpc: Vpc, filters: List[Filter]): List[Subnet] = {
+    val describeSubnetsRequest = new DescribeSubnetsRequest()
 
-class AWSFindSubnets(ec2: AmazonEC2) extends AWSService[FindSubnetsRequest, FindSubnetsResponse] {
+    val vpcFilter = new AWSFilter().withName(s"vpc-id").withValues(vpc.id)
 
-  override def apply(findSubnetsRequest: FindSubnetsRequest): FindSubnetsResponse = {
-
-    val userFilters: List[AWSFilter] = findSubnetsRequest.filters.map { tag =>
+    val userFilters: List[AWSFilter] = filters.map { tag =>
       new AWSFilter().withName(s"${tag.key}").withValues(tag.value)
     }
+    describeSubnetsRequest.withFilters((vpcFilter :: userFilters).asJava)
 
-    val vpcFilter = new AWSFilter().withName(s"vpc-id").withValues(findSubnetsRequest.vpc.id)
+    usingRequest(describeSubnetsRequest)
+  }
+  def usingIds(vpc: Vpc, ids: List[SubnetId]): List[Subnet] = {
+    val describeSubnetsRequest = new DescribeSubnetsRequest()
 
-    val describeSubnetsRequest =
-      new DescribeSubnetsRequest().withFilters((vpcFilter :: userFilters).asJava)
+    describeSubnetsRequest.withSubnetIds(ids.map(_.id).asJava)
+
+    usingRequest(describeSubnetsRequest)
+  }
+
+  private def usingRequest(describeSubnetsRequest: DescribeSubnetsRequest): List[Subnet] = {
 
     val awsSubnets: List[AWSSubnet] =
       ec2.describeSubnets(describeSubnetsRequest).getSubnets.asScala.toList
 
-    val subnets = awsSubnets.map(sn => Subnet(sn.getSubnetId))
-
-    FindSubnetsResponse(subnets)
+    awsSubnets.map(sn => Subnet(sn.getSubnetId))
   }
 }

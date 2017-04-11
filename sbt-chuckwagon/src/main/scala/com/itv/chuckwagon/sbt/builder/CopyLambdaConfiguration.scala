@@ -1,18 +1,12 @@
 package com.itv.chuckwagon.sbt.builder
 
 import com.itv.aws.iam.ARN
-import com.itv.aws.lambda.LambdaHandler
-import com.itv.aws.lambda.LambdaRuntimeConfiguration
-import com.itv.aws.lambda.MemorySize
-import com.itv.aws.lambda.VpcConfigDeclaration
 import com.itv.aws.s3.BucketName
 import com.itv.aws.s3.S3KeyPrefix
-
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.FiniteDuration
+import com.itv.chuckwagon.deploy.VpcConfigLookup
 
 case class CopyLambdaConfiguration(roleARN: Option[ARN],
-                                   vpcConfigDeclaration: Option[VpcConfigDeclaration],
+                                   vpcConfigLookup: Option[VpcConfigLookup],
                                    jarStagingBucketName: BucketName,
                                    jarStagingS3KeyPrefix: S3KeyPrefix,
                                    assumableDevAccountRoleARN: ARN)
@@ -46,7 +40,7 @@ object CopyLambdaConfigurationBuilder {
 
 class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
     val roleARN: Option[ARN],
-    val vpcConfigDeclaration: Option[VpcConfigDeclaration],
+    val vpcConfigDeclaration: Option[VpcConfigLookup],
     val stagingBucketName: Option[BucketName],
     val stagingBucketKeyPrefix: Option[S3KeyPrefix],
     val assumableDevAccountRoleARN: Option[ARN]
@@ -60,7 +54,7 @@ class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_
       assumableDevAccountRoleARN
     )
 
-  def withVpc(vpcConfigDeclaration: VpcConfigDeclaration) =
+  def withVpc(vpcConfigDeclaration: VpcConfigLookup) =
     new CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
       roleARN,
       Option(vpcConfigDeclaration),
