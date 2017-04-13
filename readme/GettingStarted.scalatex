@@ -18,14 +18,14 @@
     To install the Chuckwagon sbt plugin add the following line to the @code{project/plugins.sbt} file in your Lambda project.
 
     @hl.scala
-        addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.0.18")
+        addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.0.19.1")
 
     Next add the following configuration to your Lambda project's @code{build.sbt} file with appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
 
     @hl.scala
         scalaVersion := "2.12.1"
-        libraryDependencies ++= "com.itv" %% "lib-chuckwagon" % "0.0.18"
-        enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCreatePlugin)
+        libraryDependencies ++= "com.itv" %% "lib-chuckwagon" % "0.0.19.1"
+        enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
         chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
         chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
         chuckPublishConfig := chuckPublishConfigBuilder

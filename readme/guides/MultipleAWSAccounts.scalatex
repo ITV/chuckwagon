@@ -3,7 +3,7 @@
 Many organisations using AWS take the very sensible precaution of putting non-production environments in an entirely different AWS Account. This protects the Production Account from fat fingered development but has the side-effect of making a single deployment pipeline very difficult. The usual compromise is to have two deployment pipelines, one in the development environment and one in the production environment. The hand-off between the two environments may or may not be automated.
 
 @p
-    Chuckwagon supports the two deployment pipeline approach by providing a second plugin tailored to use in the Production Account. It is configured very similarly to the @code{ChuckwagonCreatePlugin} introduced in @sect.ref{Getting Started} and that you should continue to use in your Development Account. The new plugin is called @code{ChuckwagonCopyPlugin} and supports copying a Lambda from a different account and re-publishing it to an environment in the current account.
+    Chuckwagon supports the two deployment pipeline approach by providing a second plugin tailored to use in the Production Account. It is configured very similarly to the @code{ChuckwagonPublishPlugin} introduced in @sect.ref{Getting Started} and that you should continue to use in your Development Account. The new plugin is called @code{ChuckwagonCopyPlugin} and supports copying a Lambda from a different account and re-publishing it to an environment in the current account.
 
 @p
     To use it something like the following complete configuration is required in your @code{build.sbt},
@@ -19,7 +19,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
     }
 
 @p
-    Notice that @code{chuckRegion}, @code{chuckName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonCreatePlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
+    Notice that @code{chuckRegion}, @code{chuckName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonPublishPlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
 
 @sect{Permissions}
 
