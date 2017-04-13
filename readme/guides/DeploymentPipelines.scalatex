@@ -28,7 +28,7 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
         @code{chuckCurrentlyPublished} - The currently published versions of this Lambda (if Lambda exists)
 
     @p
-        You can easily satisfy yourself that Versioned Lambdas are different to each other by making a few changes to your Helloworld Function from the @sect.ref{Getting Started} Guide and publishing it. The @code{chuckInvokeLambda} task takes a number as an optional argument which it will use to run a specific version of your Published AWS Lambda.
+        You can easily satisfy yourself that Versioned Lambdas are different to each other by making a few changes to your Helloworld Function from the @sect.ref{Getting Started} Guide and publishing it. The @code{chuckInvoke} task takes a number as an optional argument which it will use to run a specific version of your Published AWS Lambda.
 
     @p
         The downside to relying solely on the Versioned Lambda is having to update every place that refers to it every time there is a new version. Updating lots of things is fine when it only changes every few months, but is un-manageable when it could change many times in a single day. In order to build a pipeline that treats every publish we do as a candidate for Production we need the ability to associate a specific Lambda version with an @code{Environment}.

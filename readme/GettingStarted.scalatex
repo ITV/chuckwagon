@@ -104,7 +104,7 @@
     You can test your Helloworld AWS Lambda by running the following sbt Task,
 
     @blockquote
-        @code{chuckInvokeLambda} - Execute latest Snapshot Code/Configuration and print response
+        @code{chuckInvoke} - Execute latest Snapshot Code/Configuration and print response
 
     It will use the ARN for the newly created AWS Lambda and should print something like,
 
