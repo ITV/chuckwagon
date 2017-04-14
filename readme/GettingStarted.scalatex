@@ -28,7 +28,7 @@
     @hl.scala
         scalaVersion := "2.12.1"
         libraryDependencies ++= "com.itv" %% "lib-chuckwagon" % "0.1.0"
-        enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
+        enablePlugins(ChuckwagonPublishPlugin)
         chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
         chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
         chuckPublishConfig := chuckPublishConfigBuilder

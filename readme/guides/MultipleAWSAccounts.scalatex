@@ -9,7 +9,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
     To use it something like the following complete configuration is required in your @code{build.sbt},
 
 @hl.scala{
-    enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+    enablePlugins(ChuckwagonCopyPlugin)
     chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
     chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
     chuckCopyConfig := chuckCopyConfigBuilder
@@ -105,7 +105,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
         lazy val `<LAMBDA_NAME>-qa-tests` = project
         lazy val `<LAMBDA_NAME>-prd-tests` = project
         lazy val `<LAMBDA_NAME>-dev-pipeline` = project
-          .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
+          .enablePlugins(ChuckwagonPublishPlugin)
             .settings(
               commonSettings ++
                 Seq(
@@ -126,7 +126,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
                 )
             )
         lazy val `<LAMBDA_NAME>-prd-pipeline` = project
-          .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+          .enablePlugins(ChuckwagonCopyPlugin)
             .settings(
               commonSettings ++
                 Seq(
