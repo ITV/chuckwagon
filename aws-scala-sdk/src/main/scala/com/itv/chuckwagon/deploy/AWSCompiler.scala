@@ -1,14 +1,9 @@
 package com.itv.chuckwagon.deploy
 
-import java.io.File
-import java.io.InputStream
-
 import cats.~>
 import cats.Id
+import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.s3.AmazonS3
-import com.itv.aws.Credentials
 import com.itv.aws.ec2._
 import com.itv.aws.events._
 import com.itv.aws.iam.AWSPutRolePolicy
@@ -17,7 +12,7 @@ import com.itv.aws.lambda._
 import com.itv.aws.s3._
 import com.itv.aws.sts._
 
-class AWSCompiler(region: Regions, credentials: Option[Credentials] = None) {
+class AWSCompiler(region: Regions, credentials: AWSCredentialsProvider) {
 
   val awsEc2    = ec2(region)(credentials)
   val awsEvents = events(region)(credentials)

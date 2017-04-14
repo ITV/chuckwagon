@@ -42,11 +42,11 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
               ARN(assumableDevAccountRoleARN.value),
               AssumeRoleSessionName("chuckwagon-production-deployment")
             )
-            .foldMap(new AWSCompiler(chuckRegion.value).compiler)
+            .foldMap(chuckSDKFreeCompiler.value.compiler)
 
         val assumedDevelopmentRoleCompiler = new AWSCompiler(
           region = chuckRegion.value,
-          credentials = Some(credentials)
+          credentials = credentials
         )
 
         val downloadableDevelopmentPublishedLambda: DownloadablePublishedLambda =

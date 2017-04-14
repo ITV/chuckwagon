@@ -14,7 +14,7 @@ import cats.free.Free._
 import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.itv.aws.Credentials
+import com.itv.aws.StaticCredentialsProvider
 import com.itv.aws.ec2.Filter
 import com.itv.aws.ec2.SecurityGroup
 import com.itv.aws.ec2.Subnet
@@ -30,7 +30,7 @@ package deploy {
 
   import java.io.InputStream
 
-  import com.itv.aws.Credentials
+  import com.itv.aws.StaticCredentialsProvider
   import com.itv.aws.ec2.SecurityGroupId
   import com.itv.aws.ec2.SubnetId
   import com.itv.aws.ec2.VpcId
@@ -86,7 +86,8 @@ package deploy {
   case class ListBuckets()                                           extends DeployLambdaA[List[Bucket]]
   case class PutObject(bucket: Bucket, putObjectType: PutObjectType) extends DeployLambdaA[S3Location]
 
-  case class AssumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName) extends DeployLambdaA[Credentials]
+  case class AssumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName)
+      extends DeployLambdaA[StaticCredentialsProvider]
 
 }
 
@@ -176,8 +177,8 @@ package object deploy {
   def putObject(bucket: Bucket, putObjectType: PutObjectType): DeployLambda[S3Location] =
     liftF[DeployLambdaA, S3Location](PutObject(bucket, putObjectType))
 
-  def assumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName): DeployLambda[Credentials] =
-    liftF[DeployLambdaA, Credentials](AssumeRole(roleARN, sessionName))
+  def assumeRole(roleARN: ARN, sessionName: AssumeRoleSessionName): DeployLambda[StaticCredentialsProvider] =
+    liftF[DeployLambdaA, StaticCredentialsProvider](AssumeRole(roleARN, sessionName))
 
   def findRole(test: Role => Boolean): DeployLambda[Option[Role]] =
     for {

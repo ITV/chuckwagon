@@ -6,7 +6,10 @@
 @sect{Configuring the Build}
 
     @p
-        In order to create your AWS Lambda you will need to have AWS credentials. Chuckwagon will currently only use your local default AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda. You will need to setup your @code{~/.aws/credentials} file as below, with the appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
+        In order to create your AWS Lambda you will need to have AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda.  By default Chuckwagon will use the @lnk("AWS SDK default credentials lookup process", "http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html") to find your credentials.
+
+    @p
+        One easy way to provide your credentials is to setup your @code{~/.aws/credentials} file as below, with the appropriate settings filled in for @code{<LABELLED_SECTIONS>}.
 
     @hl.sh{
     [default]

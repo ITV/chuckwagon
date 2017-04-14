@@ -1,6 +1,7 @@
 package com.itv.chuckwagon.sbt
 
 import cats.data.NonEmptyList
+import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
@@ -15,6 +16,10 @@ object Keys {
 
   trait Base {
     import scala.language.implicitConversions
+
+    val chuckAWSCredentialsProvider = settingKey[AWSCredentialsProvider](
+      "The AWS Credentials Lookup Mechanism. Defaults to standard SDK chain."
+    )
 
     val chuckSDKFreeCompiler = settingKey[AWSCompiler](
       "The Free Monad Compiler for our DeployLambdaA ADT"

@@ -165,4 +165,4 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
         @code{sbt "project <LAMBDA_NAME>-prd-pipeline" release} - Execute the prd pipeline
 
     @p
-        Sadly no such one-liner exists for the sbt shell (no build tool is perfect) but it would rarely make sense to do this in any case since pipeline can only be run on a machine that has had its @code{~/.aws/credentials} file correctly configured for the respective account.
+        Sadly no such one-liner exists for the sbt shell (no build tool is perfect).

@@ -11,6 +11,7 @@ import LoggingUtils._
 import com.itv.aws.lambda._
 import Parsers._
 import cats.Id
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.itv.aws.events.ScheduleExpression
 import sbt.complete.DefaultParsers._
 
@@ -21,8 +22,9 @@ object ChuckwagonBasePlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckAWSCredentialsProvider := DefaultAWSCredentialsProviderChain.getInstance,
       chuckEnvironments := Set[String](),
-      chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value),
+      chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value, chuckAWSCredentialsProvider.value),
       chuckPromote := {
         val (fromAliasName, toAliasName) =
           (environmentArgParser.value ~ environmentArgParser.value).parsed

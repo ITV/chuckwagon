@@ -84,7 +84,7 @@ Chuckwagon provides the building blocks for incorporating your entire AWS Lambda
             releaseStepTask(test in Test),
             releaseStepInputTask(chuckPublishTo, " qa"),
             releaseStepTask(test in IntegrationTest),
-            releaseStepInputTask(chuckPromote, " prd").
+            releaseStepInputTask(chuckPromote, " qa prd").
             releaseStepTask(chuckCleanUp)
         )
 

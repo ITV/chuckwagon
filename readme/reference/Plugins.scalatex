@@ -15,6 +15,7 @@
           tr(td("chuckName"), td("myFirstLambda"), td("The name to be used creating/updating the AWS Lambda")),
           tr(td("chuckRegion"), td("eu-west-1"), td("The AWS Region within which to create/update the AWS Lambda")),
           tr(td("chuckEnvironments"), td("""Set[String]("blue-qa", "qa")"""), td("(Optional) The Environments into which the the AWS Lambda should be published, copied and/or promoted (known as Aliases in the AWS Console)")),
+          tr(td("chuckAWSCredentialsProvider"), td("new MyCustomAWSCredentialsProvider()"), td("(Optional) The credentials provider to use for AWS interactions. By default this uses the DefaultAWSCredentialsProviderChain. You can override it with any AWSCredentialsProvider")),
           tr(td("chuckSDKFreeCompiler"), td("WIP"), td("(Optional) For testing pipelines against mock versions of the AWS SDK"))
         ))
 
