@@ -2,14 +2,40 @@
 
 
 @p
-    Chuckwagon is an @lnk("AWS Lambda", "https://aws.amazon.com/lambda/") Deployment Toolkit for Scala/sbt.
+    Chuckwagon is a Scala/sbt @lnk("AWS Lambda", "https://aws.amazon.com/lambda/") Toolkit. It makes creating and maintaining @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines typesafe and declarative.
 
 @p
-    Its initial goals are to
+    Chuckwagon provides all of the following features from within a standard sbt project
 @ul
     @li
-        provide an opinionated sandbox for learning about configuration and deployment of AWS Lambdas.
+        Tasks and Settings for the declarative management of AWS Lambda code and configuration
     @li
-        make sbt powered AWS Lambda @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines fun and easy to develop.
+        Tasks for managing the publishing and promotion of AWS Lambdas to and between environments (documented in AWS as: @lnk("Function Versioning and Aliases", "http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html)")
     @li
-        complement existing AWS managed infrastructures in an organisation (eg Terraform or Cloudformation).
+        Tasks for copying AWS Lambdas between AWS Accounts (eg DEV -> PRD)
+    @li
+        A Library for managing configuration in different environments
+
+@p
+    The documentation introduces all of these features incrementally in a series of guides so that you can learn how they compose with each other to produce the most powerful pipelines,
+
+@ul
+    @li
+        @sect.ref{Getting Started} - Create/Update a Helloworld Lambda
+    @li
+        @sect.ref{Deployment Pipelines} - Learn how to use Versions and Aliases to Promote your Lambda through Environments using @lnk("sbt-release", "https://github.com/sbt/sbt-release") based Pipelines.
+    @li
+        @sect.ref{Environment Configuration} - Learn how to make your Lambda run with different configurations in different Environments.
+    @li
+        @sect.ref{Multiple AWS Accounts} - (Advanced) Learn how to create multiple Pipelines that manage the promotion of an AWS Lambda through multiple AWS Accounts
+    @li
+        @sect.ref{Managed Infrastructure} - (Advanced) Learn how to situate your AWS Lambda Pipeline within an existing configuration management system
+
+@p
+    All of the above and other optional features are further documented in the extensive @sect.ref{Reference} section.
+
+@p
+    Finally, you can also watch me introduce Chuckwagon with a live coding demo in a talk I gave to colleagues at ITV,
+
+@br
+    @tag("iframe")(attr("width") := "560")(attr("height") := "315")(attr("src") := "https://www.youtube.com/embed/maT-hc-8SpI?start=1141")(attr("frameborder") := "0")(attr("allowfullscreen") := "true")
