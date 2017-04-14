@@ -65,17 +65,43 @@ span.hljs-tag, span.hljs-symbol{
 
 
 <p>
-    Chuckwagon is an <a href="https://aws.amazon.com/lambda/">AWS Lambda</a> Deployment Toolkit for Scala/sbt.
+    Chuckwagon is a Scala/sbt <a href="https://aws.amazon.com/lambda/">AWS Lambda</a> Toolkit. It makes creating and maintaining <a href="http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/">Continuous Delivery</a> pipelines typesafe and declarative.
 </p>
 <p>
-    Its initial goals are to</p>
+    Chuckwagon provides all of the following features from within a standard sbt project</p>
 <ul>
     <li>
-        provide an opinionated sandbox for learning about configuration and deployment of AWS Lambdas.</li>
+        Tasks and Settings for the declarative management of AWS Lambda code and configuration</li>
     <li>
-        make sbt powered AWS Lambda <a href="http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/">Continuous Delivery</a> pipelines fun and easy to develop.</li>
+        Tasks for managing the publishing and promotion of AWS Lambdas to and between environments (documented in AWS as: <a href="http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html)">Function Versioning and Aliases</a></li>
     <li>
-        complement existing AWS managed infrastructures in an organisation (eg Terraform or Cloudformation).</li></ul>
+        Tasks for copying AWS Lambdas between AWS Accounts (eg DEV -&gt; PRD)</li>
+    <li>
+        A Library for managing configuration in different environments
+</li></ul>
+<p>
+    The documentation introduces all of these features incrementally in a series of guides so that you can learn how they compose with each other to produce the most powerful pipelines,
+</p>
+<ul>
+    <li>
+        <a href="#GettingStarted">Getting Started</a> - Create/Update a Helloworld Lambda</li>
+    <li>
+        <a href="#DeploymentPipelines">Deployment Pipelines</a> - Learn how to use Versions and Aliases to Promote your Lambda through Environments using <a href="https://github.com/sbt/sbt-release">sbt-release</a> based Pipelines.</li>
+    <li>
+        <a href="#EnvironmentConfiguration">Environment Configuration</a> - Learn how to make your Lambda run with different configurations in different Environments.</li>
+    <li>
+        <a href="#MultipleAWSAccounts">Multiple AWS Accounts</a> - (Advanced) Learn how to create multiple Pipelines that manage the promotion of an AWS Lambda through multiple AWS Accounts</li>
+    <li>
+        <a href="#ManagedInfrastructure">Managed Infrastructure</a> - (Advanced) Learn how to situate your AWS Lambda Pipeline within an existing configuration management system
+</li></ul>
+<p>
+    All of the above and other optional features are further documented in the extensive <a href="#Reference">Reference</a> section.
+</p>
+<p>
+    Chuckwagon is maintained by <a href="https://twitter.com/caoilte_oconnor">@caoilte_oconnor</a> - you may remember him from such inspirational youtube videos as &quot;live-coding introduction to Chuckwagon for colleagues at ITV&quot;,
+</p>
+<br>
+    <iframe width="784" height="441" src="https://www.youtube.com/embed/maT-hc-8SpI?start=1141" frameborder="0" allowfullscreen="true"></iframe></br>
 
     <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
         
@@ -99,12 +125,12 @@ aws_secret_access_key=&lt;YOUR_SECRET_KEY&gt;
 
     To install the Chuckwagon sbt plugin add the following line to the <code>project/plugins.sbt</code> file in your Lambda project.
 
-    <pre><code class="scala scalatex-site-Styles-highlightMe">addSbtPlugin(&quot;com.itv&quot; % &quot;sbt-chuckwagon&quot; % &quot;0.0.19.1&quot;)
+    <pre><code class="scala scalatex-site-Styles-highlightMe">addSbtPlugin(&quot;com.itv&quot; % &quot;sbt-chuckwagon&quot; % &quot;0.1.0&quot;)
 </code></pre>
     Next add the following configuration to your Lambda project's <code>build.sbt</code> file with appropriate settings filled in for <code>&lt;LABELLED_SECTIONS&gt;</code>.
 
     <pre><code class="scala scalatex-site-Styles-highlightMe">scalaVersion := &quot;2.12.1&quot;
-libraryDependencies ++= &quot;com.itv&quot; %% &quot;lib-chuckwagon&quot; % &quot;0.0.19.1&quot;
+libraryDependencies ++= &quot;com.itv&quot; %% &quot;lib-chuckwagon&quot; % &quot;0.1.0&quot;
 enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
 chuckRegion := &quot;&lt;AN_AWS_REGION_EG_-_eu-west-1&gt;&quot;
 chuckName := &quot;&lt;THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA&gt;&quot;
@@ -795,15 +821,47 @@ This section won't tell you how to configure IAM Roles for Chuckwagon but it doe
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="0.1.0Release" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">0.1.0 Release<a class=" scalatex-site-Styles-headerLink" href="#0.1.0Release" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <ul>
         <li>
-            Initial Release</li></ul>
+            Initial Public Release
+
+            <ul>
+                <li>
+                    Idempotent Lambda Snapshot Creation/Management including optional support for,
+
+                    <ul>
+                        <li>
+                            VPCs</li>
+                        <li>
+                            Dead Letters</li></ul></li>
+                <li>
+                    Published Lambdas (inc Environments/Aliases)</li>
+                <li>
+                    Environment specific configuration helper library</li>
+                <li>
+                    Copy Lambdas from different AWS Account</li>
+                <li>
+                    Scheduled Execution Triggers</li>
+                <li>
+                    Invocation of Snapshot, Version and Environment specific Lambdas</li>
+                <li>
+                    Basic introspection of AWS Lambda from sbt</li>
+                <li>
+                    Basic AWS Cleanup of redundant versions and environments</li>
+                <li>
+                    Overridable credentials</li></ul></li></ul>
 </div>
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Roadmap" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Roadmap<a class=" scalatex-site-Styles-headerLink" href="#Roadmap" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
     
 
+Version <a href="#0.1.0Release">0.1.0 Release</a> contains everything that I currently need to deploy AWS Lambdas in my workplace. My focus for future releases is currently things which are peripheral to my initial vision or would simply make the project easier to run. However, there may be features which the community would find useful and which I have overlooked. I would welcome the opportunity to adjust my current plans to implement ideas which would be a good fit with the project.
+
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="0.2.0Plans" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">0.2.0 Plans<a class=" scalatex-site-Styles-headerLink" href="#0.2.0Plans" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <ul>
         <li>
-            Add Test Coverage</li>
+            unit tests</li>
+        <li>
+            sbt tests using mocked AWS</li>
+        <li>
+            embedded code examples in documentation</li>
         <li>
             Travis CI for
             <ul>
@@ -812,6 +870,8 @@ This section won't tell you how to configure IAM Roles for Chuckwagon but it doe
                 <li>
                     website</li>
                 <li>
+                    PRs</li>
+                <li>
                     nightly builds</li>
                 <li>
                     releases
@@ -819,15 +879,30 @@ This section won't tell you how to configure IAM Roles for Chuckwagon but it doe
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Later0.xReleases" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Later 0.x Releases<a class=" scalatex-site-Styles-headerLink" href="#Later0.xReleases" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <ul>
         <li>
-            Proguard enabled non-S3 Publishing</li>
+            Cloudwatch Logging helpers</li>
         <li>
-            Cloudwatch Logging Helpers</li>
+            Cloudwatch Metrics helpers</li>
         <li>
-            Cloudwatch Metrics Helpers</li>
+            Proguard facilitated direct publishing</li>
         <li>
-            Experimental Scala.js support</li></ul></div></div><script>
+            Experimental Scala.js support</li></ul>
+</div>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Acknowledgments" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Acknowledgments<a class=" scalatex-site-Styles-headerLink" href="#Acknowledgments" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+    
+
+I'd like to thank the following,
+
+<ul>
+    <li>
+        <a href="http://www.itv.com/">ITV</a> and <a href="https://twitter.com/leecoomber">@leecoomber</a> for supporting the development and open-sourcing of this work.</li>
+    <li>
+        <a href="https://twitter.com/tomonocle">@tomonocle</a> for creating a fantastically supportive infrastructure work environment at ITV (and giving me a <a href="https://www.youtube.com/watch?v=maT-hc-8SpI">filmed forum</a> to talk about my work.</li>
+    <li>
+        <a href="https://twitter.com/fiadliel">@fiadliel</a> and <a href="https://twitter.com/jaeo">@jaeo</a> for writing sbt plugins that were inspirational for this work (<a href="https://github.com/gilt/sbt-aws-lambda/">sbt-aws-lambda</a> and <a href="https://github.com/Tapad/sbt-marathon/">sbt-marathon</a> respectively).</li>
+    <li>
+        <a href="https://twitter.com/eed3si9n">@eed3si9n</a> and <a href="https://twitter.com/dwijnand">@dwijnand</a> for doing so much hard work over the last few years making sbt easier to work with and extend.</li></ul></div></div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"Chuckwagon","children":[{"value":"Getting Started","children":[{"value":"Configuring the Build","children":[]},{"value":"Helloworld Function","children":[]},{"value":"Creating a Lambda","children":[]},{"value":"Updating a Lambda","children":[]}]}]},{"value":"Guides","children":[{"value":"Deployment Pipelines","children":[{"value":"Versioning","children":[]},{"value":"Environments","children":[]},{"value":"Promotion","children":[]},{"value":"sbt-release","children":[]}]},{"value":"Environment Configuration","children":[{"value":"Dead Ends","children":[]},{"value":"Environment Detection","children":[]},{"value":"Deriving Configuration","children":[]}]},{"value":"Multiple AWS Accounts","children":[{"value":"Permissions","children":[{"value":"Development Changes","children":[]},{"value":"Production Changes","children":[]}]},{"value":"Copying","children":[]},{"value":"Multi Module Releases","children":[]}]},{"value":"Managed Infrastructure","children":[{"value":"Managed IAM Roles","children":[]},{"value":"VPCs","children":[{"value":"Using Ids","children":[]},{"value":"Using Filters","children":[]}]}]}]},{"value":"Reference","children":[{"value":"Plugins","children":[{"value":"ChuckwagonBasePlugin","children":[{"value":"chuckVpcUsingIdsBuilder","children":[]},{"value":"chuckVpcUsingFiltersBuilder","children":[]}]},{"value":"ChuckwagonPublishPlugin","children":[]},{"value":"ChuckwagonCopyPlugin","children":[]}]},{"value":"Library","children":[]},{"value":"IAM Roles","children":[{"value":"Basic Actions","children":[]},{"value":"Executing Actions","children":[]},{"value":"Copying Actions","children":[]}]}]},{"value":"Release Notes","children":[{"value":"0.1.0 Release","children":[]}]},{"value":"Roadmap","children":[{"value":"0.2.0 Plans","children":[]},{"value":"Later 0.x Releases","children":[]}]}]
+      [{"value":"Chuckwagon","children":[{"value":"Getting Started","children":[{"value":"Configuring the Build","children":[]},{"value":"Helloworld Function","children":[]},{"value":"Creating a Lambda","children":[]},{"value":"Updating a Lambda","children":[]}]}]},{"value":"Guides","children":[{"value":"Deployment Pipelines","children":[{"value":"Versioning","children":[]},{"value":"Environments","children":[]},{"value":"Promotion","children":[]},{"value":"sbt-release","children":[]}]},{"value":"Environment Configuration","children":[{"value":"Dead Ends","children":[]},{"value":"Environment Detection","children":[]},{"value":"Deriving Configuration","children":[]}]},{"value":"Multiple AWS Accounts","children":[{"value":"Permissions","children":[{"value":"Development Changes","children":[]},{"value":"Production Changes","children":[]}]},{"value":"Copying","children":[]},{"value":"Multi Module Releases","children":[]}]},{"value":"Managed Infrastructure","children":[{"value":"Managed IAM Roles","children":[]},{"value":"VPCs","children":[{"value":"Using Ids","children":[]},{"value":"Using Filters","children":[]}]}]}]},{"value":"Reference","children":[{"value":"Plugins","children":[{"value":"ChuckwagonBasePlugin","children":[{"value":"chuckVpcUsingIdsBuilder","children":[]},{"value":"chuckVpcUsingFiltersBuilder","children":[]}]},{"value":"ChuckwagonPublishPlugin","children":[]},{"value":"ChuckwagonCopyPlugin","children":[]}]},{"value":"Library","children":[]},{"value":"IAM Roles","children":[{"value":"Basic Actions","children":[]},{"value":"Executing Actions","children":[]},{"value":"Copying Actions","children":[]}]}]},{"value":"Release Notes","children":[{"value":"0.1.0 Release","children":[]}]},{"value":"Roadmap","children":[{"value":"0.2.0 Plans","children":[]},{"value":"Later 0.x Releases","children":[]}]},{"value":"Acknowledgments","children":[]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -837,4 +912,4 @@ This section won't tell you how to configure IAM Roles for Chuckwagon but it doe
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
