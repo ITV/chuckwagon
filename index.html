@@ -1,0 +1,840 @@
+<!DOCTYPE html><html><head><link href="META-INF/resources/webjars/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" /><link href="styles.css" rel="stylesheet" /><link rel="shortcut icon" type="image/png" href="favicon.png" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><style>
+.scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.05;
+  text-decoration: none;
+}
+
+
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.5;
+  text-decoration: none;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:hover{
+  opacity: 1.0;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:active{
+  opacity: 0.75;
+}
+
+.scalatex-site-Styles-content{
+  color: #777;
+  line-height: 1.6em;
+  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 800px;
+  padding: 0 1em;
+  padding-bottom: 50px;
+}
+.scalatex-site-Styles-content *{
+  position: relative;
+}
+.scalatex-site-Styles-content p{
+  text-align: justify;
+}
+.scalatex-site-Styles-content a:link{
+  color: #37a;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:visited{
+  color: #949;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:hover{
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content a:active{
+  color: #000;
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content code{
+  color: #000;
+}
+
+/*Workaround for bug in highlight.js IDEA theme*/
+span.hljs-tag, span.hljs-symbol{
+    background: none;
+}
+    </style><title>Chuckwagon</title><script src="scripts.js"></script></head><body><div>
+
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Chuckwagon" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Chuckwagon<a class=" scalatex-site-Styles-headerLink" href="#Chuckwagon" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+
+    
+
+
+<p>
+    Chuckwagon is an <a href="https://aws.amazon.com/lambda/">AWS Lambda</a> Deployment Toolkit for Scala/sbt.
+</p>
+<p>
+    Its initial goals are to</p>
+<ul>
+    <li>
+        provide an opinionated sandbox for learning about configuration and deployment of AWS Lambdas.</li>
+    <li>
+        make sbt powered AWS Lambda <a href="http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/">Continuous Delivery</a> pipelines fun and easy to develop.</li>
+    <li>
+        complement existing AWS managed infrastructures in an organisation (eg Terraform or Cloudformation).</li></ul>
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+<p>
+    This guide will walk you through the steps required to create a Helloworld AWS Lambda using the Chuckwagon Library and then upload it to AWS using the Chuckwagon sbt plugin. We will begin by configuring your build.
+</p>
+<h1 id="ConfiguringtheBuild" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ConfiguringtheBuild" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Configuring the Build</h1>
+
+    <p>
+        In order to create your AWS Lambda you will need to have AWS credentials. For this introduction those credentials will need to grant read and write access to EC2, IAM and Lambda.  By default Chuckwagon will use the <a href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS SDK default credentials lookup process</a> to find your credentials.
+</p>
+    <p>
+        One easy way to provide your credentials is to setup your <code>~/.aws/credentials</code> file as below, with the appropriate settings filled in for <code>&lt;LABELLED_SECTIONS&gt;</code>.
+</p>
+    <pre><code class="bash scalatex-site-Styles-highlightMe">[default]
+region = &lt;YOUR_REGION&gt;
+aws_access_key_id=&lt;YOUR_ACCESS_KEY&gt;
+aws_secret_access_key=&lt;YOUR_SECRET_KEY&gt;
+</code></pre>
+
+    To install the Chuckwagon sbt plugin add the following line to the <code>project/plugins.sbt</code> file in your Lambda project.
+
+    <pre><code class="scala scalatex-site-Styles-highlightMe">addSbtPlugin(&quot;com.itv&quot; % &quot;sbt-chuckwagon&quot; % &quot;0.0.19.1&quot;)
+</code></pre>
+    Next add the following configuration to your Lambda project's <code>build.sbt</code> file with appropriate settings filled in for <code>&lt;LABELLED_SECTIONS&gt;</code>.
+
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scalaVersion := &quot;2.12.1&quot;
+libraryDependencies ++= &quot;com.itv&quot; %% &quot;lib-chuckwagon&quot; % &quot;0.0.19.1&quot;
+enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
+chuckRegion := &quot;&lt;AN_AWS_REGION_EG_-_eu-west-1&gt;&quot;
+chuckName := &quot;&lt;THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA&gt;&quot;
+chuckPublishConfig := chuckPublishConfigBuilder
+  .withHandler(&quot;Helloworld::handleRequest&quot;)
+  .withMemorySizeInMB(192)
+  .withTimeout(&quot;5 seconds&quot;)
+  .withStagingBucketName(&quot;&lt;THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE&quot;)
+  .withCodeFile(assembly)
+
+</code></pre>
+    You now have the minimum build configuration required for the rest of this Getting Started Guide. You can start sbt and open the project in your favourite IDE.
+
+<h1 id="HelloworldFunction" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#HelloworldFunction" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Helloworld Function</h1>
+
+    Create <code>/src/main/scala/Helloworld.scala</code> and paste the following code into it,
+
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import com.amazonaws.services.lambda.runtime.Context
+import com.itv.chuckwagon.lambda._
+import io.circe.generic.auto._
+
+case class Response(response: String)
+
+class Helloworld extends Handler[Unit, Response] {
+  def handler(query: Unit, context: Context): Response = {
+    Response(s&quot;Hello World!&quot;)
+  }
+}
+</code></pre>
+    <p>
+        This is the simplest possible code for creating an AWS Lambda using Chuckwagon. It extends a Generic Handler that is basically the same as the <a href="http://underscore.io/blog/posts/2016/02/01/aws-lambda.html">Underscore Scala and AWS Lambda Blueprints</a>. It takes no arguments but does return a Case Class that Chuckwagon turns into the following JSON Response payload
+</p>
+    <pre><code class="javascript scalatex-site-Styles-highlightMe">{
+  &quot;response&quot; : &quot;Hello World!&quot;
+}
+</code></pre>
+    Note how the configuration <code>.withHandler(&quot;Helloworld::handleRequest&quot;)</code> in the <code>build.sbt</code> references an AWS Lambda Class and method name that is nearly the same as the Helloworld Class we created. The only difference is that the method configured to be invoked by the <code>build.sbt</code> is the underlying Library method <code>handleRequest</code> which will turn the raw request into the Case Class (or in this case <code>Unit</code> object) that we expect.
+
+<h1 id="CreatingaLambda" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CreatingaLambda" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Creating a Lambda</h1>
+
+    We are finally ready to try out out our Helloworld AWS Lambda with the following Task,
+
+    <blockquote>
+        <code>chuckPublishSnapshot</code> - Create/Update Lambda
+</blockquote>
+    <p>
+        The first time you run this task it will do the following,</p>
+    <ol>
+        <li>
+            Compile the <code>Helloworld.scala</code> file.</li>
+        <li>
+            Create a fat JAR out of it and all of its dependencies using the <a href="https://github.com/sbt/sbt-assembly">sbt-assembly</a> plugin.</li>
+        <li>
+            Upload your Assembly JAR to the S3 Bucket that you specified in the <code>chuckPublishConfig</code>.</li>
+        <li>
+            Create an IAM Role with the appropriate permissions for running the Lambda.</li>
+        <li>
+            Create a Lambda configured to use
+            <ul>
+                <li>
+                    the runtime configuration that you provided in <code>chuckPublishConfig</code></li>
+                <li>
+                    a copy of the Assembly JAR in the S3 Bucket</li>
+                <li>
+                    the IAM Role with appropriate permissions for running the Lambda</li></ul></li>
+        <li>
+            Print the ARN (<a href="http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns">Amazon Resource Name</a>) that will be the uniquely addressable location of the newly created AWS Lambda.
+</li></ol>
+    Run the task. It should print something like,
+
+    <blockquote>
+        <pre><code class="bash scalatex-site-Styles-highlightMe">[info] Chuckwagon: Just Published Snapshot as 'arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;'
+</code></pre></blockquote>
+    You can test your Helloworld AWS Lambda by running the following sbt Task,
+
+    <blockquote>
+        <code>chuckInvoke</code> - Execute latest Snapshot Code/Configuration and print response
+</blockquote>
+    It will use the ARN for the newly created AWS Lambda and should print something like,
+
+    <blockquote>
+        <pre><code class="bash scalatex-site-Styles-highlightMe">[info] Chuckwagon: About to invoke Lambda
+[info] Chuckwagon: Result of running Lambda '{&quot;response&quot;:&quot;Hello World!&quot;}'
+</code></pre></blockquote>
+    <p>
+        There's nothing too surprising about this output and even if you update your Lambda to do something more useful, running it from sbt isn't very practical for every day use. This task is, however, a great way of demonstrating the Library and Plugin that we shall continue to use in later Guides.
+</p>
+<h1 id="UpdatingaLambda" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#UpdatingaLambda" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Updating a Lambda</h1>
+
+    Update your <code>Helloworld.scala</code> file to say something else and then run <code>chuckPublishSnapshot</code>. This time the task will do the following,
+    <ol>
+        <li>
+            Recompile the <code>Helloworld.scala</code> file with your new string.</li>
+        <li>
+            Create a new Assembly JAR and over-write the previous JAR in S3 with it.</li>
+        <li>
+            Check that the IAM Role still exists and still has the appropriate permissions. Recreate it or modify it if necessary.</li>
+        <li>
+            Update the existing Lambda to use
+            <ul>
+                <li>
+                    the runtime configuration that you provided in <code>chuckPublishConfig</code></li>
+                <li>
+                    a copy of the updated Assembly JAR in S3</li>
+                <li>
+                    the appropriate IAM Role
+</li></ul></li></ol>
+    Running <code>chuckInvokeLambda</code> now will print the new string that you updated <code>Helloworld.scala</code> with. You can safely run <code>chuckPublishSnapshot</code> as many times as you want because it is idempotent (rather like a REST <code>PUT</code>). It will also always make sure that the created or updated Lambda exactly matches the contents of <code>chuckPublishConfig</code>.
+
+    <p>
+        This explanation of <code>chuckPublishSnapshot</code> concludes the Getting Started Guide but it barely scratches the surface of what is possible in AWS Lambda with Chuckwagon. Keep reading through the Guides to discover where you can take Chuckwagon next.</p>
+
+</div>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Guides" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Guides<a class=" scalatex-site-Styles-headerLink" href="#Guides" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+    <p>
+        The <a href="#GettingStarted">Getting Started</a> Guide introduced enough of Chuckwagon to create/update your first AWS Lambda. The following Guides cover more complete examples of how you might manage the more sophisticated setups required to configure/deploy your AWS Lambda in larger organisations. Additional concepts introduced include managed release processes, gated tests and multiple accounts.
+</p>
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="DeploymentPipelines" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Deployment Pipelines<a class=" scalatex-site-Styles-headerLink" href="#DeploymentPipelines" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+Chuckwagon provides the building blocks for incorporating your entire AWS Lambda deployment pipeline into the same Scala project that builds it. This guide will introduce those building blocks and show you how to assemble them into a very basic release/deployment pipeline. It picks up straight after the <a href="#GettingStarted">Getting Started</a> guide.
+
+<h1 id="Versioning" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Versioning" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Versioning</h1>
+
+    The <code>chuckPublishSnapshot</code> Task is a great technology demonstrator but has no place in the deployment pipeline or production environment for a reliable system. Introducing a requirement for it is equivalent to writing a program that depends on the <code>HEAD</code> reference of another git repository or the <code>SNAPSHOT</code> version of a Java/Scala Library, ie a system that it is impossible to reliably recreate. If the rest of your system refers to a Lambda via the ARN returned by <code>chuckPublishSnapshot</code> you can never be certain what code will be executed.
+
+    <p>
+        In order to have a fixed reference to code and configuration on a Lambda that can be guaranteed never to change we need to publish a version of that Lambda. That can be achieved with the Task,
+</p>
+    <blockquote>
+        <code>chuckPublish</code> - Create/Update Lambda and create an immutable uniquely versioned copy
+</blockquote>
+    <p>
+        This Task will do everything that <code>chuckPublishSnapshot</code> did, but will also carry out the non-idempotent operation of making a readonly versioned copy of the Lambda which can be uniquely referred to via its own ARN. This means two ARNs get created/updated as a result of running <code>chuckPublish</code>,
+</p>
+    <ul>
+        <li>
+            <code>arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;</code> - will always be the latest snapshot of your Lambda</li>
+        <li>
+            <code>arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;:&lt;VERSION&gt;</code> - the <code>&lt;VERSION&gt;</code> of your Lambda that was just created as an immutable copy of the latest changes.
+</li></ul>
+    <p>
+        The <code>VERSION</code> created will be <code>1</code> the first time <code>chuckPublish</code> is called, then <code>2</code> etc. At any time you can see the list of currently published AWS Lambdas from within the sbt shell by running,
+</p>
+    <blockquote>
+        <code>chuckCurrentlyPublished</code> - The currently published versions of this Lambda (if Lambda exists)
+</blockquote>
+    <p>
+        You can easily satisfy yourself that Versioned Lambdas are different to each other by making a few changes to your Helloworld Function from the <a href="#GettingStarted">Getting Started</a> Guide and publishing it. The <code>chuckInvoke</code> task takes a number as an optional argument which it will use to run a specific version of your Published AWS Lambda.
+</p>
+    <p>
+        The downside to relying solely on the Versioned Lambda is having to update every place that refers to it every time there is a new version. Updating lots of things is fine when it only changes every few months, but is un-manageable when it could change many times in a single day. In order to build a pipeline that treats every publish we do as a candidate for Production we need the ability to associate a specific Lambda version with an <code>Environment</code>.
+</p>
+<h1 id="Environments" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Environments" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Environments</h1>
+
+    The <code>chuckPublishTo</code> Input Task takes the <code>chuckPublish</code> Task and adds a tiny amount more functionality on the end. In addition to creating a versioned copy of your updated Lambda it makes sure that the new version is promoted to an environment (eg <code>qa</code>).
+
+    <p>
+        However, before you can publish to an environment you need to define one. Here is an example of how to define your Chuckwagon environments in sbt. (Remember to reload sbt after adding this sbt Setting.)
+</p>
+    <blockquote>
+        <code>chuckEnvironments := Set[String](&quot;qa&quot;, &quot;prd&quot;)</code> - Define qa and prd as valid Chuckwagon environments (referred to as <i>aliases</i> in the AWS Console).
+</blockquote>
+    <p>
+        Please note that defining the <code>chuckEnvironments</code> sbt Setting does not automatically lead to them being created as aliases in AWS. Chuckwagon will wait until environments are used before creating them.</p>
+    <p>
+        With valid Chuckwagon environments defined in sbt it now becomes possible to use the <code>chuckPublishTo</code> Input Task
+</p>
+    <blockquote>
+        <code>chuckPublishTo &lt;ENVIRONMENT&gt;</code> - Create/Update Lambda, then create an immutable uniquely versioned copy of it and promote that to <code>&lt;ENVIRONMENT&gt;</code>
+</blockquote>
+    <p>
+        <code>chuckPublishTo</code> is the most useful variant of the Publish tasks as it returns an ARN that can safely be referred to from other parts of your infrastructure, but which is associated with a specific version of Lambda configuration and code. In total that makes three ARNs which get created/updated as a result of running <code>chuckPublishTo</code>,</p>
+    <ul>
+        <li>
+            <code>arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;</code> - will always be the latest snapshot of your Lambda</li>
+        <li>
+            <code>arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;:&lt;VERSION&gt;</code> - the <code>&lt;VERSION&gt;</code> of your Lambda that was just created as an immutable copy of the latest changes</li>
+        <li>
+            <code>arn:aws:lambda:&lt;REGION&gt;:&lt;ACCOUNT_ID&gt;:function:&lt;LAMBDA_NAME&gt;:&lt;ENVIRONMENT&gt;</code> - The version of your Lambda currently in <code>ENVIRONMENT</code>.
+</li></ul>
+    <p>
+        Just as with specific versions, you can try out Lambdas in a specific environment using the <code>chuckInvoke</code> task, which in addition to taking version numbers as input arguments also takes environments.
+</p>
+<h1 id="Promotion" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Promotion" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Promotion</h1>
+
+    It would be possible to use <code>chuckPublishTo</code> to publish to each environment in turn, but this would mean a different version of the lambda gets deployed to QA than gets deployed to production. This is undesirable. What we want is an Input Task that can promote an existing version from one environment to another
+
+    <blockquote>
+        <code>chuckPromote &lt;FROM_ENVIRONMENT&gt; &lt;TO_ENVIRONMENT&gt;</code> - Promote the Lambda Version currently in <code>&lt;FROM_ENVIRONMENT&gt;</code> to also be referenced by <code>&lt;TO_ENVIRONMENT&gt;</code>
+</blockquote>
+    <p>
+        It is important to note that although we talk about 'promoting' the Lambda all we are physically doing in AWS is editing the destination alias to point at the same Lambda version as the source alias. After the promotion, the code/configuration that gets run in the two environments is exactly the same. The only difference is the ARN used to call the Lambda. This means that if you want your Lambda to know which environment it is being executed in you need to inspect the ARN that is passed to it during execution.
+</p>
+<h1 id="sbt-release" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#sbt-release" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>sbt-release</h1>
+
+    Chuckwagon doesn't need to provide a mechanism for building your actual pipeline, because sbt already has a brilliant plugin called <a href="https://github.com/sbt/sbt-release">sbt-release</a>. This plugin allows you to define a release process in sbt out of any existing sbt Tasks, Input Tasks or Commands. Consider the following custom release process,
+
+    <pre><code class="scala scalatex-site-Styles-highlightMe">releaseProcess := Seq[ReleaseStep](
+    releaseStepTask(clean),
+    releaseStepTask(test in Test),
+    releaseStepInputTask(chuckPublishTo, &quot; qa&quot;),
+    releaseStepTask(test in IntegrationTest),
+    releaseStepInputTask(chuckPromote, &quot; qa prd&quot;).
+    releaseStepTask(chuckCleanUp)
+)
+</code></pre>
+    <p>
+        This release process uses the Tasks we introduced earlier in this guide to build a deployment pipeline that,
+        <ol>
+            <li>
+                Runs the normal unit tests for your project (your Continuous Integration)</li>
+            <li>
+                Builds a fat JAR and deploys it to qa</li>
+            <li>
+                runs the Integration Tests (which in this very simple pipeline are expected to execute tests against the Lambda version in the qa environment via the associated ARN)</li>
+            <li>
+                If the integration tests pass then promote the version in qa to prd</li>
+            <li>
+                <code>chuckCleanUp</code> is a Task we haven't previously introduced which deletes any versions no longer referenced by an environment (ie the version that was previously in prd).
+</li></ol></p>
+    <p>
+        This very simple pipeline demonstrates how you can very easily use Chuckwagon to run your entire deployment pipeline for an AWS Lambda project. In the <a href="#MultipleAWSAccounts">Multiple AWS Accounts</a> guide we consider a more realistic scenario where your organisation insists on doing Production Deployments using a different AWS Account.</p>
+
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="EnvironmentConfiguration" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Environment Configuration<a class=" scalatex-site-Styles-headerLink" href="#EnvironmentConfiguration" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+Several times in the <a href="#DeploymentPipelines">Deployment Pipelines</a> Guide we mentioned that even though you can deploy a Lambda to more than one environment it still only exists in one place. This is because what you are actually doing is pointing two or more AWS Aliases at the same Lambda. This is an efficient feature because it means that Amazon doesn't have to create multiple copies of the JAR file / Lambda Configuration metadata that isn't allowed to change in any case. It does, however, highlight a challenge in AWS. How do you apply environment specific configuration to an AWS Lambda?
+
+<h1 id="DeadEnds" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#DeadEnds" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Dead Ends</h1>
+
+    <p>
+        Traditionally when configuring a Service you deploy an environmental configuration file along side it on the box it is deployed to. This configuration file contains things like the location of that service's database in the associated environment. There is no built in way to associate an environmental configuration file with an AWS Lambda.
+</p>
+    <p>
+        AWS Lambda provides a feature called 'Environment variables' that do at first glance look suitable for this purpose. However, AWS Lambda environment variables cannot be configured per environment. They appropriate the term environment from shell scripting, where variables can be passed to scripts by setting them as global constants on the shell. AWS Lambda doesn't run in such a shell/environment. Once you version a Lambda its environment variables cannot be changed. They are intended to be used to save time changing configuration that would otherwise require a code deployment, but this is a very different thing to the flexibility of environment variables in a shell scripting environment.
+</p>
+    <p>
+        Consequently, since code deployments are very fast and accessing AWS Lambda environment variables is necessarily cumbersome they are not obviously ideal for any use. It is possible that they would be useful for encrypted fields. Chuckwagon does not yet support such functionality.
+</p>
+<h1 id="EnvironmentDetection" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#EnvironmentDetection" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Environment Detection</h1>
+
+    <p>
+        The only way to manage Environment specific variables in AWS Lambda is to take advantage of the fact that when your Lambda is executed it knows which ARN was used to invoke it. The environment is the final section of the ARN. For example,
+</p>
+    <blockquote>
+        <code>arn:aws:lambda:eu-west-1:123456789012:function:demo:qa</code> - QA
+        <code>arn:aws:lambda:eu-west-1:123456789012:function:demo:prd</code> - PRODUCTION
+</blockquote>
+    The ARN is passed to the Lambda Handler in the Context and so needs to be detected each time that the Lambda executes.
+
+<h1 id="DerivingConfiguration" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#DerivingConfiguration" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Deriving Configuration</h1>
+
+    You could use the knowledge of which environment you are in to lookup configuration on an external system (for example <a href="https://www.consul.io/">Consul</a>). This might well make sense for configuration produced very frequently by automation or sensitive configuration that needs to be encrypted (especially if your infrastructure team already has such a setup). However, for most configuration the ideal way to store it is as typed classes inside your own code base. Given that it should be possible to push a Lambda from check-in to Production in a couple of minutes, even the time to change configuration is negligible.
+
+    <p>
+        The Chuckwagon Library makes configuration stored inside the Lambda codebase simple to lookup on a per environment basis. Consider the following changes to the <code>Helloworld.scala</code> Handler introduced in the <a href="#GettingStarted">Getting Started</a> guide,
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import com.amazonaws.services.lambda.runtime.Context
+import com.itv.chuckwagon.lambda._
+import io.circe.generic.auto._
+
+case class Response(response: String)
+
+case class HelloConfig(env: String, someServiceLocation: String) extends LambdaConfigForEnv
+
+object Helloworld {
+  val configs = LambdaConfig(
+    HelloConfig(env = &quot;qa&quot;, someServiceLocation = &quot;testLocation&quot;),
+    HelloConfig(env = &quot;prd&quot;, someServiceLocation = &quot;prdLocation&quot;)
+  )
+}
+
+class Helloworld extends Handler[Unit, Response] {
+  def handler(query: Unit, context: Context): Response = {
+
+    val config = Helloworld.configs.configFor(context)
+
+    Response(s&quot;Hello World from ${config.env}!&quot;)
+  }
+}
+</code></pre>
+    This code now does a number of interesting things in addition to printing 'Hello World',
+
+    <ul>
+        <li>
+            It defines a Case Class <code>HelloConfig</code> that can be used to describe the configuration for the function. This class extends the Chuckwagon library trait <code>LambdaConfigForEnv</code>,
+
+             <pre><code class="scala scalatex-site-Styles-highlightMe">trait LambdaConfigForEnv {
+  val env: String
+}
+</code></pre>
+             <code>LambdaConfigForEnv</code> forces your configuration case class to have the field <code>env: String</code>. This is used to determine what environment it applies to.
+</li>
+        <li>
+            It declares all of the configurations for all of its environments using the Chuckwagon library class <code>LambdaConfig</code>. This class has a type signature of,
+
+            <pre><code class="scala scalatex-site-Styles-highlightMe">case class LambdaConfig[T &lt;: LambdaConfigForEnv](configs: T*)
+</code></pre>
+            This means you can declare as many configurations as you want as long as they are a sub-type of <code>LambdaConfigForEnv</code> (as <code>HelloConfig</code> is).
+</li>
+        <li>
+            With configurations defined and declared the <code>Helloworld</code> Handler function is then able to derive the appropriate Configuration for the environment it was called in from the <code>Context</code> using a helper method on <code>LambdaConfig</code>,
+
+            <pre><code class="scala scalatex-site-Styles-highlightMe">val config = Helloworld.configs.configFor(context)
+</code></pre></li>
+        <li>
+            Finally, the <code>Helloworld</code> function makes trivial usage of this configuration to modify its response and add the environment it ran in. It is easy to see how environmental configuration could be utilised more easily in real life.
+</li></ul>
+    This example code is really all you need in order to add per environment configuration to Lambdas deployed into an Environment. It is extremely simple, but also extremely powerful.
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="MultipleAWSAccounts" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Multiple AWS Accounts<a class=" scalatex-site-Styles-headerLink" href="#MultipleAWSAccounts" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+Many organisations using AWS take the very sensible precaution of putting non-production environments in an entirely different AWS Account. This protects the Production Account from fat fingered development but has the side-effect of making a single deployment pipeline very difficult. The usual compromise is to have two deployment pipelines, one in the development environment and one in the production environment. The hand-off between the two environments may or may not be automated.
+
+<p>
+    Chuckwagon supports the two deployment pipeline approach by providing a second plugin tailored to use in the Production Account. It is configured very similarly to the <code>ChuckwagonPublishPlugin</code> introduced in <a href="#GettingStarted">Getting Started</a> and that you should continue to use in your Development Account. The new plugin is called <code>ChuckwagonCopyPlugin</code> and supports copying a Lambda from a different account and re-publishing it to an environment in the current account.
+</p>
+<p>
+    To use it something like the following complete configuration is required in your <code>build.sbt</code>,
+</p>
+<pre><code class="scala scalatex-site-Styles-highlightMe">enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+chuckRegion := &quot;&lt;AN_AWS_REGION_EG_-_eu-west-1&gt;&quot;
+chuckName := &quot;&lt;THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA&gt;&quot;
+chuckCopyConfig := chuckCopyConfigBuilder
+  .withStagingBucketName(&quot;&lt;THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE&quot;)
+  .withAssumableDevAccountRoleARN(
+    &quot;arn:aws:iam::&lt;DEV_ACCOUNT_ID&gt;:role/&lt;ASSUMABLE_DEV_ACCOUNT_ROLE_ID&gt;&quot;)
+</code></pre>
+
+<p>
+    Notice that <code>chuckRegion</code>, <code>chuckName</code> and <code>withStagingBucketName</code> are configured in the same way as they were for the <code>ChuckwagonPublishPlugin</code>. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is <code>AssumableDevAccountRoleARN</code>. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
+</p>
+<h1 id="Permissions" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Permissions" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Permissions</h1>
+
+    <p>
+        Making the IAM Role <code>AssumableDevAccountRoleARN</code> in the Development Account available to the Production Account requires granting specially configured Cross AWS Account privileges. It also requires giving a Role in the Production Account access permissions.
+</p>
+    <p>
+        The next two sub-sections will explain the two steps in detail, but for background I thoroughly recommend reading the AWS tutorial on <a href="http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html">Delegating Access Across AWS Accounts using IAM Roles</a>.
+</p>
+    <h2 id="DevelopmentChanges" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#DevelopmentChanges" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Development Changes</h2>
+
+        In your Development Account you need to create a Role (<code>&lt;ASSUMABLE_DEV_ACCOUNT_ROLE_ID&gt;</code> - the same ID used in the <code>ChuckwagonCopyPlugin</code> config earlier) with the following permissions policy,
+
+        <pre><code class="javascript scalatex-site-Styles-highlightMe">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [{
+    &quot;Effect&quot;: &quot;Allow&quot;,
+    &quot;Action&quot;: [
+      &quot;lambda:GetFunction&quot;
+    ],
+    &quot;Resource&quot;: &quot;arn:aws:lambda:*:*:*&quot;
+  }]
+}
+</code></pre>
+        <p>
+            and the following trust relationship
+</p>
+        <pre><code class="javascript scalatex-site-Styles-highlightMe">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;AWS&quot;: &quot;arn:aws:iam::&lt;PRODUCTION_ACCOUNT_ID&gt;:root&quot;
+      },
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+  ]
+}
+</code></pre>
+        This will make it possible to configure any Role in your Production Account to be able to temporarily become this Role in your Development Account.
+
+    <h2 id="ProductionChanges" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ProductionChanges" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Production Changes</h2>
+
+        In your Production Account you need to make sure that whatever Role you use to run Chuckwagon is assigned the following additional policy,
+
+        <pre><code class="javascript scalatex-site-Styles-highlightMe">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: {
+    &quot;Effect&quot;: &quot;Allow&quot;,
+    &quot;Action&quot;: &quot;sts:AssumeRole&quot;,
+    &quot;Resource&quot;: &quot;arn:aws:iam::&lt;DEVELOPMENT_ACCOUNT_ID&gt;:role/&lt;ASSUMABLE_DEV_ACCOUNT_ROLE_ID&gt;&quot;
+  }
+}
+</code></pre>
+<h1 id="Copying" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Copying" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Copying</h1>
+
+    In order to make use of the new configuration you have used in this Guide you need to use a new Input Task in <code>ChuckwagonCopyPlugin</code> that is very similar to the <code>chuckPromote</code> Input Task introduced in <a href="#DeploymentPipelines">Deployment Pipelines</a>,
+
+    <blockquote>
+        <code>chuckCopyFromOtherAccountTo &lt;FROM_ACCOUNT_ENVIRONMENT&gt; &lt;TO_ENVIRONMENT&gt;</code> - Copy Lambda from the environment of another account into the <code>&lt;TO_ENVIRONMENT&gt;</code> of this Account.
+</blockquote>
+    <p>
+        If you have correctly configured <a href="#IAMRoles">IAM Roles</a> then this Task should download the Lambda (and all its configuration) from your Development Account and Publish it as a new Lambda (with the same configuration) in your Production Account. This is as close as we can get to promoting the same Lambda between two accounts. The only (unavoidable) difference is that the Lambda will have a different Version in Production.
+</p>
+<h1 id="MultiModuleReleases" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#MultiModuleReleases" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Multi Module Releases</h1>
+
+    For Development <a href="#DeploymentPipelines">Deployment Pipelines</a> we encouraged you to use the sbt-release plugin. However, since this plugin can only define one release process per normal project a little more work needs to be done if you want to have a release process in your Production Account as well. In order to support two release processes we will move to having a multi-module build. This has other advantages too, as you will see.
+
+    <p>
+        Consider the following skeleton outline of a multi-module sbt project
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">lazy val commonSettings = Seq(
+  chuckRegion := &quot;&lt;LAMBDA_REGION&gt;&quot;,
+  chuckName := &quot;&lt;LAMBDA_NAME&gt;&quot;
+)
+lazy val `&lt;LAMBDA_NAME&gt;-service` = project
+lazy val `&lt;LAMBDA_NAME&gt;-qa-tests` = project
+lazy val `&lt;LAMBDA_NAME&gt;-prd-tests` = project
+lazy val `&lt;LAMBDA_NAME&gt;-dev-pipeline` = project
+  .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonPublishPlugin)
+    .settings(
+      commonSettings ++
+        Seq(
+          chuckEnvironments := Set[String](&quot;qa&quot;),
+          chuckPublishConfig := chuckPublishConfigBuilder
+            .withHandler(&quot;&lt;HANDLER_CLASS&gt;::&lt;HANDLER_METHOD&gt;&quot;)
+            .withMemorySizeInMB(192)
+            .withTimeout(&quot;5 seconds&quot;)
+            .withStagingBucketName(&quot;&lt;DEV_S3_BUCKET&gt;&quot;)
+            .withCodeFile(assembly in `&lt;LAMBDA_NAME&gt;-service`),
+          releaseProcess := Seq[ReleaseStep](
+            releaseStepTask(clean in `&lt;LAMBDA_NAME&gt;-service`),
+            releaseStepTask(test in Test in `&lt;LAMBDA_NAME&gt;-service`),
+            releaseStepInputTask(chuckPublishTo, &quot; qa&quot;),
+            releaseStepTask(test in `&lt;LAMBDA_NAME&gt;-qa-tests`),
+            releaseStepTask(chuckCleanUp)
+          )
+        )
+    )
+lazy val `&lt;LAMBDA_NAME&gt;-prd-pipeline` = project
+  .enablePlugins(com.itv.chuckwagon.sbt.ChuckwagonCopyPlugin)
+    .settings(
+      commonSettings ++
+        Seq(
+          chuckEnvironments := Set[String](&quot;prd&quot;),
+          chuckPublishConfig := chuckPublishConfigBuilder
+            .withStagingBucketName(&quot;&lt;PRD_S3_BUCKET&gt;&quot;)
+            .withAssumableDevAccountRoleARN(
+              &quot;&lt;ASSUMABLE_DEV_ACCOUNT_ROLE_ARN&gt;&quot;),
+          releaseProcess := Seq[ReleaseStep](
+            releaseStepInputTask(chuckCopyFromOtherAccountTo, &quot; qa prd&quot;),
+            releaseStepTask(test in `&lt;LAMBDA_NAME&gt;-prd-tests`),
+            releaseStepTask(chuckCleanUp)
+          )
+        )
+    )
+</code></pre>
+
+    <p>
+        Managing a pipeline in this fashion has the following interesting properties,
+</p>
+    <ul>
+        <li>
+            Even though the release steps run in their own module it is very easy for them to reference tasks from another module (sbt-release really is an awesome plugin).</li>
+        <li>
+            The <code>chuckRegion</code> and <code>chuckName</code> sbt settings can be shared between both pipelines which makes means they are only managed in one place even though they are used in two completely different AWS Accounts.</li>
+        <li>
+            As a by product of requiring modules for our pipelines we can move our Lambda tests into their own module as well. This allows us to guarantee that they are isolated from the Lambda that they are testing (making them proper <a href="http://softwaretestingfundamentals.com/black-box-testing/">black box tests</a>).
+</li></ul>
+    <p>
+        Running release steps in a sub-module is still a one liner from the command-line, but the format is slightly counter-intuitive and bears elucidating here,
+</p>
+    <blockquote>
+        <code>sbt &quot;project &lt;LAMBDA_NAME&gt;-dev-pipeline&quot; release</code> - Execute the dev pipeline
+</blockquote>
+    <blockquote>
+        <code>sbt &quot;project &lt;LAMBDA_NAME&gt;-prd-pipeline&quot; release</code> - Execute the prd pipeline
+</blockquote>
+    <p>
+        Sadly no such one-liner exists for the sbt shell (no build tool is perfect).</p>
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="ManagedInfrastructure" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Managed Infrastructure<a class=" scalatex-site-Styles-headerLink" href="#ManagedInfrastructure" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+For all but the most trivial of use-cases you will want to deploy your Lambdas into an AWS Account that contains other infrastructure (eg databases, EC2 instances). It is beyond the scope of Chuckwagon to help you manage this infrastructure and there are already very good tools for helping you do so (eg Terraform and CloudFormation). Chuckwagon still needs to help you interface with that infrastructure however. This guide will walk you through some of the ways in which Chuckwagon can help you.
+
+<h1 id="ManagedIAMRoles" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ManagedIAMRoles" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Managed IAM Roles</h1>
+
+    Every AWS Lambda requires an IAM Role be set that it can use to execute as. By default Chuckwagon will create and manage a basic IAM Role for your Lambda that grants the basic permissions required, however there are downsides to this approach.
+
+    <ul>
+        <li>
+            The permissions granted are currently one size fits all. Chuckwagon doesn't currently grant DynamoDB options and if it is ever extended to make this possible it ought to be done in a flexible fashion.</li>
+        <li>
+            By granting Chuckwagon permission to create an IAM Role for Lambda execution you are also granting it permission to create any other IAM Role it wants to. This is equivalent to giving it Super User Access to your AWS Account. Since AWS has no way to selectively restrict the permission to create other roles your organisation may not want to grant it to automated tools like Chuckwagon at all.
+</li></ul>
+    <p>
+        If these limitations are blockers for your organisation you can choose to create your IAM Role elsewhere and simply set the ARN on your publish or copy config builders as so,
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">chuckPublishConfig := chuckPublishConfigBuilder
+  .withRoleARN(&quot;&lt;ROLE_WITH_LAMBDA_EXECUTE_ARN&gt;&quot;)
+</code></pre>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">chuckCopyConfig := chuckCopyConfigBuilder
+  .withRoleARN(&quot;&lt;ROLE_WITH_LAMBDA_EXECUTE_ARN&gt;&quot;)
+</code></pre>
+<h1 id="VPCs" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#VPCs" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>VPCs</h1>
+
+    It is optionally possible to deploy an AWS Lambda into a VPC using both the <code>ChuckwagonPublishPlugin</code> and the <code>ChuckwagonCopyPlugin</code>. Chuckwagon supports two ways of doing this.
+
+    <h2 id="UsingIds" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#UsingIds" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Using Ids</h2>
+
+        The simplest way is to specify all of the Ids for the associated VPC resources. For example,
+
+        <pre><code class="scala scalatex-site-Styles-highlightMe">chuckPublishConfig := chuckPublishConfigBuilder
+  .withVpc(
+    chuckVpcUsingIdsBuilder
+      .withVpcId(&quot;vpc-12345678&quot;)
+      .withSubnetIds(&quot;subnet-a2345678&quot;, &quot;subnet-b2345678&quot;)
+      .withSecurityGroupIds(&quot;sg-12345678&quot;)
+</code></pre>
+    <h2 id="UsingFilters" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#UsingFilters" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Using Filters</h2>
+
+        Alternatively, in order to reduce the coupling between your Lambda and your infrastructure you can reference the VPC resources via tags instead of Ids. Consider this example,
+
+        <pre><code class="scala scalatex-site-Styles-highlightMe">chuckPublishConfig := chuckPublishConfigBuilder
+  .withVpc(
+    chuckVpcUsingFiltersBuilder
+      .withVpcLookupFilters(&quot;tag:Name&quot; -&gt; &quot;prd-vpc&quot;)
+      .withSubnetsLookupFilters(&quot;tag:Name&quot; -&gt; &quot;private-subnet*&quot;)
+      .withSecurityGroupsLookupFilters(&quot;group-name&quot; -&gt; &quot;default&quot;)
+</code></pre>
+        <p>
+            Each filter (multiple filters are allowed) is a tuple matching the AWS Filter Format. The VPC filter must return exactly one VPC, but the Subnets and SecurityGroups filters can return zero or more.</p>
+</div>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Reference" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Reference<a class=" scalatex-site-Styles-headerLink" href="#Reference" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+    <p>
+        The <a href="#Guides">Guides</a> introduce the minimum subset of Chuckwagon features required to build a Lambda pipeline, but there are many more optional features. You should find every feature fully documented in this section.
+</p>
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Plugins" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Plugins<a class=" scalatex-site-Styles-headerLink" href="#Plugins" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+<h1 id="ChuckwagonBasePlugin" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ChuckwagonBasePlugin" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>ChuckwagonBasePlugin</h1>
+
+    <p>
+        This plugin is a dependency of both <a href="#ChuckwagonPublishPlugin">ChuckwagonPublishPlugin</a> and <a href="#ChuckwagonCopyPlugin">ChuckwagonCopyPlugin</a>. It contains Settings, Tasks and helper functions that are useful whether you are publishing an AWS Lambda from source or copying one from another Account.
+</p>
+    <p>
+        Here are the base Settings available to both the <code>ChuckwagonPublishPlugin</code> and the <code>ChuckwagonCopyPlugin</code> (in addition to their own).
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Setting</td><td>Example</td><td>Description</td></tr></thead><tbody><tr><td>chuckName</td><td>myFirstLambda</td><td>The name to be used creating/updating the AWS Lambda</td></tr><tr><td>chuckRegion</td><td>eu-west-1</td><td>The AWS Region within which to create/update the AWS Lambda</td></tr><tr><td>chuckEnvironments</td><td>Set[String](&quot;blue-qa&quot;, &quot;qa&quot;)</td><td>(Optional) The Environments into which the the AWS Lambda should be published, copied and/or promoted (known as Aliases in the AWS Console)</td></tr><tr><td>chuckAWSCredentialsProvider</td><td>new MyCustomAWSCredentialsProvider()</td><td>(Optional) The credentials provider to use for AWS interactions. By default this uses the DefaultAWSCredentialsProviderChain. You can override it with any AWSCredentialsProvider</td></tr><tr><td>chuckSDKFreeCompiler</td><td>WIP</td><td>(Optional) For testing pipelines against mock versions of the AWS SDK</td></tr></tbody></table>
+
+    <p>
+        Here are the base Tasks available to both the <code>ChuckwagonPublishPlugin</code> and the <code>ChuckwagonCopyPlugin</code> (in addition to their own).
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Task</td><td>Description</td></tr></thead><tbody><tr><td>chuckCurrentEnvironments</td><td>The Environments (AWS Aliases) currently configured (if it exists)</td></tr><tr><td>chuckCurrentlyPublished</td><td>The currently published versions of this AWS Lambda (if it exists)</td></tr><tr><td>chuckPromote</td><td>Promote the AWS Lambda Version in the first Environment (AWS Alias) to the second. Environments must exist in chuckEnvironments Setting, but associated Aliases will be created in AWS if they are missing. eg &quot;chuckPromote blue-qa qa&quot;</td></tr><tr><td>chuckCleanUp</td><td>Remove all AWS Lambda Versions not deployed to an Environment (AWS Alias) and all Environments not defined in chuckEnvironments Setting</td></tr><tr><td>chuckSetLambdaTrigger</td><td>Schedule AWS Lambda to be invoked based on a cron expression eg 'chuckSetLambdaTrigger qa &quot;rate(1 minute)&quot;'</td></tr><tr><td>chuckRemoveLambdaTrigger</td><td>Remove Scheduled execution associated with AWS Lambda</td></tr><tr><td>chuckInvoke<td>Invoke the AWS Lambda (if it exists). SNAPSHOT if no arguments passed. Otherwise either the version or the environment passed as a parameter. Sends no arguments but does print output.</td></td></tr></tbody></table>
+
+    <p>
+        Here are the base helper functions available to both the <code>ChuckwagonPublishPlugin</code> and the <code>ChuckwagonCopyPlugin</code> (in addition to their own).
+</p>
+    <h2 id="chuckVpcUsingIdsBuilder" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#chuckVpcUsingIdsBuilder" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>chuckVpcUsingIdsBuilder</h2>
+
+        Starts a fluent builder for a <code>VpcConfigUsingIdsLookup</code> (which extends the <code>VpcConfigLookup</code> required by both <code>chuckPublishConfigBuilder</code> and <code>chuckCopyConfigBuilder</code> for their <code>withVpc</code> builder methods.
+
+        <p>
+            Here is an example (which is useless alone but which could be dropped into either plugin).
+</p>
+        <pre><code class="scala scalatex-site-Styles-highlightMe">chuckVpcUsingIdsBuilder
+  .withVpcId(&quot;vpc-12345678&quot;)
+  .withSubnetIds(&quot;subnet-a2345678&quot;, &quot;subnet-b2345678&quot;)
+  .withSecurityGroupIds(&quot;sg-12345678&quot;)
+</code></pre>
+        <p>
+            Here are some notes on all of the parameters available to <code>chuckVpcUsingIdsBuilder</code>
+</p>
+        <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Parameter</td><td>Notes</td></tr></thead><tbody><tr><td>VpcId</td><td>The string for a VPC Id</td></tr><tr><td>SubnetIds</td><td>One or more Subnet Ids</td></tr><tr><td>SecurityGroupIds</td><td>One or more Security Group Ids</td></tr></tbody></table>
+
+    <h2 id="chuckVpcUsingFiltersBuilder" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#chuckVpcUsingFiltersBuilder" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>chuckVpcUsingFiltersBuilder</h2>
+
+        Starts a fluent builder for a <code>VpcConfigUsingFiltersLookup</code> (which extends the <code>VpcConfigLookup</code> required by both <code>chuckPublishConfigBuilder</code> and <code>chuckCopyConfigBuilder</code> for their <code>withVpc</code> builder methods.
+
+        <p>
+            Here is an example (which is useless alone but which could be dropped into either plugin).
+</p>
+        <pre><code class="scala scalatex-site-Styles-highlightMe">chuckVpcUsingFiltersBuilder
+  .withVpcLookupFilters(&quot;tag:Name&quot; -&gt; &quot;prd-vpc&quot;)
+  .withSubnetsLookupFilters(&quot;tag:Name&quot; -&gt; &quot;private-subnet*&quot;)
+  .withSecurityGroupsLookupFilters(&quot;group-name&quot; -&gt; &quot;default&quot;)
+</code></pre>
+        <p>
+            Here are some notes on all of the parameters available to <code>chuckVpcUsingFiltersBuilder</code>
+</p>
+        <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Parameter</td><td>Notes</td></tr></thead><tbody><tr><td>VpcLookupFilters</td><td>One or more tuples representing AWS Filters that can select a single AWS VPC</td></tr><tr><td>SubnetsLookupFilters</td><td>One or more tuples representing AWS Filters that can select zero or more AWS Subnets</td></tr><tr><td>SecurityGroupsLookupFilters</td><td>One or more tuples representing AWS Filters that can select zero or more Security Groups</td></tr></tbody></table>
+
+<h1 id="ChuckwagonPublishPlugin" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ChuckwagonPublishPlugin" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>ChuckwagonPublishPlugin</h1>
+
+    <p>
+        This plugin allows you to build, configure and publish AWS Lambdas. It has only one setting, <code>chuckPublishConfig</code> which you configure using a fluent builder started by <code>chuckPublishConfigBuilder</code>. Here is an example that sets every required and optional parameter.
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">chuckPublishConfig := chuckPublishConfigBuilder
+  .withHandler(&quot;com.itv.MyHandler::handler&quot;)
+  .withMemorySizeInMB(256)
+  .withTimeout(&quot;5 seconds&quot;)
+  .withStagingBucketName(&quot;dev-staging&quot;)
+  .withStagingBucketKeyPrefix(&quot;forChuckwagon&quot;)
+  .withRoleARN(
+    &quot;arn:aws:iam::123456789012:role/dev_lambda_execute&quot;)
+  .withVpc(chuckVpcUsingFiltersBuilder
+    .withVpcLookupFilters(&quot;tag:Name&quot; -&gt; &quot;qa-vpc&quot;)
+    .withSubnetsLookupFilters(&quot;tag:Name&quot; -&gt; &quot;private-subnet*&quot;)
+    .withSecurityGroupsLookupFilters(&quot;group-name&quot; -&gt; &quot;default&quot;))
+  .withDeadLetterARN(&quot;arn:aws:sqs:eu-west-1:444455556666:dlq&quot;)
+  .withCodeFile(assembly)
+</code></pre>
+    <p>
+        Here are some notes on all of the parameters available to <code>chuckPublishConfigBuilder</code>
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Parameter</td><td>Notes</td></tr></thead><tbody><tr><td>Handler</td><td>The fully qualified class and method of the Handler</td></tr><tr><td>MemorySizeInMB</td><td>Must be between 128 and 1536 MBs</td></tr><tr><td>Timeout</td><td>Must be between 1 and 300 seconds</td></tr><tr><td>StagingBucketName</td><td>Bucket that fat JAR will be uploaded to for Lambda create/update</td></tr><tr><td>StagingBucketKeyPrefix</td><td>(Optional) Key prefix that will be used when fat JAR is uploaded to S3</td></tr><tr><td>RoleARN</td><td>(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using</td></tr><tr><td>Vpc</td><td>(Optional) specify the VPC properties to configure the AWS Lambda with using either 'chuckVpcUsingIdsBuilder' or 'chuckVpcUsingFiltersBuilder'</td></tr><tr><td>DeadLetterARN</td><td>(Optional) specify the ARN of an SQS or SNS endpoint where messages that failed Lambda invocation to be delivered</td></tr><tr><td>CodeFile</td><td>A Task[File] that produces a fat JAR suitable for creating an AWS Lambda with.</td></tr></tbody></table>
+
+    <p>
+        Here are the Tasks available to the <code>ChuckwagonPublishPlugin</code>
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Task</td><td>Description</td></tr></thead><tbody><tr><td>chuckPublishSnapshot</td><td>Compile/Create/Update $LATEST AWS Lambda according to chuckPublishConfig Setting (Not recommended for real world usage)</td></tr><tr><td>chuckPublish</td><td>As chuckPublishSnapshot except additionally create a (Numbered) Lambda Version immutable copy of $LATEST (Not recommended for real world usage)</td></tr><tr><td>chuckPublishTo</td><td>As chuckPublish except additionally assign the Lambda Version to the environment passed as an input parameter (must be one of environments defined in chuckEnvironments)</td></tr></tbody></table>
+
+<h1 id="ChuckwagonCopyPlugin" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ChuckwagonCopyPlugin" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>ChuckwagonCopyPlugin</h1>
+
+    <p>
+        This plugin allows you to copy AWS Lambdas from another Account. It has only one setting, <code>chuckCopyConfig</code> which you configure using a fluent builder started by <code>chuckCopyConfigBuilder</code>. Here is an example that sets every required and optional parameter.
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">chuckPublishConfig := chuckPublishConfigBuilder
+  .withStagingBucketName(&quot;prd-staging&quot;)
+  .withStagingBucketKeyPrefix(&quot;forChuckwagon&quot;)
+  .withRoleARN(
+    &quot;arn:aws:iam::0987654321098:role/prd_lambda_execute&quot;)
+  .withVpc(chuckVpcUsingFiltersBuilder
+    .withVpcLookupFilters(&quot;tag:Name&quot; -&gt; &quot;prd-vpc&quot;)
+    .withSubnetsLookupFilters(&quot;tag:Name&quot; -&gt; &quot;private-subnet*&quot;)
+    .withSecurityGroupsLookupFilters(&quot;group-name&quot; -&gt; &quot;default&quot;))
+  .withAssumableDevAccountRoleARN(
+    &quot;arn:aws:iam::123456789012:role/dev_lambda_get_granted_to_prd&quot;)
+</code></pre>
+    <p>
+        Here are some notes on all of the parameters available to <code>chuckCopyConfigBuilder</code>
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Parameter</td><td>Notes</td></tr></thead><tbody><tr><td>StagingBucketName</td><td>Bucket that fat JAR will be uploaded to for Lambda create/update</td></tr><tr><td>StagingBucketKeyPrefix</td><td>(Optional) Key prefix that will be used when fat JAR is uploaded to S3</td></tr><tr><td>RoleARN</td><td>(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using</td></tr><tr><td>Vpc</td><td>(Optional) specify the VPC properties to configure the AWS Lambda with using either 'chuckVpcUsingIdsBuilder' or 'chuckVpcUsingFiltersBuilder'</td></tr><tr><td>AssumableDevAccountRoleARN</td><td>The ARN of a Role in the Development Account that can be used to download the Lambda</td></tr></tbody></table>
+
+    <p>
+        Here are the Tasks available to the <code>ChuckwagonCopyPlugin</code>
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Task</td><td>Description</td></tr></thead><tbody><tr><td>chuckCopyFromOtherAccountTo</td><td>Copy an AWS Lambda from another account and publish it to the Environment expressed as an input parameter in this Account (using chuckPublishConfig Setting)</td></tr></tbody></table>
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Library" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Library<a class=" scalatex-site-Styles-headerLink" href="#Library" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+The Chuckwagon Library is an optional layer on top of the AWS Lambda Library. It currently enables the following,
+
+<ul>
+    <li>
+        A Scala friendly wrapper around the Java <a href="https://github.com/aws/aws-lambda-java-libs/blob/master/aws-lambda-java-core/src/main/java/com/amazonaws/services/lambda/runtime/RequestStreamHandler.java">RequestStreamHandler</a> working on the same basis as the <a href="http://underscore.io/blog/posts/2016/02/01/aws-lambda.html">Underscore Scala and AWS Lambda Blueprints</a>.
+</li>
+    <li>
+        Helper Classes for constructing Environment Specific Configuration. This <a href="https://github.com/ITV/chuckwagon/blob/master/lib-chuckwagon/src/main/scala/com/itv/chuckwagon/lambda/LambdaConfig.scala">very simple code</a> uses the environment extracted from the ARN used to invoke the function in order to derive the configuration file for the associated environment. See the guide on <a href="#EnvironmentConfiguration">Environment Configuration</a> for an introduction to the topic.</li></ul>
+
+    <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="IAMRoles" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">IAM Roles<a class=" scalatex-site-Styles-headerLink" href="#IAMRoles" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+        
+
+This section won't tell you how to configure IAM Roles for Chuckwagon but it does describe when and why specific permissions are required so that you can justify the creation of the required roles within your organisation.
+
+<h1 id="BasicActions" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#BasicActions" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Basic Actions</h1>
+
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Actions</td><td>Notes</td></tr></thead><tbody><tr><td>s3:ListBuckets</td><td></td></tr><tr><td>s3:PutObject</td><td></td></tr><tr><td>s3:PutObjectAcl</td><td></td></tr><tr><td>lambda:ListVersionsByFunction</td><td></td></tr><tr><td>lambda:CreateFunction</td><td></td></tr><tr><td>lambda:GetFunction</td><td></td></tr><tr><td>lambda:GetFunctionConfiguration</td><td></td></tr><tr><td>lambda:UpdateFunctionCode</td><td></td></tr><tr><td>lambda:UpdateFunctionConfiguration</td><td>*All Required* for any operation of the sbt Plugin</td></tr><tr><td>lambda:PublishVersion</td><td>*All Recommended* Required to Publish Versions (ie chuckPublish)</td></tr><tr><td>lambda:CreateAlias</td><td></td></tr><tr><td>lambda:GetAlias</td><td></td></tr><tr><td>lambda:ListAliases</td><td></td></tr><tr><td>lambda:UpdateAlias</td><td>*All Recommended* Required to Create/Manage Environments (ie chuckPublishTo)</td></tr><tr><td>lambda:DeleteFunction</td><td></td></tr><tr><td>lambda:DeleteAlias</td><td>*All Recommended* Required to run chuckCleanup Task</td></tr><tr><td>ec2:DescribeSecurityGroups</td><td></td></tr><tr><td>events:DescribeSubnets</td><td></td></tr><tr><td>events:DescribeVpcs</td><td>*All Optional* Required if Lambda VPC Configured with Tag Lookups</td></tr><tr><td>events:PutRule</td><td></td></tr><tr><td>events:PutTargets</td><td></td></tr><tr><td>lambda:AddPermission</td><td></td></tr><tr><td>lambda:GetPolicy</td><td></td></tr><tr><td>lambda:UpdateEventSourceMapping</td><td>*All Optional* Required for chuckSetLambdaTrigger</td></tr><tr><td>events:DeleteRule</td><td></td></tr><tr><td>events:RemoveTargets</td><td></td></tr><tr><td>lambda:RemovePermission</td><td>*All Optional* Required for chuckRemoveLambdaTrigger</td></tr><tr><td>lambda:InvokeFunction</td><td>*Optional* Required for chuckInvoke</td></tr><tr><td>iam:*</td><td>*Not Recommended* But required if you rely on Chuckwagon to manage the Role for your AWS Lambdas</td></tr></tbody></table>
+
+<h1 id="ExecutingActions" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ExecutingActions" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Executing Actions</h1>
+
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Actions</td><td>Notes</td></tr></thead><tbody><tr><td>logs:CreateLogGroup</td><td></td></tr><tr><td>logs:CreateLogStream</td><td></td></tr><tr><td>logs:PutDestination</td><td></td></tr><tr><td>logs:PutLogEvents</td><td>*All Recommended* Required if using Cloudwatch Logging</td></tr><tr><td>cloudwatch:PutMetricData</td><td>*Recommended* Required if using Cloudwatch Metrics</td></tr><tr><td>ec2:CreateNetworkInterface</td><td></td></tr><tr><td>ec2:DescribeNetworkInterfaces</td><td></td></tr><tr><td>ec2:DeleteNetworkInterface</td><td>*All Optional* Required if running within a VPC</td></tr></tbody></table>
+
+<h1 id="CopyingActions" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CopyingActions" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Copying Actions</h1>
+
+    <p>
+        The following Actions are required to be configured in your Source Account
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Actions</td><td>Notes</td></tr></thead><tbody><tr><td>lambda:GetFunction</td><td>*Required* Must also grant access to Destination Account</td></tr></tbody></table>
+
+    <p>
+        The following Actions are required to be configured in your Destination Account
+</p>
+    <table class="pure-table pure-table-bordered pure-table-striped"><thead><tr><td>Actions</td><td>Notes</td></tr></thead><tbody><tr><td>sts:AssumeRole</td><td>*Required* Must specify the Resource in your Source Account</td></tr></tbody></table>
+
+</div>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="ReleaseNotes" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Release Notes<a class=" scalatex-site-Styles-headerLink" href="#ReleaseNotes" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+    
+
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="0.1.0Release" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">0.1.0 Release<a class=" scalatex-site-Styles-headerLink" href="#0.1.0Release" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <ul>
+        <li>
+            Initial Release</li></ul>
+</div>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Roadmap" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Roadmap<a class=" scalatex-site-Styles-headerLink" href="#Roadmap" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+    
+
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="0.2.0Plans" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">0.2.0 Plans<a class=" scalatex-site-Styles-headerLink" href="#0.2.0Plans" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <ul>
+        <li>
+            Add Test Coverage</li>
+        <li>
+            Travis CI for
+            <ul>
+                <li>
+                    tests</li>
+                <li>
+                    website</li>
+                <li>
+                    nightly builds</li>
+                <li>
+                    releases
+</li></ul></li></ul>
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Later0.xReleases" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Later 0.x Releases<a class=" scalatex-site-Styles-headerLink" href="#Later0.xReleases" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <ul>
+        <li>
+            Proguard enabled non-S3 Publishing</li>
+        <li>
+            Cloudwatch Logging Helpers</li>
+        <li>
+            Cloudwatch Metrics Helpers</li>
+        <li>
+            Experimental Scala.js support</li></ul></div></div><script>
+    scalatex.scrollspy.Controller().main(
+      [{"value":"Chuckwagon","children":[{"value":"Getting Started","children":[{"value":"Configuring the Build","children":[]},{"value":"Helloworld Function","children":[]},{"value":"Creating a Lambda","children":[]},{"value":"Updating a Lambda","children":[]}]}]},{"value":"Guides","children":[{"value":"Deployment Pipelines","children":[{"value":"Versioning","children":[]},{"value":"Environments","children":[]},{"value":"Promotion","children":[]},{"value":"sbt-release","children":[]}]},{"value":"Environment Configuration","children":[{"value":"Dead Ends","children":[]},{"value":"Environment Detection","children":[]},{"value":"Deriving Configuration","children":[]}]},{"value":"Multiple AWS Accounts","children":[{"value":"Permissions","children":[{"value":"Development Changes","children":[]},{"value":"Production Changes","children":[]}]},{"value":"Copying","children":[]},{"value":"Multi Module Releases","children":[]}]},{"value":"Managed Infrastructure","children":[{"value":"Managed IAM Roles","children":[]},{"value":"VPCs","children":[{"value":"Using Ids","children":[]},{"value":"Using Filters","children":[]}]}]}]},{"value":"Reference","children":[{"value":"Plugins","children":[{"value":"ChuckwagonBasePlugin","children":[{"value":"chuckVpcUsingIdsBuilder","children":[]},{"value":"chuckVpcUsingFiltersBuilder","children":[]}]},{"value":"ChuckwagonPublishPlugin","children":[]},{"value":"ChuckwagonCopyPlugin","children":[]}]},{"value":"Library","children":[]},{"value":"IAM Roles","children":[{"value":"Basic Actions","children":[]},{"value":"Executing Actions","children":[]},{"value":"Copying Actions","children":[]}]}]},{"value":"Release Notes","children":[{"value":"0.1.0 Release","children":[]}]},{"value":"Roadmap","children":[{"value":"0.2.0 Plans","children":[]},{"value":"Later 0.x Releases","children":[]}]}]
+  )</script><script>
+    ['DOMContentLoaded', 'load'].forEach(function(ev){
+      addEventListener(ev, function(){
+        Array.prototype.forEach.call(
+          document.getElementsByClassName('scalatex-site-Styles-highlightMe'),
+          hljs.highlightBlock
+        );
+      })
+    })
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
