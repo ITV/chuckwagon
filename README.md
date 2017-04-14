@@ -2,6 +2,10 @@
 
 Chuckwagon is a Scala/sbt [AWS Lambda](https://aws.amazon.com/lambda/) Toolkit. It makes creating and maintaining [Continuous Delivery](http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/) pipelines typesafe and declarative.
 
+Complete introductory guides and reference documentation available on the website,
+
+[http://io.itv.com/chuckwagon/](http://io.itv.com/chuckwagon/)
+
 # Installation
 
 Add the following to your `project/plugins.sbt` file:
