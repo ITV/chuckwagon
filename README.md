@@ -41,4 +41,4 @@ This README represents a tiny fraction of the features documented on the Chuckwa
 
 # Licence
 
-Chuckwagon is free to use under the [ITV OSS Licence](http://io.itv.com/chuckwagon/) (a derivative of the [Apache License, Version 2.0]).
+Chuckwagon is free to use under the [ITV OSS Licence](http://io.itv.com/chuckwagon/) (a derivative of the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)).
