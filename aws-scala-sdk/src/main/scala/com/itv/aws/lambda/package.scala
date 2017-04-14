@@ -29,7 +29,8 @@ package lambda {
 
   case class LambdaRuntimeConfiguration(handler: LambdaHandler,
                                         timeout: FiniteDuration,
-                                        memorySize: MemorySize) {
+                                        memorySize: MemorySize,
+                                        deadLetterARN: Option[ARN]) {
 
     require(
       timeout > 0.seconds && timeout <= 300.seconds,

@@ -36,7 +36,8 @@ class AWSListPublishedLambdasWithName(awsLambda: AWSLambda) {
             runtime = LambdaRuntimeConfiguration(
               handler = LambdaHandler(fc.getHandler),
               timeout = fc.getTimeout.toDouble.seconds,
-              memorySize = MemorySize(fc.getMemorySize)
+              memorySize = MemorySize(fc.getMemorySize),
+              deadLetterARN = FunctionConfigurationHelpers.deadLetterARN(fc)
             )
           ),
           arn = ARN(fc.getFunctionArn),

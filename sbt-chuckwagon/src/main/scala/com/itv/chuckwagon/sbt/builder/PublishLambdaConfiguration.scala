@@ -34,7 +34,12 @@ object PublishLambdaConfigurationBuilder {
     PublishLambdaConfiguration(
       builder.roleARN,
       builder.vpcConfigDeclaration,
-      LambdaRuntimeConfiguration(builder.handler.get, builder.timeout.get, builder.memorySize.get),
+      LambdaRuntimeConfiguration(
+        builder.handler.get,
+        builder.timeout.get,
+        builder.memorySize.get,
+        builder.deadLetterARN
+      ),
       builder.stagingBucketName.get,
       builder.stagingBucketKeyPrefix.getOrElse(S3KeyPrefix("")),
       builder.codeFile.get
@@ -47,7 +52,7 @@ object PublishLambdaConfigurationBuilder {
       UNDEFINED_memorySize,
       UNDEFINED_stagingBucketName,
       UNDEFINED_codeFile
-    ](None, None, None, None, None, None, None, None)
+    ](None, None, None, None, None, None, None, None, None)
 }
 
 class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
@@ -62,6 +67,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
     val memorySize: Option[MemorySize],
     val stagingBucketName: Option[BucketName],
     val stagingBucketKeyPrefix: Option[S3KeyPrefix],
+    val deadLetterARN: Option[ARN],
     val codeFile: Option[TaskKey[File]]
 ) {
   def withRoleARN(arn: String) =
@@ -79,6 +85,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
 
@@ -97,6 +104,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
 
@@ -115,6 +123,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
 
@@ -134,6 +143,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
   }
@@ -153,6 +163,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       Option(MemorySize(memorySize)),
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
 
@@ -165,6 +176,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       Option(BucketName(name)),
       stagingBucketKeyPrefix,
+      deadLetterARN,
       codeFile
     )
 
@@ -183,6 +195,26 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       Option(S3KeyPrefix(name)),
+      deadLetterARN,
+      codeFile
+    )
+
+  def withDeadLetterARN(arn: String) =
+    new PublishLambdaConfigurationBuilder[
+      B_LAMBDA_HANDLER,
+      B_TIMEOUT,
+      B_MEMORY_SIZE,
+      B_STAGING_BUCKET_NAME,
+      B_CODE_FILE
+    ](
+      roleARN,
+      vpcConfigDeclaration,
+      handler,
+      timeout,
+      memorySize,
+      stagingBucketName,
+      stagingBucketKeyPrefix,
+      Option(ARN(arn)),
       codeFile
     )
 
@@ -201,6 +233,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_HANDLER,
       memorySize,
       stagingBucketName,
       stagingBucketKeyPrefix,
+      deadLetterARN,
       Option(codeFileTask)
     )
 }

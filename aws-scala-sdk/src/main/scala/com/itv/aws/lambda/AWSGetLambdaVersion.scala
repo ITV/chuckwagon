@@ -1,8 +1,10 @@
 package com.itv.aws.lambda
 
 import com.amazonaws.services.lambda.AWSLambda
+import com.amazonaws.services.lambda.model.FunctionConfiguration
 import com.amazonaws.services.lambda.model.GetFunctionRequest
 import com.itv.aws.iam.ARN
+
 import scala.concurrent.duration._
 
 class AWSGetLambdaVersion(awsLambda: AWSLambda) {
@@ -26,7 +28,8 @@ class AWSGetLambdaVersion(awsLambda: AWSLambda) {
           runtime = LambdaRuntimeConfiguration(
             handler = LambdaHandler(fc.getHandler),
             timeout = fc.getTimeout.toDouble.seconds,
-            memorySize = MemorySize(fc.getMemorySize)
+            memorySize = MemorySize(fc.getMemorySize),
+            deadLetterARN = FunctionConfigurationHelpers.deadLetterARN(fc)
           )
         ),
         version = LambdaVersion(fc.getVersion.toInt),

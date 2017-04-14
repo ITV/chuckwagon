@@ -106,6 +106,7 @@
             .withVpcLookupFilters("tag:Name" -> "qa-vpc")
             .withSubnetsLookupFilters("tag:Name" -> "private-subnet*")
             .withSecurityGroupsLookupFilters("group-name" -> "default"))
+          .withDeadLetterARN("arn:aws:sqs:eu-west-1:444455556666:dlq")
           .withCodeFile(assembly)
 
     @p
@@ -122,6 +123,7 @@
           tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
           tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),
           tr(td("Vpc"), td("(Optional) specify the VPC properties to configure the AWS Lambda with using either 'chuckVpcUsingIdsBuilder' or 'chuckVpcUsingFiltersBuilder'")),
+          tr(td("DeadLetterARN"), td("(Optional) specify the ARN of an SQS or SNS endpoint where messages that failed Lambda invocation to be delivered")),
           tr(td("CodeFile"), td("A Task[File] that produces a fat JAR suitable for creating an AWS Lambda with."))
         ))
 

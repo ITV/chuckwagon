@@ -3,6 +3,7 @@ package com.itv.aws.lambda
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.CreateFunctionRequest
 import com.amazonaws.services.lambda.model.CreateFunctionResult
+import com.amazonaws.services.lambda.model.DeadLetterConfig
 import com.amazonaws.services.lambda.model.FunctionCode
 import com.amazonaws.services.lambda.model.{VpcConfig => AWSVpcConfig}
 import com.itv.aws.s3.S3Location
@@ -60,6 +61,13 @@ object AWSCreateLambda {
       .withMemorySize(memorySize.value)
       .withCode(functionCode)
       .withPublish(true)
+
+    deadLetterARN.foreach { arn =>
+      awsCreateFunctionRequest.withDeadLetterConfig(
+        new DeadLetterConfig()
+          .withTargetArn(arn.value)
+      )
+    }
 
     vpcConfig.foreach { vpc =>
       awsCreateFunctionRequest.withVpcConfig(
