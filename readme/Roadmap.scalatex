@@ -1,9 +1,15 @@
 @import Main._
 
+Version @sect.ref{0.1.0 Release} contains everything that I currently need to deploy AWS Lambdas in my workplace. My focus for future releases is currently things which are peripheral to my initial vision or would simply make the project easier to run. However, there may be features which the community would find useful and which I have overlooked. I would welcome the opportunity to adjust my current plans to implement ideas which would be a good fit with the project.
+
 @sect{0.2.0 Plans}
     @ul
         @li
-            Add Test Coverage
+            unit tests
+        @li
+            sbt tests using mocked AWS
+        @li
+            embedded code examples in documentation
         @li
             Travis CI for
             @ul
@@ -12,6 +18,8 @@
                 @li
                     website
                 @li
+                    PRs
+                @li
                     nightly builds
                 @li
                     releases
@@ -19,10 +27,10 @@
 @sect{Later 0.x Releases}
     @ul
         @li
-            Proguard enabled non-S3 Publishing
+            Cloudwatch Logging helpers
         @li
-            Cloudwatch Logging Helpers
+            Cloudwatch Metrics helpers
         @li
-            Cloudwatch Metrics Helpers
+            Proguard facilitated direct publishing
         @li
             Experimental Scala.js support

@@ -40,3 +40,6 @@
 
 @sect{Roadmap}
     @scalatex.Roadmap()
+
+@sect{Acknowledgments}
+    @scalatex.Acknowledgments()

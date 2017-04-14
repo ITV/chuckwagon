@@ -35,7 +35,7 @@
     All of the above and other optional features are further documented in the extensive @sect.ref{Reference} section.
 
 @p
-    Finally, you can also watch me introduce Chuckwagon with a live coding demo in a talk I gave to colleagues at ITV,
+    Chuckwagon is maintained by @lnk("@caoilte_oconnor", "https://twitter.com/caoilte_oconnor") - you may remember him from such inspirational youtube videos as "live-coding introduction to Chuckwagon for colleagues at ITV",
 
 @br
     @tag("iframe")(attr("width") := "784")(attr("height") := "441")(attr("src") := "https://www.youtube.com/embed/maT-hc-8SpI?start=1141")(attr("frameborder") := "0")(attr("allowfullscreen") := "true")

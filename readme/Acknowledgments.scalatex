@@ -1,0 +1,13 @@
+@import Main._
+
+I'd like to thank the following,
+
+@ul
+    @li
+        @lnk("ITV", "http://www.itv.com/") and @lnk("@leecoomber", "https://twitter.com/leecoomber") for supporting the development and open-sourcing of this work.
+    @li
+        @lnk("@tomonocle", "https://twitter.com/tomonocle") for creating a fantastically supportive infrastructure work environment at ITV (and giving me a @lnk("filmed forum", "https://www.youtube.com/watch?v=maT-hc-8SpI") to talk about my work.
+    @li
+        @lnk("@fiadliel", "https://twitter.com/fiadliel") and @lnk("@jaeo", "https://twitter.com/jaeo") for writing sbt plugins that were inspirational for this work (@lnk("sbt-aws-lambda", "https://github.com/gilt/sbt-aws-lambda/") and @lnk("sbt-marathon",  "https://github.com/Tapad/sbt-marathon/") respectively).
+    @li
+        @lnk("@eed3si9n", "https://twitter.com/eed3si9n") and @lnk("@dwijnand", "https://twitter.com/dwijnand") for doing so much hard work over the last few years making sbt easier to work with and extend.

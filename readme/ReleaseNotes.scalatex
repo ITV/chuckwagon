@@ -3,4 +3,30 @@
 @sect{0.1.0 Release}
     @ul
         @li
-            Initial Release
+            Initial Public Release
+
+            @ul
+                @li
+                    Idempotent Lambda Snapshot Creation/Management including optional support for,
+
+                    @ul
+                        @li
+                            VPCs
+                        @li
+                            Dead Letters
+                @li
+                    Published Lambdas (inc Environments/Aliases)
+                @li
+                    Environment specific configuration helper library
+                @li
+                    Copy Lambdas from different AWS Account
+                @li
+                    Scheduled Execution Triggers
+                @li
+                    Invocation of Snapshot, Version and Environment specific Lambdas
+                @li
+                    Basic introspection of AWS Lambda from sbt
+                @li
+                    Basic AWS Cleanup of redundant versions and environments
+                @li
+                    Overridable credentials
