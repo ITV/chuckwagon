@@ -38,4 +38,4 @@
     Finally, you can also watch me introduce Chuckwagon with a live coding demo in a talk I gave to colleagues at ITV,
 
 @br
-    @tag("iframe")(attr("width") := "560")(attr("height") := "315")(attr("src") := "https://www.youtube.com/embed/maT-hc-8SpI?start=1141")(attr("frameborder") := "0")(attr("allowfullscreen") := "true")
+    @tag("iframe")(attr("width") := "784")(attr("height") := "441")(attr("src") := "https://www.youtube.com/embed/maT-hc-8SpI?start=1141")(attr("frameborder") := "0")(attr("allowfullscreen") := "true")
