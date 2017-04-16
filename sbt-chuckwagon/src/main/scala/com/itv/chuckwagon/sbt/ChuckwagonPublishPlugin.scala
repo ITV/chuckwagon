@@ -1,11 +1,8 @@
 package com.itv.chuckwagon.sbt
 
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
-import sbt.Keys.streams
-import sbt.AutoPlugin
-import sbt.Def
-import sbt.File
-import sbt.Task
+import sbt.Keys._
+import sbt._
 import LoggingUtils._
 import fansi.Color.Green
 import fansi.Str
@@ -23,11 +20,17 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckNames := {
+        val cpc = chuckPublishConfig.value
+        cpc.lambdaNameToHandlerMappings.map { nameAndHandler =>
+          nameAndHandler.lambdaName
+        }
+      },
       chuckPublishSnapshot := {
         val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
-        val lambda = resolvedLambdaForPublishing.value
-        val code   = codeGeneratorTask.value
+        val lambdas = resolvedLambdasForPublishing.value
+        val code    = codeGeneratorTask.value
 
         streams.value.log.info(
           logMessage(
@@ -37,10 +40,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
           )
         )
 
-        val lambdaSnapshot =
+        val lambdaSnapshots =
           com.itv.chuckwagon.deploy
-            .uploadAndPublishLambdaSnapshot(
-              lambda,
+            .uploadAndPublishLambdaSnapshots(
+              lambdas,
               jarStagingBucketName,
               PutFile(
                 jarStagingS3KeyPrefix,
@@ -49,21 +52,24 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-        streams.value.log.info(
-          logMessage(
-            (Str("Just Published Snapshot as '") ++ Green(
-              lambdaSnapshot.arn.value.toString
-            ) ++ Str("'")).render
+        lambdaSnapshots.foreach { lambdaSnapshot =>
+          streams.value.log.info(
+            logMessage(
+              lambdaSnapshot.lambda,
+              (Str("Just Published Snapshot as '") ++ Green(
+                lambdaSnapshot.arn.value.toString
+              ) ++ Str("'")).render
+            )
           )
-        )
+        }
 
-        lambdaSnapshot
+        lambdaSnapshots
       },
       chuckPublish := {
         val developmentLambdaConfiguration = chuckPublishConfig.value
         import developmentLambdaConfiguration._
-        val lambda = resolvedLambdaForPublishing.value
-        val code   = codeGeneratorTask.value
+        val lambdas = resolvedLambdasForPublishing.value
+        val code    = codeGeneratorTask.value
 
         streams.value.log.info(
           logMessage(
@@ -73,10 +79,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
           )
         )
 
-        val publishedLambda =
+        val publishedLambdas =
           com.itv.chuckwagon.deploy
-            .uploadAndPublishLambda(
-              lambda,
+            .uploadAndPublishLambdas(
+              lambdas,
               jarStagingBucketName,
               PutFile(
                 jarStagingS3KeyPrefix,
@@ -85,60 +91,74 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
             )
             .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-        streams.value.log.info(
-          logMessage(
-            (Str("Just Published Version '") ++ Green(
-              publishedLambda.version.value.toString
-            ) ++ Str(
-              "' as '"
-            ) ++ Green(publishedLambda.arn.value) ++ Str("'")).render
+        publishedLambdas.foreach { publishedLambda =>
+          streams.value.log.info(
+            logMessage(
+              publishedLambda.lambda,
+              (Str("Just Published Version '") ++ Green(
+                publishedLambda.version.value.toString
+              ) ++ Str(
+                "' as '"
+              ) ++ Green(publishedLambda.arn.value) ++ Str("'")).render
+            )
           )
-        )
+        }
 
-        publishedLambda
+        publishedLambdas
       },
       chuckPublishTo := {
         val toAliasName = environmentArgParser.value.parsed
 
-        val publishedLambda = chuckPublish.value
+        val publishedLambdas = chuckPublish.value
 
-        val alias =
-          com.itv.chuckwagon.deploy
-            .aliasPublishedLambda(
-              publishedLambda,
-              toAliasName
+        publishedLambdas.foreach {
+          publishedLambda =>
+            val alias =
+              com.itv.chuckwagon.deploy
+                .aliasPublishedLambda(
+                  publishedLambda,
+                  toAliasName
+                )
+                .foldMap(chuckSDKFreeCompiler.value.compiler)
+
+            streams.value.log.info(
+              logMessage(
+                publishedLambda.lambda,
+                (Str("Just Published Version '") ++ Green(
+                  alias.lambdaVersion.value.toString
+                ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
+                  "' as '"
+                ) ++ Green(alias.arn.value) ++ Str("'")).render
+              )
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
-
-        streams.value.log.info(
-          logMessage(
-            (Str("Just Published Version '") ++ Green(
-              alias.lambdaVersion.value.toString
-            ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
-              "' as '"
-            ) ++ Green(alias.arn.value) ++ Str("'")).render
-          )
-        )
+        }
 
         ()
       }
     )
 
-  private def resolvedLambdaForPublishing: Def.Initialize[Task[Lambda]] = Def.taskDyn {
-    val developmentLambdaConfiguration = chuckPublishConfig.value
-    import developmentLambdaConfiguration._
+  private def resolvedLambdasForPublishing: Def.Initialize[Task[List[Lambda]]] = Def.taskDyn {
+    val cpc = chuckPublishConfig.value
+    import cpc._
 
     val maybeVpcConfig = maybeVpcConfigTask.value
 
     Def.task {
-      Lambda(
-        deployment = LambdaDeploymentConfiguration(
-          name = chuckName.value,
-          roleARN = chuckRoleTask.value.arn,
-          vpcConfig = maybeVpcConfig
-        ),
-        runtime = lambdaRuntimeConfiguration
-      )
+      lambdaNameToHandlerMappings.map { nameToHandler =>
+        Lambda(
+          deployment = LambdaDeploymentConfiguration(
+            name = nameToHandler.lambdaName,
+            roleARN = chuckRoleTask.value.arn,
+            vpcConfig = maybeVpcConfig
+          ),
+          runtime = LambdaRuntimeConfiguration(
+            handler = nameToHandler.lambdaHandler,
+            timeout = timeout,
+            memorySize = memorySize,
+            deadLetterARN = deadLetterARN
+          )
+        )
+      }
     }
   }
 
@@ -154,7 +174,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
           chuckPublishConfig.value.roleARN,
-          chuckName.value
+          LambdaRoles.roleNameFor(name.value)
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)
     }

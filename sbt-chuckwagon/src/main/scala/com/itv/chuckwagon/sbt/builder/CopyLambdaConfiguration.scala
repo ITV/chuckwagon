@@ -1,11 +1,13 @@
 package com.itv.chuckwagon.sbt.builder
 
 import com.itv.aws.iam.ARN
+import com.itv.aws.lambda.LambdaName
 import com.itv.aws.s3.BucketName
 import com.itv.aws.s3.S3KeyPrefix
 import com.itv.chuckwagon.deploy.VpcConfigLookup
 
-case class CopyLambdaConfiguration(roleARN: Option[ARN],
+case class CopyLambdaConfiguration(lambdaNames: List[LambdaName],
+                                   roleARN: Option[ARN],
                                    vpcConfigLookup: Option[VpcConfigLookup],
                                    jarStagingBucketName: BucketName,
                                    jarStagingS3KeyPrefix: S3KeyPrefix,
@@ -14,13 +16,15 @@ case class CopyLambdaConfiguration(roleARN: Option[ARN],
 object CopyLambdaConfigurationBuilder {
   import scala.language.implicitConversions
 
+  abstract class UNDEFINED_lambdaName
   abstract class UNDEFINED_stagingBucketName
   abstract class UNDEFINED_assumableDevAccountRoleARN
 
   implicit def getCopyLambdaConfiguration(
-      builder: CopyLambdaConfigurationBuilder[DEFINED, DEFINED]
+      builder: CopyLambdaConfigurationBuilder[DEFINED, DEFINED, DEFINED]
   ): CopyLambdaConfiguration =
     CopyLambdaConfiguration(
+      builder.lambdaNames,
       builder.roleARN,
       builder.vpcConfigDeclaration,
       builder.stagingBucketName.get,
@@ -29,7 +33,12 @@ object CopyLambdaConfigurationBuilder {
     )
 
   def apply() =
-    new CopyLambdaConfigurationBuilder[UNDEFINED_stagingBucketName, UNDEFINED_assumableDevAccountRoleARN](
+    new CopyLambdaConfigurationBuilder[
+      UNDEFINED_lambdaName,
+      UNDEFINED_stagingBucketName,
+      UNDEFINED_assumableDevAccountRoleARN
+    ](
+      Nil,
       None,
       None,
       None,
@@ -38,15 +47,52 @@ object CopyLambdaConfigurationBuilder {
     )
 }
 
-class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+class CopyLambdaConfigurationBuilder[B_LAMBDA_NAME,
+                                     B_STAGING_BUCKET_NAME,
+                                     B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+    val lambdaNames: List[LambdaName],
     val roleARN: Option[ARN],
     val vpcConfigDeclaration: Option[VpcConfigLookup],
     val stagingBucketName: Option[BucketName],
     val stagingBucketKeyPrefix: Option[S3KeyPrefix],
     val assumableDevAccountRoleARN: Option[ARN]
 ) {
+
+  def withLambdaName(name: String) =
+    new CopyLambdaConfigurationBuilder[
+      B_LAMBDA_NAME,
+      B_STAGING_BUCKET_NAME,
+      B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN
+    ](
+      List(LambdaName(name)),
+      roleARN,
+      vpcConfigDeclaration,
+      stagingBucketName,
+      stagingBucketKeyPrefix,
+      assumableDevAccountRoleARN
+    )
+
+  def withLambdaNames(names: String*) =
+    new CopyLambdaConfigurationBuilder[
+      B_LAMBDA_NAME,
+      B_STAGING_BUCKET_NAME,
+      B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN
+    ](
+      names.toList.map(LambdaName),
+      roleARN,
+      vpcConfigDeclaration,
+      stagingBucketName,
+      stagingBucketKeyPrefix,
+      assumableDevAccountRoleARN
+    )
+
   def withRoleARN(arn: String) =
-    new CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+    new CopyLambdaConfigurationBuilder[
+      B_LAMBDA_NAME,
+      B_STAGING_BUCKET_NAME,
+      B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN
+    ](
+      lambdaNames,
       Option(ARN(arn)),
       vpcConfigDeclaration,
       stagingBucketName,
@@ -55,7 +101,12 @@ class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_
     )
 
   def withVpc(vpcConfigDeclaration: VpcConfigLookup) =
-    new CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+    new CopyLambdaConfigurationBuilder[
+      B_LAMBDA_NAME,
+      B_STAGING_BUCKET_NAME,
+      B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN
+    ](
+      lambdaNames,
       roleARN,
       Option(vpcConfigDeclaration),
       stagingBucketName,
@@ -64,7 +115,8 @@ class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_
     )
 
   def withStagingBucketName(name: String) =
-    new CopyLambdaConfigurationBuilder[DEFINED, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+    new CopyLambdaConfigurationBuilder[B_LAMBDA_NAME, DEFINED, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+      lambdaNames,
       roleARN,
       vpcConfigDeclaration,
       Option(BucketName(name)),
@@ -73,7 +125,12 @@ class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_
     )
 
   def withStagingBucketKeyPrefix(name: String) =
-    new CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN](
+    new CopyLambdaConfigurationBuilder[
+      B_LAMBDA_NAME,
+      B_STAGING_BUCKET_NAME,
+      B_STAGING_ASSUMABLE_DEV_ACCOUNT_ROLE_ARN
+    ](
+      lambdaNames,
       roleARN,
       vpcConfigDeclaration,
       stagingBucketName,
@@ -82,7 +139,8 @@ class CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, B_STAGING_ASSUMABLE_
     )
 
   def withAssumableDevAccountRoleARN(name: String) =
-    new CopyLambdaConfigurationBuilder[B_STAGING_BUCKET_NAME, DEFINED](
+    new CopyLambdaConfigurationBuilder[B_LAMBDA_NAME, B_STAGING_BUCKET_NAME, DEFINED](
+      lambdaNames,
       roleARN,
       vpcConfigDeclaration,
       stagingBucketName,

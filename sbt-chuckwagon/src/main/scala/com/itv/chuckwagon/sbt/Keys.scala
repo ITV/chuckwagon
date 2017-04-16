@@ -36,9 +36,9 @@ object Keys {
 
     implicit def getChuckRegionFor(regionName: String): Regions = Regions.fromName(regionName)
 
-    val chuckName = settingKey[LambdaName]("The name to be used creating/updating the AWS Lambda")
+    val chuckNames = settingKey[List[LambdaName]]("The derived list of AWS Lambda Names")
 
-    implicit def getChuckNameFor(lambdaName: String): LambdaName = LambdaName(lambdaName)
+    implicit def getChuckNamesFor(names: List[String]): List[LambdaName] = names.map(LambdaName)
 
     val chuckCurrentEnvironments = taskKey[Option[List[Alias]]](
       "The Environments (AWS Aliases) currently configured (if it exists)"
@@ -76,10 +76,10 @@ object Keys {
   trait Publish {
 
     val chuckPublishSnapshot =
-      taskKey[LambdaSnapshot]("Upload latest code to Lambda")
+      taskKey[List[LambdaSnapshot]]("Upload latest code to Lambda")
 
     val chuckPublish =
-      taskKey[PublishedLambda]("Upload latest code to Lambda and Publish it")
+      taskKey[List[PublishedLambda]]("Upload latest code to Lambda and Publish it")
 
     val chuckPublishTo =
       inputKey[Unit]("Upload latest code to Lambda and Publish it to an Environment")

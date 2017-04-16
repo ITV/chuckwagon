@@ -4,12 +4,12 @@ import com.itv.aws.iam._
 
 object LambdaRoles {
 
-  def roleNameFor(lambdaName: LambdaName) =
-    RoleName(s"lambda-chuckwagon-${lambdaName.value}")
+  def roleNameFor(name: String) =
+    RoleName(s"lambda-chuckwagon-${name}")
 
-  def roleDeclarationFor(lambdaName: LambdaName) =
+  def roleDeclarationFor(roleName: RoleName) =
     RoleDeclaration(
-      name = roleNameFor(lambdaName),
+      name = roleName,
       assumeRolePolicyDocument = ASSUME_ROLE_POLICY_DOCUMENT
     )
 

@@ -27,6 +27,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     Seq(
+      chuckNames := chuckCopyConfig.value.lambdaNames,
       chuckCopyFromOtherAccountTo := {
         val (fromAliasNameString, toAliasName) =
           (token(' ') ~> token(NotQuoted) ~ environmentArgParser.value).parsed
@@ -52,7 +53,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
         val downloadableDevelopmentPublishedLambda: DownloadablePublishedLambda =
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(
-              chuckName.value,
+              chuckNames.value.head,
               AliasName(fromAliasNameString)
             )
             .foldMap(assumedDevelopmentRoleCompiler.compiler)
@@ -64,47 +65,53 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
             .getEntity
         val developmentLambdaInputStream = developmentLambdaCodeEntity.getContent
 
-        val productionLambda =
-          downloadableDevelopmentPublishedLambda.publishedLambda.lambda
-            .copy(
-              deployment = LambdaDeploymentConfiguration(
-                name = chuckName.value,
-                roleARN = chuckRoleTask.value.arn,
-                vpcConfig = maybeVpcConfig
+        val productionLambdas =
+          chuckNames.value.map { chuckName =>
+            downloadableDevelopmentPublishedLambda.publishedLambda.lambda
+              .copy(
+                deployment = LambdaDeploymentConfiguration(
+                  name = chuckName,
+                  roleARN = chuckRoleTask.value.arn,
+                  vpcConfig = maybeVpcConfig
+                )
               )
-            )
+          }
 
         try {
-          val publishedLambda =
+          val publishedLambdas =
             com.itv.chuckwagon.deploy
-              .uploadAndPublishLambda(
-                productionLambda,
+              .uploadAndPublishLambdas(
+                productionLambdas,
                 jarStagingBucketName,
                 PutInputStream(
-                  S3Key(s"${jarStagingS3KeyPrefix.value}${chuckName.value}-copy.jar"),
+                  S3Key(s"${jarStagingS3KeyPrefix.value}${name.value}-copy.jar"),
                   developmentLambdaInputStream,
                   developmentLambdaCodeEntity.getContentLength
                 )
               )
               .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-          val alias =
-            com.itv.chuckwagon.deploy
-              .aliasPublishedLambda(
-                publishedLambda,
-                toAliasName
-              )
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+          publishedLambdas.foreach {
+            publishedLambda =>
+              val alias =
+                com.itv.chuckwagon.deploy
+                  .aliasPublishedLambda(
+                    publishedLambda,
+                    toAliasName
+                  )
+                  .foldMap(chuckSDKFreeCompiler.value.compiler)
 
-          streams.value.log.info(
-            logMessage(
-              (Str("Just Published Version '") ++ Green(
-                alias.lambdaVersion.value.toString
-              ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
-                "' as '"
-              ) ++ Green(alias.arn.value) ++ Str("'")).render
-            )
-          )
+              streams.value.log.info(
+                logMessage(
+                  publishedLambda.lambda,
+                  (Str("Just Published Version '") ++ Green(
+                    alias.lambdaVersion.value.toString
+                  ) ++ Str("' to Environment '") ++ Green(alias.name.value) ++ Str(
+                    "' as '"
+                  ) ++ Green(alias.arn.value) ++ Str("'")).render
+                )
+              )
+          }
         } finally {
           developmentLambdaInputStream.close()
         }
@@ -121,7 +128,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
       com.itv.chuckwagon.deploy
         .getPredefinedOrChuckwagonRole(
           chuckCopyConfig.value.roleARN,
-          chuckName.value
+          LambdaRoles.roleNameFor(name.value)
         )
         .foldMap(chuckSDKFreeCompiler.value.compiler)
     }

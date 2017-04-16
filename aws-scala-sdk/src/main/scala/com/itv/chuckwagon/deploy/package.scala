@@ -191,12 +191,12 @@ package object deploy {
       }
     } yield maybeRole
 
-  def getOrCreateChuckwagonRole(lambdaName: LambdaName): DeployLambda[Role] =
+  def getOrCreateChuckwagonRole(roleName: RoleName): DeployLambda[Role] =
     for {
-      maybeRole <- findRole(_.roleDeclaration.name == LambdaRoles.roleNameFor(lambdaName))
+      maybeRole <- findRole(_.roleDeclaration.name == roleName)
       roleWithoutPolicyDoc <- maybeRole match {
         case Some(role) => pure[DeployLambdaA, Role](role)
-        case None       => createRole(LambdaRoles.roleDeclarationFor(lambdaName))
+        case None       => createRole(LambdaRoles.roleDeclarationFor(roleName))
       }
       role <- putRolePolicy(LambdaRoles.rolePolicyFor(roleWithoutPolicyDoc))
     } yield role
@@ -211,12 +211,11 @@ package object deploy {
       }
     } yield role
 
-  def getPredefinedOrChuckwagonRole(predefinedRoleARN: Option[ARN],
-                                    lambdaName: LambdaName): DeployLambda[Role] =
+  def getPredefinedOrChuckwagonRole(predefinedRoleARN: Option[ARN], roleName: RoleName): DeployLambda[Role] =
     for {
       role <- predefinedRoleARN match {
         case Some(arn) => getPredefinedRoleOrError(arn)
-        case None      => getOrCreateChuckwagonRole(lambdaName)
+        case None      => getOrCreateChuckwagonRole(roleName)
       }
     } yield role
 
@@ -230,6 +229,10 @@ package object deploy {
           _ => updateCodeAndPublishLambda(lambda, s3Location)
         )
     } yield publishedLambda
+  def publishLambdas(lambdas: List[Lambda], s3Location: S3Location): DeployLambda[List[PublishedLambda]] =
+    lambdas.map { lambda =>
+      publishLambda(lambda, s3Location)
+    }.sequenceU
 
   def publishLambdaSnapshot(lambda: Lambda, s3Location: S3Location): DeployLambda[LambdaSnapshot] =
     for {
@@ -241,10 +244,31 @@ package object deploy {
           _ => updateCodeForLambdaSnapshot(lambda, s3Location)
         )
     } yield publishedLambda
+  def publishLambdaSnapshots(lambdas: List[Lambda],
+                             s3Location: S3Location): DeployLambda[List[LambdaSnapshot]] =
+    lambdas.map { lambda =>
+      publishLambdaSnapshot(lambda, s3Location)
+    }.sequenceU
 
-  def uploadAndPublishLambda(lambda: Lambda,
-                             bucketName: BucketName,
-                             putObjectType: PutObjectType): DeployLambda[PublishedLambda] =
+  def uploadAndPublishLambdas(lambdas: List[Lambda],
+                              bucketName: BucketName,
+                              putObjectType: PutObjectType): DeployLambda[List[PublishedLambda]] =
+    for {
+      buckets <- listBuckets()
+      uploadBucketOrEmpty = buckets.find(
+        b => b.name.value == bucketName.value
+      )
+      uploadBucket <- uploadBucketOrEmpty match {
+        case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
+        case None         => createBucket(bucketName)
+      }
+      s3Location       <- putObject(uploadBucket, putObjectType)
+      publishedLambdas <- publishLambdas(lambdas, s3Location)
+    } yield publishedLambdas
+
+  def uploadAndPublishLambdaSnapshots(lambdas: List[Lambda],
+                                      bucketName: BucketName,
+                                      putObjectType: PutObjectType): DeployLambda[List[LambdaSnapshot]] =
     for {
       buckets <- listBuckets()
       uploadBucketOrEmpty = buckets.find(
@@ -255,24 +279,8 @@ package object deploy {
         case None         => createBucket(bucketName)
       }
       s3Location      <- putObject(uploadBucket, putObjectType)
-      publishedLambda <- publishLambda(lambda, s3Location)
-    } yield publishedLambda
-
-  def uploadAndPublishLambdaSnapshot(lambda: Lambda,
-                                     bucketName: BucketName,
-                                     putObjectType: PutObjectType): DeployLambda[LambdaSnapshot] =
-    for {
-      buckets <- listBuckets()
-      uploadBucketOrEmpty = buckets.find(
-        b => b.name.value == bucketName.value
-      )
-      uploadBucket <- uploadBucketOrEmpty match {
-        case Some(bucket) => pure[DeployLambdaA, Bucket](bucket)
-        case None         => createBucket(bucketName)
-      }
-      s3Location     <- putObject(uploadBucket, putObjectType)
-      lambdaSnapshot <- publishLambdaSnapshot(lambda, s3Location)
-    } yield lambdaSnapshot
+      lambdaSnapshots <- publishLambdaSnapshots(lambdas, s3Location)
+    } yield lambdaSnapshots
 
   def aliasPublishedLambda(publishedLambda: PublishedLambda, aliasName: AliasName): DeployLambda[Alias] =
     for {
@@ -315,6 +323,12 @@ package object deploy {
           )
       }
     } yield alias
+  def promoteLambdas(lambdaNames: List[LambdaName],
+                     fromName: AliasName,
+                     to: AliasName): DeployLambda[List[Alias]] =
+    lambdaNames.map { lambdaName =>
+      promoteLambda(lambdaName, fromName, to)
+    }.sequenceU
 
   def deleteRedundantAliases(
       lambdaName: LambdaName,
