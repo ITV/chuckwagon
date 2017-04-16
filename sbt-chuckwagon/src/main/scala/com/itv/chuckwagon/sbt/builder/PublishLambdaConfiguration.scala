@@ -71,8 +71,8 @@ object PublishLambdaConfigurationBuilder {
     ](None, None, None, Nil, Nil, None, None, None, None, None, None)
 }
 
-class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
-                                        B_LAMBDA_HANDLERS,
+class PublishLambdaConfigurationBuilder[B_NAMES,
+                                        B_HANDLERS,
                                         B_TIMEOUT,
                                         B_MEMORY_SIZE,
                                         B_STAGING_BUCKET_NAME,
@@ -91,8 +91,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 ) {
   def withRoleARN(arn: String) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -113,8 +113,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withVpc(vpcConfigDeclaration: VpcConfigLookup) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -142,7 +142,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
     new PublishLambdaConfigurationBuilder[
       DEFINED,
-      B_LAMBDA_HANDLERS,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -170,7 +170,7 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
     }
 
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
+      B_NAMES,
       DEFINED,
       B_TIMEOUT,
       B_MEMORY_SIZE,
@@ -228,8 +228,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
   def withTimeout(timeout: String) = {
     val parsedDuration: FiniteDuration = Duration(timeout).asInstanceOf[FiniteDuration]
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       DEFINED,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -251,8 +251,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withMemorySizeInMB(memorySize: Int) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       DEFINED,
       B_STAGING_BUCKET_NAME,
@@ -273,8 +273,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withStagingBucketName(name: String) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       DEFINED,
@@ -295,8 +295,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withStagingBucketKeyPrefix(name: String) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -317,8 +317,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withDeadLetterARN(arn: String) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
@@ -339,8 +339,8 @@ class PublishLambdaConfigurationBuilder[B_LAMBDA_NAMES,
 
   def withCodeFile(codeFileTask: TaskKey[File]) =
     new PublishLambdaConfigurationBuilder[
-      B_LAMBDA_NAMES,
-      B_LAMBDA_HANDLERS,
+      B_NAMES,
+      B_HANDLERS,
       B_TIMEOUT,
       B_MEMORY_SIZE,
       B_STAGING_BUCKET_NAME,
