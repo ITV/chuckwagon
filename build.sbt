@@ -121,3 +121,24 @@ lazy val readme = scalatex
     },
     scalacOptions := scalacOptions.value.filter(_ != "-P:acyclic:force").filter(_ != "-Xlint")
   )
+
+publishMavenStyle := true
+publishArtifact := true
+publishArtifact in Test := false
+licenses := Seq(
+  "ITV-OSS" -> url("http://itv.com/itv-oss-licence-v1.0"))
+homepage := Some(url("http://io.itv.com/chuckwagon/"))
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/itv/chuckwagon"),
+    "scm:git:git@github.com:itv/chuckwagon.git"
+  )
+),
+pomExtra :=
+  <developers>
+    <developer>
+      <id>caoilte</id>
+      <name>Caoilte O'Connor</name>
+      <url>http://caoilte.org</url>
+    </developer>
+  </developers>
