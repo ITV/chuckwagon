@@ -13,6 +13,27 @@ lazy val noPublishSettings = Seq(
   publishLocal := (),
   publishArtifact := false
 )
+lazy val publishSettings = Seq(
+  publishMavenStyle := true,
+  publishArtifact := true,
+  publishArtifact in Test := false,
+  licenses := Seq("ITV-OSS" -> url("http://itv.com/itv-oss-licence-v1.0")),
+  homepage := Some(url("http://io.itv.com/chuckwagon/")),
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/itv/chuckwagon"),
+      "scm:git:git@github.com:itv/chuckwagon.git"
+    )
+  ),
+  pomExtra :=
+    <developers>
+    <developer>
+      <id>caoilte</id>
+      <name>Caoilte O'Connor</name>
+      <url>http://caoilte.org</url>
+    </developer>
+  </developers>
+)
 
 val awsSdkVersion = "1.11.119"
 val circeVersion  = "0.7.1"
@@ -34,7 +55,8 @@ lazy val root = (project in file("."))
 lazy val `aws-scala-sdk` = project
   .enablePlugins(CrossPerProjectPlugin)
   .settings(
-    commonSettings ++
+    publishSettings ++
+      commonSettings ++
       Seq(
         scalaVersion := "2.10.6",
         crossScalaVersions := Seq("2.12.1", "2.10.6"),
@@ -58,7 +80,8 @@ lazy val `aws-scala-sdk` = project
 lazy val `lib-chuckwagon` = project
   .enablePlugins(CrossPerProjectPlugin)
   .settings(
-    commonSettings ++
+    publishSettings ++
+      commonSettings ++
       Seq(
         scalaVersion := "2.12.1",
         crossScalaVersions := Seq("2.12.1"),
@@ -78,7 +101,8 @@ lazy val `lib-chuckwagon` = project
 lazy val `sbt-chuckwagon` = project
   .enablePlugins(CrossPerProjectPlugin)
   .settings(
-    commonSettings ++
+    publishSettings ++
+      commonSettings ++
       Seq(
         sbtPlugin := true,
         scalaVersion := "2.10.6",
@@ -121,23 +145,3 @@ lazy val readme = scalatex
     },
     scalacOptions := scalacOptions.value.filter(_ != "-P:acyclic:force").filter(_ != "-Xlint")
   )
-
-publishMavenStyle := true
-publishArtifact := true
-publishArtifact in Test := false
-licenses := Seq("ITV-OSS" -> url("http://itv.com/itv-oss-licence-v1.0"))
-homepage := Some(url("http://io.itv.com/chuckwagon/"))
-scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/itv/chuckwagon"),
-    "scm:git:git@github.com:itv/chuckwagon.git"
-  )
-)
-pomExtra :=
-  <developers>
-    <developer>
-      <id>caoilte</id>
-      <name>Caoilte O'Connor</name>
-      <url>http://caoilte.org</url>
-    </developer>
-  </developers>
