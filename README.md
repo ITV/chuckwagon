@@ -20,8 +20,8 @@ Here is an example of the most basic possible configuration in your `build.sbt`:
 ```scala
 enablePlugins(ChuckwagonPublishPlugin)
 chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
-chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
 chuckPublishConfig := chuckPublishConfigBuilder
+  .withName("<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>")  
   .withHandler("<FULLY_QUALIFIED_CLASS::METHOD>")
   .withMemorySizeInMB(192)
   .withTimeout("5 seconds")
