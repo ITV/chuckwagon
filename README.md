@@ -33,9 +33,21 @@ chuckPublishConfig := chuckPublishConfigBuilder
 
 ```chuckPublishSnapshot``` - Will create/update your AWS Lambda
 
+# Features 
+
+* [Versioning / Environments](http://io.itv.com/chuckwagon/#DeploymentPipelines) (also known as [Aliases](http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html))
+* [Deployment Pipelines using sbt-release](http://io.itv.com/chuckwagon/#sbt-release) 
+* [Environment Specific Configurations](http://io.itv.com/chuckwagon/#EnvironmentConfiguration)
+* [Copying between AWS Accounts](http://io.itv.com/chuckwagon/#MultipleAWSAccounts)
+* [VPCs](http://io.itv.com/chuckwagon/#VPCs)
+* [Many more](http://io.itv.com/chuckwagon/#Reference) including,
+  * Scheduled Executions
+  * Multiple Lambdas created from the same Assembly/Config
+  * Invocation / Introspection of AWS from sbt shell
+
 # Documentation
 
-This README represents a tiny fraction of the features documented on the Chuckwagon website:
+Complete documentation is available on the Chuckwagon website:
 
 [http://io.itv.com/chuckwagon/](http://io.itv.com/chuckwagon/)
 

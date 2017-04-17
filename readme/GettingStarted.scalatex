@@ -30,8 +30,8 @@
         libraryDependencies ++= "com.itv" %% "lib-chuckwagon" % "0.1.0"
         enablePlugins(ChuckwagonPublishPlugin)
         chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
-        chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
         chuckPublishConfig := chuckPublishConfigBuilder
+          .withName("<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>")
           .withHandler("Helloworld::handleRequest")
           .withMemorySizeInMB(192)
           .withTimeout("5 seconds")
@@ -113,8 +113,8 @@
 
     @blockquote
         @hl.sh
-            [info] Chuckwagon: About to invoke Lambda
-            [info] Chuckwagon: Result of running Lambda '{"response":"Hello World!"}'
+            [info] Chuckwagon: <LAMBDA_NAME>: About to invoke Lambda
+            [info] Chuckwagon: <LAMBDA_NAME>: Result of running Lambda '{"response":"Hello World!"}'
 
     @p
         There's nothing too surprising about this output and even if you update your Lambda to do something more useful, running it from sbt isn't very practical for every day use. This task is, however, a great way of demonstrating the Library and Plugin that we shall continue to use in later Guides.

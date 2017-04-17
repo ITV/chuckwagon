@@ -10,9 +10,9 @@
     @li
         Tasks and Settings for the declarative management of AWS Lambda code and configuration
     @li
-        Tasks for managing the publishing and promotion of AWS Lambdas to and between environments (documented in AWS as: @lnk("Function Versioning and Aliases", "http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html)")
+        Tasks for managing the publishing and promotion of AWS Lambdas to and between environments (documented in AWS as: @lnk("Function Versioning and Aliases", "http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html")).
     @li
-        Tasks for copying AWS Lambdas between AWS Accounts (eg DEV -> PRD)
+        Tasks for copying AWS Lambdas between AWS Accounts (eg DEV -> PRD).
     @li
         A Library for managing configuration in different environments
 

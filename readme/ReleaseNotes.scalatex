@@ -21,6 +21,8 @@
                 @li
                     Copy Lambdas from different AWS Account
                 @li
+                    Multiple Lambdas created from the same Assembly/Config
+                @li
                     Scheduled Execution Triggers
                 @li
                     Invocation of Snapshot, Version and Environment specific Lambdas

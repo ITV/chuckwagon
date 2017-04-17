@@ -218,8 +218,11 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           case Some(lambdaName) => lambdaName
           case None =>
             chuckNames.value match {
-              case chuckName :: Nil     => chuckName
-              case moreThanOneChuckName => throw new IllegalArgumentException("")
+              case chuckName :: Nil => chuckName
+              case moreThanOneChuckName =>
+                throw new IllegalArgumentException(
+                  s"You must specify one of of '${chuckNames.value.map(_.value).mkString}'"
+                )
             }
         }
 

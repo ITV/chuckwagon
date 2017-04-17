@@ -12,7 +12,6 @@
         `class` := "pure-table pure-table-bordered pure-table-striped",
         thead(tr(td("Setting"), td("Example"), td("Description"))),
         tbody(
-          tr(td("chuckName"), td("myFirstLambda"), td("The name to be used creating/updating the AWS Lambda")),
           tr(td("chuckRegion"), td("eu-west-1"), td("The AWS Region within which to create/update the AWS Lambda")),
           tr(td("chuckEnvironments"), td("""Set[String]("blue-qa", "qa")"""), td("(Optional) The Environments into which the the AWS Lambda should be published, copied and/or promoted (known as Aliases in the AWS Console)")),
           tr(td("chuckAWSCredentialsProvider"), td("new MyCustomAWSCredentialsProvider()"), td("(Optional) The credentials provider to use for AWS interactions. By default this uses the DefaultAWSCredentialsProviderChain. You can override it with any AWSCredentialsProvider")),
@@ -32,7 +31,7 @@
           tr(td("chuckCleanUp"), td("Remove all AWS Lambda Versions not deployed to an Environment (AWS Alias) and all Environments not defined in chuckEnvironments Setting")),
           tr(td("chuckSetLambdaTrigger"), td("""Schedule AWS Lambda to be invoked based on a cron expression eg 'chuckSetLambdaTrigger qa "rate(1 minute)"'""")),
           tr(td("chuckRemoveLambdaTrigger"), td("Remove Scheduled execution associated with AWS Lambda")),
-          tr(td("chuckInvoke", td("Invoke the AWS Lambda (if it exists). SNAPSHOT if no arguments passed. Otherwise either the version or the environment passed as a parameter. Sends no arguments but does print output.")))
+          tr(td("chuckInvoke", td("Invoke the AWS Lambda (if it exists). SNAPSHOT if no arguments passed. Otherwise either the version or the environment passed as a parameter. Sends no arguments but does print output. (If you have configured multiple Lambdas then you will also need to specify which Lambda you want to run, eg 'chuckInvoke myFirstLambda qa'.)")))
         ))
 
     @p
@@ -91,10 +90,11 @@
 @sect{ChuckwagonPublishPlugin}
 
     @p
-        This plugin allows you to build, configure and publish AWS Lambdas. It has only one setting, @code{chuckPublishConfig} which you configure using a fluent builder started by @code{chuckPublishConfigBuilder}. Here is an example that sets every required and optional parameter.
+        This plugin allows you to build, configure and publish AWS Lambdas. It has only one setting, @code{chuckPublishConfig} which you configure using a fluent builder started by @code{chuckPublishConfigBuilder}. Here is an example that sets every required and optional parameter for creating a single AWS Lambda.
 
     @hl.scala
         chuckPublishConfig := chuckPublishConfigBuilder
+          .withName("myFirstLambda")
           .withHandler("com.itv.MyHandler::handler")
           .withMemorySizeInMB(256)
           .withTimeout("5 seconds")
@@ -110,13 +110,29 @@
           .withCodeFile(assembly)
 
     @p
+        Here is an example which creates multiple AWS Lambdas from the same code file (it doesn't set any optional parameters).
+
+    @hl.scala
+        chuckPublishConfig := chuckPublishConfigBuilder
+          .withNamesToHandlers(
+            "myFirstLambda" -> "com.itv.MyHandlerOne::handler",
+            "myOtherLambda" -> "com.itv.MyHandlerTwo::handler",
+          )
+          .withMemorySizeInMB(256)
+          .withTimeout("5 seconds")
+          .withStagingBucketName("dev-staging")
+          .withCodeFile(assembly)
+
+    @p
         Here are some notes on all of the parameters available to @code{chuckPublishConfigBuilder}
 
     @table(
         `class` := "pure-table pure-table-bordered pure-table-striped",
         thead(tr(td("Parameter"), td("Notes"))),
         tbody(
-          tr(td("Handler"), td("The fully qualified class and method of the Handler")),
+          tr(td("Name"), td("The name to be used creating/updating the AWS Lambda. If you set this you must set 'Handler' and cannot set 'NamesToHandlers'.")),
+          tr(td("Handler"), td("The fully qualified class and method of the Handler. If you set this you must set 'Name' and cannot set 'NamesToHandlers'.")),
+          tr(td("NamesToHandlers"), td("One or more (ie varargs) comma separated (String, String) Tuples of Names to Handlers. An AWS Lambda will be created for each name with all of the same settings except for the Handler. If you set this you cannot set 'Name' or 'Handler'")),
           tr(td("MemorySizeInMB"), td("Must be between 128 and 1536 MBs")),
           tr(td("Timeout"), td("Must be between 1 and 300 seconds")),
           tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
@@ -145,7 +161,8 @@
         This plugin allows you to copy AWS Lambdas from another Account. It has only one setting, @code{chuckCopyConfig} which you configure using a fluent builder started by @code{chuckCopyConfigBuilder}. Here is an example that sets every required and optional parameter.
 
     @hl.scala
-        chuckPublishConfig := chuckPublishConfigBuilder
+        chuckPublishConfig := chuckCopyConfigBuilder
+          .withName("myFirstLambda")
           .withStagingBucketName("prd-staging")
           .withStagingBucketKeyPrefix("forChuckwagon")
           .withRoleARN(
@@ -158,12 +175,25 @@
             "arn:aws:iam::123456789012:role/dev_lambda_get_granted_to_prd")
 
     @p
+        Here is an example which copies multiple AWS Lambdas another account (it doesn't set any optional parameters).
+
+    @hl.scala
+        chuckPublishConfig := chuckCopyConfigBuilder
+          .withNames("myFirstLambda", "myOtherLambda")
+          .withStagingBucketName("prd-staging")
+          .withAssumableDevAccountRoleARN(
+            "arn:aws:iam::123456789012:role/dev_lambda_get_granted_to_prd")
+
+    @p
         Here are some notes on all of the parameters available to @code{chuckCopyConfigBuilder}
 
     @table(
         `class` := "pure-table pure-table-bordered pure-table-striped",
         thead(tr(td("Parameter"), td("Notes"))),
         tbody(
+          tr(td("Name"), td("The name of the Lambda to be copied from the other Account. If you set this you cannot set 'Names'.")),
+          tr(td("Names"), td("One or more (ie varargs) names of Lambdas to be copied from the other Account. An AWS Lambda will be created for each name with all of the same settings except for the Handler. If you set this you cannot set 'Name'")),
+          tr(td("Name"), td("The name to be used creating/updating the AWS Lambda")),
           tr(td("StagingBucketName"), td("Bucket that fat JAR will be uploaded to for Lambda create/update")),
           tr(td("StagingBucketKeyPrefix"), td("(Optional) Key prefix that will be used when fat JAR is uploaded to S3")),
           tr(td("RoleARN"), td("(Optional) Pre-existing ARN that AWS Lambda will be configured to execute using")),

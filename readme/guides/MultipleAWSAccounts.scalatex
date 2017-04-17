@@ -11,15 +11,15 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
 @hl.scala{
     enablePlugins(ChuckwagonCopyPlugin)
     chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
-    chuckName := "<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>"
     chuckCopyConfig := chuckCopyConfigBuilder
+      .withName("<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>")
       .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
       .withAssumableDevAccountRoleARN(
         "arn:aws:iam::<DEV_ACCOUNT_ID>:role/<ASSUMABLE_DEV_ACCOUNT_ROLE_ID>")
     }
 
 @p
-    Notice that @code{chuckRegion}, @code{chuckName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonPublishPlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
+    Notice that @code{chuckRegion}, @code{withName} and @code{withStagingBucketName} are configured in the same way as they were for the @code{ChuckwagonPublishPlugin}. Many other fields are missing because they will be taken from the source Lambda being copied. The only additional field in this example is @code{AssumableDevAccountRoleARN}. This Role ARN must be configured on the Development AWS Account, so that when Chuckwagon is run on the Production AWS Account it can use that role to copy the Lambda.
 
 @sect{Permissions}
 
@@ -98,9 +98,9 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
 
     @hl.scala{
         lazy val commonSettings = Seq(
-          chuckRegion := "<LAMBDA_REGION>",
-          chuckName := "<LAMBDA_NAME>"
+          chuckRegion := "<LAMBDA_REGION>"
         )
+        val lambdaName = "<LAMBDA_NAME>"
         lazy val `<LAMBDA_NAME>-service` = project
         lazy val `<LAMBDA_NAME>-qa-tests` = project
         lazy val `<LAMBDA_NAME>-prd-tests` = project
@@ -111,6 +111,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
                 Seq(
                   chuckEnvironments := Set[String]("qa"),
                   chuckPublishConfig := chuckPublishConfigBuilder
+                    .withName(lambdaName)
                     .withHandler("<HANDLER_CLASS>::<HANDLER_METHOD>")
                     .withMemorySizeInMB(192)
                     .withTimeout("5 seconds")
@@ -131,7 +132,8 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
               commonSettings ++
                 Seq(
                   chuckEnvironments := Set[String]("prd"),
-                  chuckPublishConfig := chuckPublishConfigBuilder
+                  chuckPublishConfig := chuckCopyConfigBuilder
+                    .withName(lambdaName)
                     .withStagingBucketName("<PRD_S3_BUCKET>")
                     .withAssumableDevAccountRoleARN(
                       "<ASSUMABLE_DEV_ACCOUNT_ROLE_ARN>"),
@@ -151,7 +153,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
         @li
             Even though the release steps run in their own module it is very easy for them to reference tasks from another module (sbt-release really is an awesome plugin).
         @li
-            The @code{chuckRegion} and @code{chuckName} sbt settings can be shared between both pipelines which makes means they are only managed in one place even though they are used in two completely different AWS Accounts.
+            The @code{chuckRegion} sbt setting and the @code{lambdaName} constant can be shared between both pipelines which makes means they are only managed in one place even though they are used in two completely different AWS Accounts.
         @li
             As a by product of requiring modules for our pipelines we can move our Lambda tests into their own module as well. This allows us to guarantee that they are isolated from the Lambda that they are testing (making them proper @lnk("black box tests", "http://softwaretestingfundamentals.com/black-box-testing/")).
 
