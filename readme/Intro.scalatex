@@ -2,7 +2,7 @@
 
 
 @p
-    Chuckwagon is a Scala/sbt @lnk("AWS Lambda", "https://aws.amazon.com/lambda/") Toolkit. It makes creating and maintaining @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines typesafe and declarative.
+    @lnk("Chuckwagon", "https://github.com/itv/chuckwagon") is a Scala/sbt @lnk("AWS Lambda", "https://aws.amazon.com/lambda/") Toolkit. It makes creating and maintaining @lnk("Continuous Delivery", "http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/") pipelines typesafe and declarative.
 
 @p
     Chuckwagon provides all of the following features from within a standard sbt project
