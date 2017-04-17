@@ -25,7 +25,7 @@ chuckPublishConfig := chuckPublishConfigBuilder
   .withHandler("<FULLY_QUALIFIED_CLASS::METHOD>")
   .withMemorySizeInMB(192)
   .withTimeout("5 seconds")
-  .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
+  .withStagingBucketName("<THE_S3_BUCKET_WHERE_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
   .withCodeFile(assembly)
 ```
 

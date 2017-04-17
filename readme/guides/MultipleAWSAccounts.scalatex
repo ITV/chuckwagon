@@ -13,7 +13,7 @@ Many organisations using AWS take the very sensible precaution of putting non-pr
     chuckRegion := "<AN_AWS_REGION_EG_-_eu-west-1>"
     chuckCopyConfig := chuckCopyConfigBuilder
       .withName("<THE_NAME_YOU_WANT_FOR_YOUR_LAMBDA>")
-      .withStagingBucketName("<THE_S3_BUCKET_WHER_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
+      .withStagingBucketName("<THE_S3_BUCKET_WHERE_CHUCKWAGON_WILL_UPLOAD_YOUR_CODE")
       .withAssumableDevAccountRoleARN(
         "arn:aws:iam::<DEV_ACCOUNT_ID>:role/<ASSUMABLE_DEV_ACCOUNT_ROLE_ID>")
     }
