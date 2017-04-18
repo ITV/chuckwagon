@@ -7,4 +7,10 @@ The Chuckwagon Library is an optional layer on top of the AWS Lambda Library. It
         A Scala friendly wrapper around the Java @lnk("RequestStreamHandler", "https://github.com/aws/aws-lambda-java-libs/blob/master/aws-lambda-java-core/src/main/java/com/amazonaws/services/lambda/runtime/RequestStreamHandler.java") working on the same basis as the @lnk("Underscore Scala and AWS Lambda Blueprints", "http://underscore.io/blog/posts/2016/02/01/aws-lambda.html").
 
     @li
-        Helper Classes for constructing Environment Specific Configuration. This @lnk("very simple code", "https://github.com/ITV/chuckwagon/blob/master/lib-chuckwagon/src/main/scala/com/itv/chuckwagon/lambda/LambdaConfig.scala") uses the environment extracted from the ARN used to invoke the function in order to derive the configuration file for the associated environment. See the guide on @sect.ref{Environment Configuration} for an introduction to the topic.
+        Helper Classes for constructing Environment Specific Configuration. This @lnk("very simple code", "https://github.com/ITV/chuckwagon/blob/master/jvm/src/main/scala/com/itv/chuckwagon/lambda/LambdaConfig.scala") uses the environment extracted from the ARN used to invoke the function in order to derive the configuration file for the associated environment. See the guide on @sect.ref{Environment Configuration} for an introduction to the topic.
+
+@p
+    You can use it by adding the following dependency to your @code{build.sbt}
+
+@hl.scala
+    libraryDependencies ++= "com.itv.chuckwagon" %% "chuckwagon-jvm" % "0.1.0"

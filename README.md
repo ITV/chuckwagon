@@ -14,7 +14,7 @@ Add the following to your `project/plugins.sbt` file:
 
 
 ```scala
-addSbtPlugin("com.itv" % "sbt-chuckwagon" % "0.1.0")
+addSbtPlugin("com.itv.chuckwagon" % "sbt-chuckwagon" % "0.1.0")
 ```
 
 Here is an example of the most basic possible configuration in your `build.sbt`:

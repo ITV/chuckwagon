@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
   publishArtifact in (Compile, packageDoc) := true
 )
 
-sonatypeProfileName := "com.itv.chuckwagon"
+sonatypeProfileName := "com.itv"
 
 lazy val noPublishSettings = Seq(
   publish := (),
