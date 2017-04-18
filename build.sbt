@@ -4,8 +4,7 @@ lazy val commonSettings = Seq(
   description := "A framework for writing and deploying Scala AWS Lambda Functions",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.1" % Test
-  ),
-  publishTo := Some("Artifactory Realm".at("https://itvrepos.artifactoryonline.com/itvrepos/cps-libs"))
+  )
 )
 
 lazy val noPublishSettings = Seq(
