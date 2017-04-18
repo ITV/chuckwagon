@@ -124,9 +124,10 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  releaseStepCommandAndRemaining("+publish"),
+  releaseStepCommandAndRemaining("+publishSigned"),
   setNextVersion,
   commitNextVersion,
+  ReleaseStep(action = Command.process("+sonatypeReleaseAll")),
   pushChanges
 )
 

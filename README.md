@@ -1,3 +1,5 @@
+[![Join the chat at https://gitter.im/itv/chuckwagon](https://badges.gitter.im/itv/chuckwagon.svg)](https://gitter.im/itv/chuckwagon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 # Chuckwagon
 
 Chuckwagon is a Scala/sbt [AWS Lambda](https://aws.amazon.com/lambda/) Toolkit. It makes creating and maintaining [Continuous Delivery](http://www.alwaysagileconsulting.com/articles/what-is-continuous-delivery/) pipelines typesafe and declarative.
