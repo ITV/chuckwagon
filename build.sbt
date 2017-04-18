@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  organization := "com.itv",
+  organization := "com.itv.chuckwagon",
   scalaVersion := "2.12.1",
   description := "A framework for writing and deploying Scala AWS Lambda Functions",
   libraryDependencies ++= Seq(
@@ -46,9 +46,8 @@ lazy val root = (project in file("."))
   .settings(noPublishSettings)
   .aggregate(
     `aws-scala-sdk`,
-    `lib-chuckwagon`,
-    `sbt-chuckwagon`,
-    readme
+    `jvm`,
+    `sbt-chuckwagon`
   )
 
 lazy val `aws-scala-sdk` = project
@@ -57,6 +56,7 @@ lazy val `aws-scala-sdk` = project
     publishSettings ++
       commonSettings ++
       Seq(
+        moduleName := "chuckwagon-aws-scala-sdk",
         scalaVersion := "2.10.6",
         crossScalaVersions := Seq("2.12.1", "2.10.6"),
         libraryDependencies ++= Seq(
@@ -76,12 +76,13 @@ lazy val `aws-scala-sdk` = project
       )
   )
 
-lazy val `lib-chuckwagon` = project
+lazy val `jvm` = project
   .enablePlugins(CrossPerProjectPlugin)
   .settings(
     publishSettings ++
       commonSettings ++
       Seq(
+        moduleName := "chuckwagon-jvm",
         scalaVersion := "2.12.1",
         crossScalaVersions := Seq("2.12.1"),
         libraryDependencies ++= Seq(
