@@ -7,6 +7,8 @@ lazy val commonSettings = Seq(
   )
 )
 
+sonatypeProfileName := "com.itv.chuckwagon"
+
 lazy val noPublishSettings = Seq(
   publish := (),
   publishLocal := (),
