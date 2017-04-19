@@ -31,7 +31,11 @@ chuckPublishConfig := chuckPublishConfigBuilder
   .withCodeFile(assembly)
 ```
 
+In order to execute Chuckwagon Tasks with this configuration, you will need [AWS Credentials with read and write access to EC2, IAM and Lambda](http://io.itv.com/chuckwagon/#IAMRoles). The [Getting Started Guide](http://io.itv.com/chuckwagon/#GettingStarted) has more details on one way of configuring this.
+
 # Usage
+
+Here is an example of the most basic possible usage of Chuckwagon:
 
 ```chuckPublishSnapshot``` - Will create/update your AWS Lambda
 

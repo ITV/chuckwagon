@@ -36,7 +36,7 @@ This section won't tell you how to configure IAM Roles for Chuckwagon but it doe
           tr(td("events:RemoveTargets"), td("")),
           tr(td("lambda:RemovePermission"), td("*All Optional* Required for chuckRemoveLambdaTrigger")),
           tr(td("lambda:InvokeFunction"), td("*Optional* Required for chuckInvoke")),
-          tr(td("iam:*"), td("*Not Recommended* But required if you rely on Chuckwagon to manage the Role for your AWS Lambdas"))
+          tr(td("iam:*"), td("*Not Recommended* Required if 'RoleARN' on chuckPublishConfigBuilder/chuckCopyConfigBuilder not set and Chuckwagon is being relied upon to create IAM Role."))
         ))
 
 @sect{Executing Actions}
