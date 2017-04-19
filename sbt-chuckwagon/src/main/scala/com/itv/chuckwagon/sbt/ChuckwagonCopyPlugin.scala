@@ -50,6 +50,8 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
           credentials = credentials
         )
 
+        // FIXME: Needs to download every Lambda Configuration (Handlers are all different)
+        // https://github.com/ITV/chuckwagon/issues/1
         val downloadableDevelopmentPublishedLambda: DownloadablePublishedLambda =
           com.itv.chuckwagon.deploy
             .getDownloadablePublishedLambdaVersion(

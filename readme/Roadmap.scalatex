@@ -2,6 +2,13 @@
 
 Version @sect.ref{0.1.0 Release} contains everything that I currently need to deploy AWS Lambdas in my workplace. My focus for future releases is currently things which are peripheral to my initial vision or would simply make the project easier to run. However, there may be features which the community would find useful and which I have overlooked. I would welcome the opportunity to adjust my current plans to implement ideas which would be a good fit with the project.
 
+@sect{0.1.1 Plans}
+    @ul
+        @li
+            Fix @lnk("chuckCopyConfigBuilder.withNames uses same configuration for all lambdas #1", "https://github.com/ITV/chuckwagon/issues/1")
+        @li
+            Fix other problems with initial release that become apparent
+
 @sect{0.2.0 Plans}
     @ul
         @li
