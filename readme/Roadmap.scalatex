@@ -41,3 +41,5 @@ Version @sect.ref{0.1.0 Release} contains everything that I currently need to de
             Proguard facilitated direct publishing
         @li
             Experimental Scala.js support
+        @li
+            First AWS Lambda invocations are slow. @code{chuckNorris} Task will make them fast.
