@@ -14,6 +14,10 @@ package iam {
 
   case class ARN(value: String) extends AnyVal
 
+  object ARN {
+    def toString$extension1(unBoxed: String): String = unBoxed
+  }
+
   case class RoleName(value: String) extends AnyVal
 
   case class Role(roleDeclaration: RoleDeclaration, arn: ARN)

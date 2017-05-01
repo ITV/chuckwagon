@@ -1,11 +1,14 @@
 package com.itv.chuckwagon.sbt
 
+import cats.Id
+import cats.~>
 import cats.data.NonEmptyList
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.itv.aws.iam.ARN
 import com.itv.aws.lambda._
 import com.itv.chuckwagon.deploy.AWSCompiler
+import com.itv.chuckwagon.deploy.DeployLambdaA
 import com.itv.chuckwagon.deploy.VpcConfigLookup
 import com.itv.chuckwagon.sbt.builder._
 import sbt._
@@ -21,7 +24,7 @@ object Keys {
       "The AWS Credentials Lookup Mechanism. Defaults to standard SDK chain."
     )
 
-    val chuckSDKFreeCompiler = settingKey[AWSCompiler](
+    val chuckSDKFreeCompiler = settingKey[DeployLambdaA ~> Id](
       "The Free Monad Compiler for our DeployLambdaA ADT"
     )
 

@@ -11,13 +11,27 @@ package object s3 {
 
 package s3 {
   case class S3KeyPrefix(value: String) extends AnyVal
-  case class S3Key(value: String)       extends AnyVal
+
+  object S3KeyPrefix {
+    def toString$extension1(unBoxed: String): String = unBoxed
+  }
+
+  case class S3Key(value: String) extends AnyVal
+
+  object S3Key {
+    def toString$extension1(unBoxed: String): String = unBoxed
+  }
 
   case class S3Address(bucketName: BucketName, keyPrefix: S3KeyPrefix)
 
   case class S3Location(bucket: Bucket, key: S3Key)
 
   case class BucketName(value: String) extends AnyVal
+
+  object BucketName {
+    def toString$extension1(unBoxed: String): String = unBoxed
+  }
+
   case class Bucket(name: BucketName)
 
 }

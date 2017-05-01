@@ -40,6 +40,8 @@ lazy val publishSettings = Seq(
 val awsSdkVersion = "1.11.119"
 val circeVersion  = "0.7.1"
 val slf4jVersion  = "1.7.25"
+val scala212      = "2.12.2"
+val scala210      = "2.10.6"
 
 lazy val root = (project in file("."))
   .enablePlugins(CrossPerProjectPlugin)
@@ -50,6 +52,7 @@ lazy val root = (project in file("."))
   .aggregate(
     `aws-scala-sdk`,
     `jvm`,
+    `test-fixtures`,
     `sbt-chuckwagon`
   )
 
@@ -60,8 +63,8 @@ lazy val `aws-scala-sdk` = project
       commonSettings ++
       Seq(
         moduleName := "chuckwagon-aws-scala-sdk",
-        scalaVersion := "2.10.6",
-        crossScalaVersions := Seq("2.12.1", "2.10.6"),
+        scalaVersion := scala210,
+        crossScalaVersions := Seq(scala212, scala210),
         libraryDependencies ++= Seq(
           "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
@@ -86,8 +89,8 @@ lazy val `jvm` = project
       commonSettings ++
       Seq(
         moduleName := "chuckwagon-jvm",
-        scalaVersion := "2.12.1",
-        crossScalaVersions := Seq("2.12.1"),
+        scalaVersion := scala212,
+        crossScalaVersions := Seq(scala212),
         libraryDependencies ++= Seq(
           "com.amazonaws" % "aws-lambda-java-core"   % "1.1.0" % Provided,
           "com.amazonaws" % "aws-lambda-java-events" % "1.3.0" % Provided,
@@ -101,6 +104,20 @@ lazy val `jvm` = project
       )
   )
 
+lazy val `test-fixtures` = project
+  .enablePlugins(CrossPerProjectPlugin)
+  .settings(noPublishSettings)
+  .settings(commonSettings)
+  .settings(
+    scalaVersion := scala210,
+    crossScalaVersions := Seq(scala212, scala210),
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "pprint"       % "0.4.3",
+      "com.lihaoyi" %% "ammonite-ops" % "0.8.4"
+    )
+  )
+  .dependsOn(`aws-scala-sdk`)
+
 lazy val `sbt-chuckwagon` = project
   .enablePlugins(CrossPerProjectPlugin)
   .settings(
@@ -108,7 +125,7 @@ lazy val `sbt-chuckwagon` = project
       commonSettings ++
       Seq(
         sbtPlugin := true,
-        scalaVersion := "2.10.6",
+        scalaVersion := scala210,
         libraryDependencies ++= Seq(
           "com.lihaoyi" %% "fansi" % "0.2.3"
         ),
@@ -144,8 +161,8 @@ lazy val readme = scalatex
   .enablePlugins(CrossPerProjectPlugin)
   .settings(commonSettings)
   .settings(
-    scalaVersion := "2.12.1",
-    crossScalaVersions := Seq("2.12.1"),
+    scalaVersion := scala212,
+    crossScalaVersions := Seq(scala212),
     noPublishSettings,
     test := {
       run.in(Compile).toTask(" --validate-links").value

@@ -50,7 +50,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
                 codeGeneratorTask.value
               )
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(chuckSDKFreeCompiler.value)
 
         lambdaSnapshots.foreach { lambdaSnapshot =>
           streams.value.log.info(
@@ -89,7 +89,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
                 code
               )
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(chuckSDKFreeCompiler.value)
 
         publishedLambdas.foreach { publishedLambda =>
           streams.value.log.info(
@@ -119,7 +119,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
                   publishedLambda,
                   toAliasName
                 )
-                .foldMap(chuckSDKFreeCompiler.value.compiler)
+                .foldMap(chuckSDKFreeCompiler.value)
 
             streams.value.log.info(
               logMessage(
@@ -176,7 +176,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
           chuckPublishConfig.value.roleARN,
           LambdaRoles.roleNameFor(name.value)
         )
-        .foldMap(chuckSDKFreeCompiler.value.compiler)
+        .foldMap(chuckSDKFreeCompiler.value)
     }
   }
 }

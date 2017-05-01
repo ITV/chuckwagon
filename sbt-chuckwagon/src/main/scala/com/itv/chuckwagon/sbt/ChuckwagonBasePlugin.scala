@@ -21,7 +21,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
     Seq(
       chuckAWSCredentialsProvider := DefaultAWSCredentialsProviderChain.getInstance,
       chuckEnvironments := Set[String](),
-      chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value, chuckAWSCredentialsProvider.value),
+      chuckSDKFreeCompiler := new AWSCompiler(chuckRegion.value, chuckAWSCredentialsProvider.value).compiler,
       chuckPromote := {
         val (fromAliasName, toAliasName) =
           (environmentArgParser.value ~ environmentArgParser.value).parsed
@@ -31,7 +31,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
             fromAliasName,
             toAliasName
           )
-          .foldMap(chuckSDKFreeCompiler.value.compiler)
+          .foldMap(chuckSDKFreeCompiler.value)
 
         promotedToAliases.foreach {
           promotedToAlias =>
@@ -58,13 +58,13 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           chuckName =>
             val maybeAliases = com.itv.chuckwagon.deploy
               .listAliases(chuckName)
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
             maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
               case Some(alias) => {
                 val _ = com.itv.chuckwagon.deploy
                   .setLambdaTrigger(alias, ScheduleExpression(scheduleExpressionString))
-                  .foldMap(chuckSDKFreeCompiler.value.compiler)
+                  .foldMap(chuckSDKFreeCompiler.value)
 
                 streams.value.log
                   .info(
@@ -91,14 +91,14 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           chuckName =>
             val maybeAliases = com.itv.chuckwagon.deploy
               .listAliases(chuckName)
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
             maybeAliases.getOrElse(Nil).find(alias => alias.name == targetAliasName) match {
               case Some(alias) => {
 
                 com.itv.chuckwagon.deploy
                   .removeLambdaTrigger(alias)
-                  .foldMap(chuckSDKFreeCompiler.value.compiler)
+                  .foldMap(chuckSDKFreeCompiler.value)
 
                 streams.value.log
                   .info(
@@ -123,7 +123,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           chuckName =>
             val maybeAliases = com.itv.chuckwagon.deploy
               .listAliases(chuckName)
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
             maybeAliases match {
               case Some(aliases) => {
@@ -149,7 +149,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           chuckName =>
             val maybePublishedLambdas = com.itv.chuckwagon.deploy
               .listPublishedLambdasWithName(chuckName)
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
             maybePublishedLambdas match {
               case Some(publishedLambdas) => {
@@ -178,7 +178,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
                 chuckName,
                 chuckEnvironments.value.toList.map(_.aliasName)
               )
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
           streams.value.log.info(
             logItemsMessage(
@@ -193,7 +193,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           val deletedLambdaVersions =
             com.itv.chuckwagon.deploy
               .deleteRedundantPublishedLambdas(chuckName)
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
           streams.value.log.info(
             logItemsMessage(
@@ -233,7 +233,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val output: LambdaResponse =
           com.itv.chuckwagon.deploy
             .invokeLambda(lambdaName, qualifier)
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(chuckSDKFreeCompiler.value)
 
         streams.value.log.info(
           logItemsMessage(lambdaName, "Result of running Lambda", output.toString)

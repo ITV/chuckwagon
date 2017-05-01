@@ -43,7 +43,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
               ARN(assumableDevAccountRoleARN.value),
               AssumeRoleSessionName("chuckwagon-production-deployment")
             )
-            .foldMap(chuckSDKFreeCompiler.value.compiler)
+            .foldMap(chuckSDKFreeCompiler.value)
 
         val assumedDevelopmentRoleCompiler = new AWSCompiler(
           region = chuckRegion.value,
@@ -91,7 +91,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
                   developmentLambdaCodeEntity.getContentLength
                 )
               )
-              .foldMap(chuckSDKFreeCompiler.value.compiler)
+              .foldMap(chuckSDKFreeCompiler.value)
 
           publishedLambdas.foreach {
             publishedLambda =>
@@ -101,7 +101,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
                     publishedLambda,
                     toAliasName
                   )
-                  .foldMap(chuckSDKFreeCompiler.value.compiler)
+                  .foldMap(chuckSDKFreeCompiler.value)
 
               streams.value.log.info(
                 logMessage(
@@ -132,7 +132,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
           chuckCopyConfig.value.roleARN,
           LambdaRoles.roleNameFor(name.value)
         )
-        .foldMap(chuckSDKFreeCompiler.value.compiler)
+        .foldMap(chuckSDKFreeCompiler.value)
     }
   }
 }

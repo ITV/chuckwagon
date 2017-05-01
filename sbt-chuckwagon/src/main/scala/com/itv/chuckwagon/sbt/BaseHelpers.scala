@@ -28,7 +28,7 @@ object BaseHelpers {
           .getVpcConfig(
             vpcConfigDeclaration
           )
-          .foldMap(chuckSDKFreeCompiler.value.compiler)
+          .foldMap(chuckSDKFreeCompiler.value)
 
       maybeVpcConfig.foreach { vpcConfig =>
         streams.value.log.info(
