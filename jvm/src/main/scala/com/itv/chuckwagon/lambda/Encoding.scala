@@ -8,6 +8,9 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+class PachinkoDecodingException(message: String, cause: Throwable) extends Exception(message, cause)
+class PachinkoEncodingException(message: String, cause: Throwable) extends Exception(message, cause)
+
 object Encoding {
   import io.circe._
   import io.circe.parser._
@@ -15,7 +18,17 @@ object Encoding {
 
   def in[T](is: InputStream)(implicit decoder: Decoder[T]): Try[T] = {
     val t = Try(Source.fromInputStream(is).mkString).flatMap { string =>
-      decode[T](string).fold(Failure(_), Success(_))
+      decode[T](string).fold(
+        decodeError => {
+          Failure(
+            new PachinkoDecodingException(
+              s"Failed to decode '$string'",
+              decodeError
+            )
+          )
+        },
+        Success(_)
+      )
     }
     is.close()
     t

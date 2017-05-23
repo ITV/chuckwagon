@@ -31,6 +31,6 @@ abstract class FutureHandler[T, R](d: Option[Duration] = None)(
   protected def handlerFuture(input: T, context: Context): Future[R]
   protected def handler(input: T, context: Context): R = Await.result(
     handlerFuture(input, context),
-    d.getOrElse(Duration(context.getRemainingTimeInMillis().toLong, MILLISECONDS))
+    d.getOrElse(Duration(context.getRemainingTimeInMillis.toLong, MILLISECONDS))
   )
 }
