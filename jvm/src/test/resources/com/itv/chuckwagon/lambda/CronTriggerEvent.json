@@ -1,0 +1,13 @@
+{
+  "version": "0",
+  "id": "some-unique-id",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "586133794935",
+  "time": "2017-05-23T15:53:34Z",
+  "region": "eu-west-1",
+  "resources": [
+    "the-arn-that-triggered-it"
+  ],
+  "detail": {}
+}
