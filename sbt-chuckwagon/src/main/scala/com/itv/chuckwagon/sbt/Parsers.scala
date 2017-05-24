@@ -35,4 +35,31 @@ object Parsers {
     token(' ') ~> nameExamplesParser
   }
 
+  val ScheduledEventRule = """{
+                             |  "version": "0",
+                             |  "id": "some-unique-id",
+                             |  "detail-type": "Scheduled Event",
+                             |  "source": "aws.events",
+                             |  "account": "123456789012",
+                             |  "time": "2017-05-23T15:53:34Z",
+                             |  "region": "eu-west-1",
+                             |  "resources": [
+                             |    "the-arn-that-triggered-it"
+                             |  ],
+                             |  "detail": {}
+                             |}""".stripMargin
+
+  val payloadParser: Parser[Option[String]] = {
+    token(' ') ~> ("ScheduledEventRule".examples(FixedSetExamples(List("ScheduledEventRule"))) || StringVerbatim
+      .examples(FixedSetExamples(List("\"\"\"")))
+      .?).map { options =>
+      options.fold(
+        {
+          case "ScheduledEventRule" => Option(ScheduledEventRule)
+        },
+        payload => payload
+      )
+    }
+  }
+
 }

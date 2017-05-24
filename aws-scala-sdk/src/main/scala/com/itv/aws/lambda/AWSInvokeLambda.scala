@@ -28,12 +28,15 @@ case class LambdaResponsePayload(value: ByteBuffer) extends LambdaResponse {
 }
 
 class AWSInvokeLambda(awsLambda: AWSLambda) {
-  def apply(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]): LambdaResponse = {
+  def apply(lambdaName: LambdaName,
+            qualifier: Option[InvokeQualifier],
+            payload: Option[String]): LambdaResponse = {
 
     val awsInvokeRequest = new InvokeRequest()
       .withFunctionName(lambdaName.value)
 
     qualifier.foreach(invokeQualifier => awsInvokeRequest.setQualifier(invokeQualifier.toString))
+    payload.foreach(invokePayload => awsInvokeRequest.setPayload(invokePayload))
 
     val awsInvokeResponse = awsLambda.invoke(awsInvokeRequest)
 

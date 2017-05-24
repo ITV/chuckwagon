@@ -11,6 +11,7 @@ import Parsers._
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.itv.aws.events.ScheduleExpression
 import sbt.complete.DefaultParsers._
+import sbt.complete.FixedSetExamples
 
 object ChuckwagonBasePlugin extends AutoPlugin {
 
@@ -206,15 +207,17 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         ()
       },
       chuckInvoke := {
-        val env: (Option[LambdaName], Option[Either[AliasName, LambdaVersion]]) =
-          (chuckNameParser.value.? ~ (environmentArgParser.value || versionArgParser.value).?).parsed
+        val ((maybeLambdaName, maybeQualifier), payload) =
+          (chuckNameParser.value.? ~
+            (environmentArgParser.value || versionArgParser.value).? ~
+            payloadParser).parsed
 
-        val qualifier: Option[InvokeQualifier] = env._2.map {
+        val qualifier: Option[InvokeQualifier] = maybeQualifier.map {
           case Left(environment) => EnvironmentQualifier(environment)
           case Right(version)    => VersionQualifier(version)
         }
 
-        val lambdaName: LambdaName = env._1 match {
+        val lambdaName: LambdaName = maybeLambdaName match {
           case Some(lambdaName) => lambdaName
           case None =>
             chuckNames.value match {
@@ -226,13 +229,17 @@ object ChuckwagonBasePlugin extends AutoPlugin {
             }
         }
 
+        val logArgs = qualifier.map(q => Str(" '") ++ Green(q.toString) ++ Str("'")) ++ payload
+          .map(p => s" with payload '$p'")
+          .toList
+
         streams.value.log.info(
-          logItemsMessage(lambdaName, "About to invoke Lambda", qualifier.toList.map(_.toString): _*)
+          logMessage(lambdaName, s"About to invoke Lambda ${logArgs.mkString("")}")
         )
 
         val output: LambdaResponse =
           com.itv.chuckwagon.deploy
-            .invokeLambda(lambdaName, qualifier)
+            .invokeLambda(lambdaName, qualifier, payload)
             .foldMap(chuckSDKFreeCompiler.value)
 
         streams.value.log.info(

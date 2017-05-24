@@ -75,7 +75,7 @@ package deploy {
   case class DeleteLambdaVersion(publishedLambda: PublishedLambda) extends DeployLambdaA[LambdaVersion]
   case class GetLambdaVersion(lambdaName: LambdaName, aliasName: AliasName)
       extends DeployLambdaA[DownloadablePublishedLambda]
-  case class InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier])
+  case class InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier], payload: Option[String])
       extends DeployLambdaA[LambdaResponse]
 
   case class CreateRole(roleDeclaration: RoleDeclaration) extends DeployLambdaA[Role]
@@ -152,8 +152,10 @@ package object deploy {
   def updateCodeAndPublishLambda(lambda: Lambda, s3Location: S3Location): DeployLambda[PublishedLambda] =
     liftF[DeployLambdaA, PublishedLambda](UpdateCodeAndPublishLambda(lambda, s3Location))
 
-  def invokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]): DeployLambda[LambdaResponse] =
-    liftF[DeployLambdaA, LambdaResponse](InvokeLambda(lambdaName, qualifier))
+  def invokeLambda(lambdaName: LambdaName,
+                   qualifier: Option[InvokeQualifier],
+                   payload: Option[String]): DeployLambda[LambdaResponse] =
+    liftF[DeployLambdaA, LambdaResponse](InvokeLambda(lambdaName, qualifier, payload))
 
   def deleteLambdaVersion(
       publishedLambda: PublishedLambda

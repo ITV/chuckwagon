@@ -119,8 +119,12 @@ class AWSCompiler(region: Regions, credentials: AWSCredentialsProvider) {
         case UpdateLambdaConfiguration(lambda: Lambda) => {
           updateLambdaConfiguration(lambda)
         }
-        case InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]) =>
-          invokeLambda(lambdaName, qualifier)
+        case InvokeLambda(
+            lambdaName: LambdaName,
+            qualifier: Option[InvokeQualifier],
+            payload: Option[String]
+            ) =>
+          invokeLambda(lambdaName, qualifier, payload)
         case ListBuckets() =>
           listBuckets()
         case CreateBucket(name: BucketName) =>

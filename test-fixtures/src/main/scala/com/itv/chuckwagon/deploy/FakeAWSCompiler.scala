@@ -79,10 +79,10 @@ case class FakeAWSCompiler(
             PublishedLambda(lambda, nextVersion, arnFor(nextVersion))
           case UpdateCodeForLambdaSnapshot(lambda: Lambda, s3Location: S3Location) =>
             LambdaSnapshot(lambda, arnSnapshot)
-          case UpdateLambdaConfiguration(lambda: Lambda)                                => ()
-          case InvokeLambda(lambdaName: LambdaName, qualifier: Option[InvokeQualifier]) => ???
-          case ListBuckets()                                                            => buckets
-          case CreateBucket(name: BucketName)                                           => Bucket(name)
+          case UpdateLambdaConfiguration(lambda: Lambda)    => ()
+          case InvokeLambda(lambdaName, qualifier, payload) => ???
+          case ListBuckets()                                => buckets
+          case CreateBucket(name: BucketName)               => Bucket(name)
           case PutObject(bucket: Bucket, putObjectType: PutObjectType) =>
             S3Location(bucket, key)
           case CreateRole(roleDeclaration)      => Role(roleDeclaration, roleARN)
