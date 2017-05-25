@@ -18,7 +18,7 @@ class EventsDecodingTests extends FlatSpec with Matchers {
         "some-unique-id",
         "Scheduled Event",
         "aws.events",
-        "586133794935",
+        "123456789012",
         "2017-05-23T15:53:34Z",
         "eu-west-1",
         List(
