@@ -49,13 +49,12 @@ object Parsers {
                              |  "detail": {}
                              |}""".stripMargin
 
-  val payloadParser: Parser[Option[String]] = {
+  val payloadParser: Parser[String] = {
     token(' ') ~> ("ScheduledEventRule".examples(FixedSetExamples(List("ScheduledEventRule"))) || StringVerbatim
-      .examples(FixedSetExamples(List("\"\"\"")))
-      .?).map { options =>
+      .examples(FixedSetExamples(List("\"\"\"")))).map { options =>
       options.fold(
         {
-          case "ScheduledEventRule" => Option(ScheduledEventRule)
+          case "ScheduledEventRule" => ScheduledEventRule
         },
         payload => payload
       )

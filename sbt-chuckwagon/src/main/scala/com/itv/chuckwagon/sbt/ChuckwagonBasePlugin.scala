@@ -210,7 +210,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         val ((maybeLambdaName, maybeQualifier), payload) =
           (chuckNameParser.value.? ~
             (environmentArgParser.value || versionArgParser.value).? ~
-            payloadParser).parsed
+            payloadParser.?).parsed
 
         val qualifier: Option[InvokeQualifier] = maybeQualifier.map {
           case Left(environment) => EnvironmentQualifier(environment)
