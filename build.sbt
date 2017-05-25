@@ -110,7 +110,7 @@ lazy val `test-fixtures` = project
   .settings(commonSettings)
   .settings(
     scalaVersion := scala210,
-    crossScalaVersions := Seq(scala212, scala210),
+    crossScalaVersions := Seq(scala210),
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "pprint"       % "0.4.3",
       "com.lihaoyi" %% "ammonite-ops" % "0.8.4"
