@@ -126,6 +126,7 @@ lazy val `sbt-chuckwagon` = project
       Seq(
         sbtPlugin := true,
         scalaVersion := scala210,
+        crossScalaVersions := Seq(scala210),
         libraryDependencies ++= Seq(
           "com.lihaoyi" %% "fansi" % "0.2.3"
         ),
