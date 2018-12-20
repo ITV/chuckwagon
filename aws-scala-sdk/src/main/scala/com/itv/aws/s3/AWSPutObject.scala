@@ -9,9 +9,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.{PutObjectRequest => AWSPutObjectRequest}
 
 sealed trait PutObjectType
-case class PutFile(keyPrefix: S3KeyPrefix, file: File) extends PutObjectType
-case class PutInputStream(s3Key: S3Key, inputStream: InputStream, inputStreamLength: Long)
-    extends PutObjectType
+case class PutFile(keyPrefix: S3KeyPrefix, file: File)                                     extends PutObjectType
+case class PutInputStream(s3Key: S3Key, inputStream: InputStream, inputStreamLength: Long) extends PutObjectType
 
 class AWSPutObject(awsS3: AmazonS3) {
   def apply(bucket: Bucket, putObject: PutObjectType): S3Location = {

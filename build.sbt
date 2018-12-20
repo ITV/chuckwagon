@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.itv.chuckwagon",
-  scalaVersion := "2.12.1",
+  scalaVersion := "2.12.8",
   description := "A framework for writing and deploying Scala AWS Lambda Functions",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.1" % Test
@@ -11,8 +11,8 @@ lazy val commonSettings = Seq(
 sonatypeProfileName := "com.itv"
 
 lazy val noPublishSettings = Seq(
-  publish := (),
-  publishLocal := (),
+  publish := Unit,
+  publishLocal := Unit,
   publishArtifact := false
 )
 lazy val publishSettings = Seq(
@@ -40,11 +40,9 @@ lazy val publishSettings = Seq(
 val awsSdkVersion = "1.11.119"
 val circeVersion  = "0.7.1"
 val slf4jVersion  = "1.7.25"
-val scala212      = "2.12.2"
-val scala210      = "2.10.6"
 
 lazy val root = (project in file("."))
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(
     name := "chuckwagon"
   )
@@ -57,14 +55,12 @@ lazy val root = (project in file("."))
   )
 
 lazy val `aws-scala-sdk` = project
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
       Seq(
         moduleName := "chuckwagon-aws-scala-sdk",
-        scalaVersion := scala210,
-        crossScalaVersions := Seq(scala212, scala210),
         libraryDependencies ++= Seq(
           "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
           "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
@@ -83,14 +79,12 @@ lazy val `aws-scala-sdk` = project
   )
 
 lazy val `jvm` = project
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
       Seq(
         moduleName := "chuckwagon-jvm",
-        scalaVersion := scala212,
-        crossScalaVersions := Seq(scala212),
         libraryDependencies ++= Seq(
           "com.amazonaws" % "aws-lambda-java-core"   % "1.1.0" % Provided,
           "com.amazonaws" % "aws-lambda-java-events" % "1.3.0" % Provided,
@@ -105,32 +99,28 @@ lazy val `jvm` = project
   )
 
 lazy val `test-fixtures` = project
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(noPublishSettings)
   .settings(commonSettings)
   .settings(
-    scalaVersion := scala210,
-    crossScalaVersions := Seq(scala210),
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint"       % "0.4.3",
-      "com.lihaoyi" %% "ammonite-ops" % "0.8.4"
+      "com.lihaoyi" %% "pprint"       % "0.5.3",
+      "com.lihaoyi" %% "ammonite-ops" % "1.4.4"
     )
   )
   .dependsOn(`aws-scala-sdk`)
 
 lazy val `sbt-chuckwagon` = project
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
       Seq(
         sbtPlugin := true,
-        scalaVersion := scala210,
-        crossScalaVersions := Seq(scala210),
         libraryDependencies ++= Seq(
           "com.lihaoyi" %% "fansi" % "0.2.3"
         ),
-        addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.4")
+        addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.9")
       )
   )
   .dependsOn(`aws-scala-sdk`)
@@ -159,11 +149,9 @@ lazy val readme = scalatex
     url = "https://github.com/itv/chuckwagon/tree/master",
     source = "Readme"
   )
-  .enablePlugins(CrossPerProjectPlugin)
+  .enablePlugins()
   .settings(commonSettings)
   .settings(
-    scalaVersion := scala212,
-    crossScalaVersions := Seq(scala212),
     noPublishSettings,
     test := {
       run.in(Compile).toTask(" --validate-links").value

@@ -34,7 +34,9 @@ class AWSFindSecurityGroups(ec2: AmazonEC2) {
     usingRequest(describeSecurityGroupsRequest)
   }
 
-  private def usingRequest(describeSecurityGroupsRequest: DescribeSecurityGroupsRequest): List[SecurityGroup] = {
+  private def usingRequest(
+      describeSecurityGroupsRequest: DescribeSecurityGroupsRequest
+  ): List[SecurityGroup] = {
 
     val awsSecurityGroups: List[AWSSecurityGroup] =
       ec2.describeSecurityGroups(describeSecurityGroupsRequest).getSecurityGroups.asScala.toList

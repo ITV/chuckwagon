@@ -34,26 +34,29 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           )
           .foldMap(chuckSDKFreeCompiler.value)
 
-        promotedToAliases.foreach {
-          promotedToAlias =>
-            streams.value.log.info(
-              logMessage(
-                promotedToAlias.lambdaName,
-                (Str("Just Promoted Version '") ++ Green(
-                  promotedToAlias.lambdaVersion.value.toString
-                ) ++ Str("' from Environment '") ++ Green(fromAliasName.value) ++ Str(
-                  "' to Environment '"
-                ) ++ Green(toAliasName.value) ++ Str("' as '") ++ Green(
-                  promotedToAlias.arn.value
-                ) ++ Str("'")).render
-              )
+        val logStream: String => Unit = msg => streams.value.log.info(msg)
+
+        promotedToAliases.foreach { promotedToAlias =>
+          logStream(
+            logMessage(
+              promotedToAlias.lambdaName,
+              (Str("Just Promoted Version '") ++ Green(
+                promotedToAlias.lambdaVersion.value.toString
+              ) ++ Str("' from Environment '") ++ Green(fromAliasName.value) ++ Str(
+                "' to Environment '"
+              ) ++ Green(toAliasName.value) ++ Str("' as '") ++ Green(
+                promotedToAlias.arn.value
+              ) ++ Str("'")).render
             )
+          )
         }
         ()
       },
       chuckSetLambdaTrigger := {
         val (targetAliasName, scheduleExpressionString) =
           (environmentArgParser.value ~ (token(' ') ~> token(StringBasic))).parsed
+
+        val logStream: String => Unit = msg => streams.value.log.info(msg)
 
         chuckNames.value.foreach {
           chuckName =>
@@ -67,15 +70,15 @@ object ChuckwagonBasePlugin extends AutoPlugin {
                   .setLambdaTrigger(alias, ScheduleExpression(scheduleExpressionString))
                   .foldMap(chuckSDKFreeCompiler.value)
 
-                streams.value.log
-                  .info(
-                    logMessage(
-                      chuckName,
-                      (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
-                        "' with Expression '"
-                      ) ++ Green(scheduleExpressionString) ++ Str("'")).render
-                    )
+                logStream(
+                  logMessage(
+                    chuckName,
+                    (Str("Just Created Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
+                      "' with Expression '"
+                    ) ++ Green(scheduleExpressionString) ++ Str("'")).render
                   )
+                )
+
               }
               case None =>
                 throw new Exception(
@@ -87,6 +90,8 @@ object ChuckwagonBasePlugin extends AutoPlugin {
       },
       chuckRemoveLambdaTrigger := {
         val targetAliasName = environmentArgParser.value.parsed
+
+        val logStream: String => Unit = msg => streams.value.log.info(msg)
 
         chuckNames.value.foreach {
           chuckName =>
@@ -101,15 +106,15 @@ object ChuckwagonBasePlugin extends AutoPlugin {
                   .removeLambdaTrigger(alias)
                   .foldMap(chuckSDKFreeCompiler.value)
 
-                streams.value.log
-                  .info(
-                    logMessage(
-                      chuckName,
-                      (Str("Just Removed Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
-                        "'"
-                      )).render
-                    )
+                logStream(
+                  logMessage(
+                    chuckName,
+                    (Str("Just Removed Schedule Trigger for Environment '") ++ Green(alias.name.value) ++ Str(
+                      "'"
+                    )).render
                   )
+                )
+
               }
               case None =>
                 throw new Exception(
@@ -120,6 +125,9 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         ()
       },
       chuckCurrentEnvironments := {
+
+        def logStream(msg: String) = streams.value.log.info(msg)
+
         chuckNames.value.headOption.flatMap {
           chuckName =>
             val maybeAliases = com.itv.chuckwagon.deploy
@@ -127,8 +135,8 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               .foldMap(chuckSDKFreeCompiler.value)
 
             maybeAliases match {
-              case Some(aliases) => {
-                streams.value.log.info(
+              case Some(aliases) =>
+                logStream(
                   logItemsMessage(
                     chuckName,
                     "Current Aliases and associated Lambda Versions",
@@ -137,15 +145,16 @@ object ChuckwagonBasePlugin extends AutoPlugin {
                     ): _*
                   )
                 )
-              }
+
               case None =>
-                streams.value.log
-                  .info(logItemsMessage(chuckName, "No Lambda defined so no aliases exist"))
+                logStream(logItemsMessage(chuckName, "No Lambda defined so no aliases exist"))
             }
             maybeAliases
         }
       },
       chuckCurrentlyPublished := {
+        def logStream(msg: String) = streams.value.log.info(msg)
+
         chuckNames.value.headOption.flatMap {
           chuckName =>
             val maybePublishedLambdas = com.itv.chuckwagon.deploy
@@ -153,24 +162,24 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               .foldMap(chuckSDKFreeCompiler.value)
 
             maybePublishedLambdas match {
-              case Some(publishedLambdas) => {
-                streams.value.log.info(
+              case Some(publishedLambdas) =>
+                logStream(
                   logItemsMessage(
                     chuckName,
                     "Currently published versions",
                     publishedLambdas.map(_.version.value.toString): _*
                   )
                 )
-              }
+
               case None =>
-                streams.value.log.info(
-                  logMessage(chuckName, "No Lambda defined so no published versions exist")
-                )
+                logStream(logMessage(chuckName, "No Lambda defined so no published versions exist"))
             }
             maybePublishedLambdas
         }
       },
       chuckCleanUp := {
+
+        def logStream(msg: String) = streams.value.log.info(msg)
 
         chuckNames.value.foreach { chuckName =>
           val deletedAliases =
@@ -181,7 +190,7 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               )
               .foldMap(chuckSDKFreeCompiler.value)
 
-          streams.value.log.info(
+          logStream(
             logItemsMessage(
               chuckName,
               s"Deleted the following redundant aliases",
@@ -196,13 +205,14 @@ object ChuckwagonBasePlugin extends AutoPlugin {
               .deleteRedundantPublishedLambdas(chuckName)
               .foldMap(chuckSDKFreeCompiler.value)
 
-          streams.value.log.info(
+          logStream(
             logItemsMessage(
               chuckName,
               s"Deleted the following redundant lambda versions ",
               deletedLambdaVersions.map(_.value.toString): _*
             )
           )
+
         }
         ()
       },
@@ -233,18 +243,16 @@ object ChuckwagonBasePlugin extends AutoPlugin {
           .map(p => s" with payload '$p'")
           .toList
 
-        streams.value.log.info(
-          logMessage(lambdaName, s"About to invoke Lambda ${logArgs.mkString("")}")
-        )
+        def logStream(msg: String) = streams.value.log.info(msg)
+
+        logStream(logMessage(lambdaName, s"About to invoke Lambda ${logArgs.mkString("")}"))
 
         val output: LambdaResponse =
           com.itv.chuckwagon.deploy
             .invokeLambda(lambdaName, qualifier, payload)
             .foldMap(chuckSDKFreeCompiler.value)
 
-        streams.value.log.info(
-          logItemsMessage(lambdaName, "Result of running Lambda", output.toString)
-        )
+        logStream(logItemsMessage(lambdaName, "Result of running Lambda", output.toString))
 
         output match {
           case res: LambdaResponsePayload => res.toString()
@@ -252,4 +260,5 @@ object ChuckwagonBasePlugin extends AutoPlugin {
         }
       }
     )
+
 }

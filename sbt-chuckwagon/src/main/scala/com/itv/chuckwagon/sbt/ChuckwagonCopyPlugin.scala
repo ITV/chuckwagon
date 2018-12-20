@@ -37,6 +37,18 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
 
         val maybeVpcConfig = maybeVpcConfigFromProductionLambdaConfiguration().value
 
+        maybeVpcConfig.foreach { vpcConfig =>
+          streams.value.log.info(
+            logMessage(
+              (Str("Desired vpc-id: '") ++ Green(vpcConfig.vpc.id) ++ Str("' subnets: '") ++ vpcConfig.subnets
+                .map(s => Green(s.id).render)
+                .mkString(Str(", ").render) ++ Str("' security groups: '") ++ vpcConfig.securityGroups
+                .map(sg => Green(sg.id).render)
+                .mkString(Str(", ").render) ++ Str("'")).render
+            )
+          )
+        }
+
         val credentials =
           com.itv.chuckwagon.deploy
             .assumeRole(
@@ -79,6 +91,8 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
               )
           }
 
+        def logStreamMessage(msg: String) = streams.value.log.info(msg)
+
         try {
           val publishedLambdas =
             com.itv.chuckwagon.deploy
@@ -103,7 +117,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
                   )
                   .foldMap(chuckSDKFreeCompiler.value)
 
-              streams.value.log.info(
+              logStreamMessage(
                 logMessage(
                   publishedLambda.lambda,
                   (Str("Just Published Version '") ++ Green(
@@ -113,6 +127,7 @@ object ChuckwagonCopyPlugin extends AutoPlugin {
                   ) ++ Green(alias.arn.value) ++ Str("'")).render
                 )
               )
+
           }
         } finally {
           developmentLambdaInputStream.close()

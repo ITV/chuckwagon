@@ -11,11 +11,10 @@ package object aws {
     Client
   ], Client](
       builder: AwsSyncClientBuilder[Builder, Client]
-  ): Regions => AWSCredentialsProvider => Client = {
-    (region: Regions) => credentials: AWSCredentialsProvider =>
-      {
-        builder.withRegion(region).withCredentials(credentials).build
-      }
+  ): Regions => AWSCredentialsProvider => Client = { (region: Regions) => credentials: AWSCredentialsProvider =>
+    {
+      builder.withRegion(region).withCredentials(credentials).build
+    }
   }
 
   type AwsClientBuilder[T] = Regions => AWSCredentialsProvider => T

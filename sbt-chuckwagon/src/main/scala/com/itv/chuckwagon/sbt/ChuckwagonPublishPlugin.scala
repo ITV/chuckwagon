@@ -1,15 +1,17 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
-import sbt.Keys._
-import sbt._
-import LoggingUtils._
-import fansi.Color.Green
-import fansi.Str
-import Parsers._
+import com.itv.aws.iam.ARN
 import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
 import com.itv.aws.s3.PutFile
+import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
+import com.itv.chuckwagon.sbt.LoggingUtils._
+import com.itv.chuckwagon.sbt.Parsers._
+import fansi.Color.Green
+import fansi.Str
+import sbt.Keys._
+import sbt.Def
+import sbt._
 
 object ChuckwagonPublishPlugin extends AutoPlugin {
 
@@ -32,12 +34,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         val lambdas = resolvedLambdasForPublishing.value
         val code    = codeGeneratorTask.value
 
-        streams.value.log.info(
-          logMessage(
-            (Str("About to upload '") ++ Green(
-              code.toURI.toString
-            ) ++ Str("' as AWS Lambda")).render
-          )
+        logMessage(
+          (Str("About to upload '") ++ Green(
+            code.toURI.toString
+          ) ++ Str("' as AWS Lambda")).render
         )
 
         val lambdaSnapshots =
@@ -52,8 +52,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
             )
             .foldMap(chuckSDKFreeCompiler.value)
 
+        def logStream(msg: String) = streams.value.log.info(msg)
+
         lambdaSnapshots.foreach { lambdaSnapshot =>
-          streams.value.log.info(
+          logStream(
             logMessage(
               lambdaSnapshot.lambda,
               (Str("Just Published Snapshot as '") ++ Green(
@@ -71,12 +73,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
         val lambdas = resolvedLambdasForPublishing.value
         val code    = codeGeneratorTask.value
 
-        streams.value.log.info(
-          logMessage(
-            (Str("About to upload '") ++ Green(
-              code.toURI.toString
-            ) ++ Str("' as AWS Lambda")).render
-          )
+        logMessage(
+          (Str("About to upload '") ++ Green(
+            code.toURI.toString
+          ) ++ Str("' as AWS Lambda")).render
         )
 
         val publishedLambdas =
@@ -91,8 +91,10 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
             )
             .foldMap(chuckSDKFreeCompiler.value)
 
+        def logStream(msg: String) = streams.value.log.info(msg)
+
         publishedLambdas.foreach { publishedLambda =>
-          streams.value.log.info(
+          logStream(
             logMessage(
               publishedLambda.lambda,
               (Str("Just Published Version '") ++ Green(
@@ -111,6 +113,8 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
 
         val publishedLambdas = chuckPublish.value
 
+        def logStream(msg: String) = streams.value.log.info(msg)
+
         publishedLambdas.foreach {
           publishedLambda =>
             val alias =
@@ -121,7 +125,7 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
                 )
                 .foldMap(chuckSDKFreeCompiler.value)
 
-            streams.value.log.info(
+            logStream(
               logMessage(
                 publishedLambda.lambda,
                 (Str("Just Published Version '") ++ Green(
@@ -144,11 +148,25 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
     val maybeVpcConfig = maybeVpcConfigTask.value
 
     Def.task {
+      val chuckRoleTask = Def
+        .taskDyn {
+          Def.task {
+            com.itv.chuckwagon.deploy
+              .getPredefinedOrChuckwagonRole(
+                chuckPublishConfig.value.roleARN,
+                LambdaRoles.roleNameFor(name.value)
+              )
+              .foldMap(chuckSDKFreeCompiler.value)
+          }
+        }
+        .value
+        .arn
+
       lambdaNameToHandlerMappings.map { nameToHandler =>
         Lambda(
           deployment = LambdaDeploymentConfiguration(
             name = nameToHandler.lambdaName,
-            roleARN = chuckRoleTask.value.arn,
+            roleARN = chuckRoleTask,
             vpcConfig = maybeVpcConfig
           ),
           runtime = LambdaRuntimeConfiguration(
@@ -167,16 +185,5 @@ object ChuckwagonPublishPlugin extends AutoPlugin {
   }
   private def codeGeneratorTask: Def.Initialize[Task[File]] = Def.taskDyn {
     chuckPublishConfig.value.codeFile
-  }
-
-  private def chuckRoleTask: Def.Initialize[Task[Role]] = Def.taskDyn {
-    Def.task {
-      com.itv.chuckwagon.deploy
-        .getPredefinedOrChuckwagonRole(
-          chuckPublishConfig.value.roleARN,
-          LambdaRoles.roleNameFor(name.value)
-        )
-        .foldMap(chuckSDKFreeCompiler.value)
-    }
   }
 }
