@@ -11,8 +11,8 @@ lazy val commonSettings = Seq(
 sonatypeProfileName := "com.itv"
 
 lazy val noPublishSettings = Seq(
-  publish := Unit,
-  publishLocal := Unit,
+  publish := {},
+  publishLocal := {},
   publishArtifact := false
 )
 lazy val publishSettings = Seq(
@@ -42,7 +42,6 @@ val circeVersion  = "0.7.1"
 val slf4jVersion  = "1.7.25"
 
 lazy val root = (project in file("."))
-  .enablePlugins()
   .settings(
     name := "chuckwagon"
   )
@@ -55,7 +54,6 @@ lazy val root = (project in file("."))
   )
 
 lazy val `aws-scala-sdk` = project
-  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
@@ -79,7 +77,6 @@ lazy val `aws-scala-sdk` = project
   )
 
 lazy val `jvm` = project
-  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
@@ -99,7 +96,6 @@ lazy val `jvm` = project
   )
 
 lazy val `test-fixtures` = project
-  .enablePlugins()
   .settings(noPublishSettings)
   .settings(commonSettings)
   .settings(
@@ -111,7 +107,6 @@ lazy val `test-fixtures` = project
   .dependsOn(`aws-scala-sdk`)
 
 lazy val `sbt-chuckwagon` = project
-  .enablePlugins()
   .settings(
     publishSettings ++
       commonSettings ++
@@ -149,7 +144,6 @@ lazy val readme = scalatex
     url = "https://github.com/itv/chuckwagon/tree/master",
     source = "Readme"
   )
-  .enablePlugins()
   .settings(commonSettings)
   .settings(
     noPublishSettings,

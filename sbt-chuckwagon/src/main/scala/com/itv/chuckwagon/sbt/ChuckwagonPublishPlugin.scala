@@ -1,7 +1,5 @@
 package com.itv.chuckwagon.sbt
 
-import com.itv.aws.iam.ARN
-import com.itv.aws.iam.Role
 import com.itv.aws.lambda._
 import com.itv.aws.s3.PutFile
 import com.itv.chuckwagon.sbt.ChuckwagonBasePlugin.autoImport._
@@ -10,8 +8,7 @@ import com.itv.chuckwagon.sbt.Parsers._
 import fansi.Color.Green
 import fansi.Str
 import sbt.Keys._
-import sbt.Def
-import sbt._
+import sbt.{Def, _}
 
 object ChuckwagonPublishPlugin extends AutoPlugin {
 
