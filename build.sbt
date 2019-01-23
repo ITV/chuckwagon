@@ -69,7 +69,7 @@ lazy val `aws-scala-sdk` = project
           "io.circe"       %% "circe-core"         % circeVersion,
           "io.circe"       %% "circe-generic"      % circeVersion,
           "io.circe"       %% "circe-parser"       % circeVersion,
-          "org.typelevel"  %% "cats-free"          % "0.9.0",
+          "org.typelevel"  %% "cats-free"          % "1.5.0",
           "org.scala-lang" % "scala-reflect"       % scalaVersion.value // for macro paradise, for circe generic parsing
         ),
         addCompilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.full))
