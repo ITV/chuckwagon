@@ -38,7 +38,7 @@ lazy val publishSettings = Seq(
 )
 
 val awsSdkVersion = "1.11.119"
-val circeVersion  = "0.7.1"
+val circeVersion  = "0.10.0"
 val slf4jVersion  = "1.7.25"
 
 lazy val root = (project in file("."))
