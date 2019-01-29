@@ -6,13 +6,13 @@ class CommandRecorder(name: String) extends (DeployLambdaA[_] => Unit) {
   import CommandRecorder._
   private var commands: List[DeployLambdaA[_]] = Nil
 
-  def result = commands.reverse
+  def result: List[DeployLambdaA[_]] = commands.reverse
 
   override def apply(next: DeployLambdaA[_]): Unit =
     commands = next :: commands
 
   def writeToFile(): Unit =
-    write.over(CommandRecorder.wd / pprintFileName(name), pprint.stringify(result))
+    write.over(CommandRecorder.wd / pprintFileName(name), pprint.tokenize(result).mkString)
 
   def readFromFile(): String =
     readCommandRecorderFile(name)

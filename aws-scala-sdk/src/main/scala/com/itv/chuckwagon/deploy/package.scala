@@ -1,39 +1,21 @@
 package com.itv.chuckwagon
 
-import java.io.File
-import java.io.InputStream
-import java.nio.ByteBuffer
-
-import com.itv.aws.iam.ARN
-import com.itv.aws.iam.Role
-import com.itv.aws.iam.RoleName
-import com.itv.aws.lambda._
-import com.itv.aws.s3._
 import cats.free.Free
 import cats.free.Free._
-import cats.syntax.list._
 import cats.instances.list._
 import cats.syntax.traverse._
 import com.itv.aws.StaticCredentialsProvider
-import com.itv.aws.ec2.Filter
-import com.itv.aws.ec2.SecurityGroup
-import com.itv.aws.ec2.Subnet
-import com.itv.aws.ec2.Vpc
+import com.itv.aws.ec2.{Filter, SecurityGroup, Subnet, Vpc}
 import com.itv.aws.events._
-import com.itv.aws.iam.RoleDeclaration
-import com.itv.aws.iam.RolePolicy
+import com.itv.aws.iam._
+import com.itv.aws.lambda._
+import com.itv.aws.s3._
 import com.itv.aws.sts.AssumeRoleSessionName
-
-import scala.annotation.tailrec
 
 package deploy {
 
-  import java.io.InputStream
-
   import com.itv.aws.StaticCredentialsProvider
-  import com.itv.aws.ec2.SecurityGroupId
-  import com.itv.aws.ec2.SubnetId
-  import com.itv.aws.ec2.VpcId
+  import com.itv.aws.ec2.{SecurityGroupId, SubnetId, VpcId}
   import com.itv.aws.sts.AssumeRoleSessionName
 
   sealed trait DeployLambdaA[A]
@@ -231,10 +213,11 @@ package object deploy {
           _ => updateCodeAndPublishLambda(lambda, s3Location)
         )
     } yield publishedLambda
+
   def publishLambdas(lambdas: List[Lambda], s3Location: S3Location): DeployLambda[List[PublishedLambda]] =
-    lambdas.map { lambda =>
+   lambdas.map { lambda =>
       publishLambda(lambda, s3Location)
-    }.sequenceU
+    }.sequence[DeployLambda, PublishedLambda]
 
   def publishLambdaSnapshot(lambda: Lambda, s3Location: S3Location): DeployLambda[LambdaSnapshot] =
     for {
@@ -246,11 +229,12 @@ package object deploy {
           _ => updateCodeForLambdaSnapshot(lambda, s3Location)
         )
     } yield publishedLambda
+
   def publishLambdaSnapshots(lambdas: List[Lambda],
                              s3Location: S3Location): DeployLambda[List[LambdaSnapshot]] =
     lambdas.map { lambda =>
       publishLambdaSnapshot(lambda, s3Location)
-    }.sequenceU
+    }.sequence[DeployLambda, LambdaSnapshot]
 
   def uploadAndPublishLambdas(lambdas: List[Lambda],
                               bucketName: BucketName,
@@ -325,12 +309,13 @@ package object deploy {
           )
       }
     } yield alias
+
   def promoteLambdas(lambdaNames: List[LambdaName],
                      fromName: AliasName,
                      to: AliasName): DeployLambda[List[Alias]] =
     lambdaNames.map { lambdaName =>
       promoteLambda(lambdaName, fromName, to)
-    }.sequenceU
+    }.sequence[DeployLambda, Alias]
 
   def deleteRedundantAliases(
       lambdaName: LambdaName,
@@ -340,7 +325,7 @@ package object deploy {
       alreadyCreatedAliases <- listAliases(lambdaName)
       aliasesToDelete = alreadyCreatedAliases.toList.flatten
         .filterNot(a => desiredAliasNames.toSet.contains(a.name))
-      deletedAliases <- aliasesToDelete.map(deleteAlias).sequenceU
+      deletedAliases <- aliasesToDelete.map(deleteAlias).sequence[DeployLambda, AliasName]
     } yield deletedAliases
 
   def deleteRedundantPublishedLambdas(
@@ -359,7 +344,7 @@ package object deploy {
         )
       deletedLambdaVersions <- publishedLambdasToDelete
         .map(deleteLambdaVersion)
-        .sequenceU
+        .sequence[DeployLambda, LambdaVersion]
     } yield deletedLambdaVersions
 
   def putLambdaPermission(alias: Alias, sourcePermissionName: String, sourceARN: ARN): DeployLambda[Unit] = {

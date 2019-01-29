@@ -77,7 +77,7 @@ class UploadAndPublishLambdasTests extends FlatSpec with Matchers {
     commandRecorder.result should equal(expectedCommands)
 
     commandRecorder.writeToFile()
-    commandRecorder.readFromFile() should equal(pprint.stringify(expectedCommands))
+    commandRecorder.readFromFile() should equal(pprint.tokenize(expectedCommands).mkString)
   }
 
   it should "command publishing two Lambdas that don't exist and return their references" in {
@@ -109,7 +109,7 @@ class UploadAndPublishLambdasTests extends FlatSpec with Matchers {
     commandRecorder.result should equal(expectedCommands)
 
     commandRecorder.writeToFile()
-    commandRecorder.readFromFile() should equal(pprint.stringify(expectedCommands))
+    commandRecorder.readFromFile() should equal(pprint.tokenize(expectedCommands).mkString)
   }
 
   it should "command updating a single Lambda that exists and return its reference" in {
@@ -136,11 +136,11 @@ class UploadAndPublishLambdasTests extends FlatSpec with Matchers {
     commandRecorder.result should equal(expectedCommands)
 
     commandRecorder.writeToFile()
-    commandRecorder.readFromFile() should equal(pprint.stringify(expectedCommands))
+    commandRecorder.readFromFile() should equal(pprint.tokenize(expectedCommands).mkString)
   }
 
   def assertListsEqual[A](actual: List[A], expected: List[A]): Unit = {
-    withClue(s"actual: ${pprint.stringify(actual)}, expected: ${pprint.stringify(expected)}") {
+    withClue(s"actual: ${pprint.tokenize(actual).mkString}, expected: ${pprint.tokenize(expected).mkString}") {
       actual.size should equal(expected.size)
     }
     actual.zip(expected).zipWithIndex.foreach { result =>
@@ -182,7 +182,7 @@ class UploadAndPublishLambdasTests extends FlatSpec with Matchers {
     assertListsEqual(commandRecorder.result, expectedCommands)
 
     commandRecorder.writeToFile()
-    commandRecorder.readFromFile() should equal(pprint.stringify(expectedCommands))
+    commandRecorder.readFromFile() should equal(pprint.tokenize(expectedCommands).mkString)
   }
 
 }
