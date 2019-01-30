@@ -122,20 +122,20 @@ lazy val `sbt-chuckwagon` = project
 
 releaseCrossBuild := false
 import ReleaseTransformations._
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  releaseStepCommandAndRemaining("+test"),
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  releaseStepCommandAndRemaining("+publishSigned"),
-  setNextVersion,
-  commitNextVersion,
-  releaseStepCommandAndRemaining("sonatypeReleaseAll"),
-  pushChanges
-)
+//releaseProcess := Seq[ReleaseStep](
+//  checkSnapshotDependencies,
+//  inquireVersions,
+//  runClean,
+//  releaseStepCommandAndRemaining("+test"),
+//  setReleaseVersion,
+//  commitReleaseVersion,
+//  tagRelease,
+//  releaseStepCommandAndRemaining("+publishSigned"),
+//  setNextVersion,
+//  commitNextVersion,
+//  releaseStepCommandAndRemaining("sonatypeReleaseAll"),
+//  pushChanges
+//)
 
 lazy val readme = scalatex
   .ScalatexReadme(
@@ -152,3 +152,11 @@ lazy val readme = scalatex
     },
     scalacOptions := scalacOptions.value.filter(_ != "-P:acyclic:force").filter(_ != "-Xlint")
   )
+
+publishTo in ThisBuild := {
+  val artifactory = "https://itvrepos.jfrog.io/itvrepos/oasvc-ivy"
+  if (isSnapshot.value)
+    Some("Artifactory Realm" at artifactory)
+  else
+    Some("Artifactory Realm" at artifactory + ";build.timestamp=" + new java.util.Date().getTime)
+}
