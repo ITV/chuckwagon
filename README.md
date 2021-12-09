@@ -1,3 +1,7 @@
+# DEPRECATED
+
+Chuckwagon no longer actually works. For scala lambda deployments another option is [Conan](https://github.com/ITV/online-scala-toolbox/tree/master/scalajs-lambda-deployer).
+
 [![Join the chat at https://gitter.im/itv/chuckwagon](https://badges.gitter.im/itv/chuckwagon.svg)](https://gitter.im/itv/chuckwagon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Chuckwagon
